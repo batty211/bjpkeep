@@ -25,13 +25,29 @@ export async function GET() {
 export async function POST(req: Request) {
   const body = await req.json();
 
-  const item = await prisma.item.create({
+  const item =
+  await prisma.item.create({
     data: {
       name: body.name,
-      quantity: Number(body.quantity),
+      quantity:
+        Number(body.quantity),
       unit: body.unit,
-      category: body.category,
-      shelfId: body.shelfId,
+      category:
+        body.category,
+      shelfId:
+        body.shelfId,
+
+      images:
+        body.imagePath
+          ? {
+              create: {
+                path: body.imagePath,
+              },
+            }
+          : undefined,
+    },
+    include: {
+      images: true,
     },
   });
 

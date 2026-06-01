@@ -17,8 +17,32 @@ export default function ItemForm({
   const [unit, setUnit] = useState("");
   const [category, setCategory] = useState("");
   const [shelfId, setShelfId] = useState("");
+  const [file, setFile] =
+  useState<File | null>(null);
 
   async function save() {
+    let imagePath = "";
+
+if (file) {
+  const fd = new FormData();
+
+  fd.append("file", file);
+
+  const upload =
+    await fetch(
+      "/api/upload",
+      {
+        method: "POST",
+        body: fd,
+      }
+    );
+
+  const uploaded =
+    await upload.json();
+
+  imagePath =
+    uploaded.path;
+}
     await fetch("/api/items", {
       method: "POST",
       headers: {
@@ -30,6 +54,7 @@ export default function ItemForm({
         unit,
         category,
         shelfId,
+        imagePath,
       }),
     });
 
@@ -90,7 +115,15 @@ export default function ItemForm({
           </option>
         ))}
       </select>
-
+<input
+  type="file"
+  className="mb-2 w-full"
+  onChange={(e) =>
+    setFile(
+      e.target.files?.[0] ?? null
+    )
+  }
+/>
       <button
         onClick={save}
         className="rounded bg-black px-4 py-2 text-white"
