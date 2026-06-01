@@ -2,30 +2,23 @@
 
 import { useState } from "react";
 
-type Shelf = {
-  id: string;
-  code: string;
-};
-
 export default function ItemForm({
-  shelves,
   initialData,
+  cabinetId,
+  cabinets,
 }: {
-  shelves: Shelf[];
+  cabinetId?: string;
+  cabinets: { id: string; name?: string; code?: string }[];
   initialData?: {
     id?: string;
     name: string;
-    quantity: number;
-    unit: string;
-    category: string;
-    shelfId: string;
   };
 }) {
   const [name, setName] = useState(initialData?.name ?? "");
-  const [quantity, setQuantity] = useState(initialData?.quantity ?? 1);
-  const [unit, setUnit] = useState(initialData?.unit ?? "");
-  const [category, setCategory] = useState(initialData?.category ?? "");
-  const [shelfId, setShelfId] = useState(initialData?.shelfId ?? "");
+  const [cabinetIdState, setCabinetIdState] = useState(
+    initialData?.cabinetId ?? ""
+  );
+  const isFromQR = !!cabinetId;
   const [file, setFile] =
   useState<File | null>(null);
   const [saving, setSaving] = useState(false);
@@ -64,10 +57,7 @@ if (file) {
       body: JSON.stringify({
         id: initialData?.id,
         name,
-        quantity,
-        unit,
-        category,
-        shelfId,
+        cabinetId: cabinetIdState,
         imagePath,
       }),
     });
@@ -101,47 +91,20 @@ if (file) {
         onChange={(e) => setName(e.target.value)}
       />
 
-      <input
-        className="mb-2 w-full rounded border p-2"
-        placeholder="Category"
-        value={category}
-        onChange={(e) => setCategory(e.target.value)}
-      />
-
-      <input
-        type="number"
-        className="mb-2 w-full rounded border p-2"
-        value={quantity}
-        onChange={(e) =>
-          setQuantity(Number(e.target.value))
-        }
-      />
-
-      <input
-        className="mb-2 w-full rounded border p-2"
-        placeholder="Unit"
-        value={unit}
-        onChange={(e) => setUnit(e.target.value)}
-      />
-
       <select
         className="mb-2 w-full rounded border p-2"
-        value={shelfId}
-        onChange={(e) => setShelfId(e.target.value)}
+        value={cabinetIdState}
+        onChange={(e) => setCabinetIdState(e.target.value)}
+        disabled={isFromQR}
       >
-        <option value="">
-          Select Shelf
-        </option>
-
-        {shelves.map((shelf) => (
-          <option
-            key={shelf.id}
-            value={shelf.id}
-          >
-            {shelf.code}
+        <option value="">Select Cabinet</option>
+        {cabinets.map((c) => (
+          <option key={c.id} value={c.id}>
+            {c.code ?? c.name}
           </option>
         ))}
       </select>
+
 <input
   type="file"
   className="mb-2 w-full"

@@ -21,13 +21,9 @@ export default async function ItemDetailPage({
     },
     include: {
       images: true,
-      shelf: {
+      cabinet: {
         include: {
-          cabinet: {
-            include: {
-              room: true,
-            },
-          },
+          room: true,
         },
       },
     },
@@ -138,19 +134,10 @@ export default async function ItemDetailPage({
 
             <div>
               <div className="text-sm text-gray-500">
-                Shelf
-              </div>
-              <div className="font-medium">
-                {item.shelf.code}
-              </div>
-            </div>
-
-            <div>
-              <div className="text-sm text-gray-500">
                 Cabinet
               </div>
               <div className="font-medium">
-                {item.shelf.cabinet.name}
+                {item.cabinet.name}
               </div>
             </div>
 
@@ -159,7 +146,7 @@ export default async function ItemDetailPage({
                 Room
               </div>
               <div className="font-medium">
-                {item.shelf.cabinet.room.name}
+                {item.cabinet.room.name}
               </div>
             </div>
 

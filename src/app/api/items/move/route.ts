@@ -33,7 +33,11 @@ if (token) {
       id: body.itemId,
     },
     include: {
-      shelf: true,
+      cabinet: {
+        include: {
+          room: true,
+        },
+      },
     },
   });
 
@@ -49,7 +53,7 @@ if (token) {
       id: item.id,
     },
     data: {
-      shelfId: body.shelfId,
+      cabinetId: body.cabinetId,
     },
   });
 
@@ -57,7 +61,7 @@ await prisma.activityLog.create({
   data: {
     userId,
     action: "MOVE_ITEM",
-    details: `${item.name}: ${item.shelf.code} -> ${body.shelfCode}`,
+    details: `${item.name}: moved cabinet`,
   },
 });
 

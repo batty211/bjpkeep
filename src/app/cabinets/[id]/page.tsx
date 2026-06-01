@@ -13,19 +13,12 @@ export default async function CabinetPage({
     where: { id },
     include: {
       room: true,
-      shelves: {
+      items: {
         include: {
-          items: {
-            include: {
-              images: true,
-            },
-            orderBy: {
-              name: "asc",
-            },
-          },
+          images: true,
         },
         orderBy: {
-          code: "asc",
+          name: "asc",
         },
       },
     },
@@ -52,34 +45,23 @@ export default async function CabinetPage({
           </div>
         </div>
 
-        {cabinet.shelves.map((shelf) => (
-          <div
-            key={shelf.id}
-            className="rounded-xl border bg-white p-4"
-          >
-            <h2 className="font-semibold">
-              📦 {shelf.code}
-            </h2>
+        <div className="space-y-3">
+          {cabinet.items.map((item) => (
+            <Link
+              key={item.id}
+              href={`/items/${item.id}`}
+              className="block rounded-xl border bg-white p-4 hover:bg-gray-50"
+            >
+              {item.name}
+            </Link>
+          ))}
 
-            <div className="mt-3 space-y-2">
-              {shelf.items.map((item) => (
-                <Link
-                  key={item.id}
-                  href={`/items/${item.id}`}
-                  className="block rounded border p-3 hover:bg-gray-50"
-                >
-                  {item.name}
-                </Link>
-              ))}
-
-              {shelf.items.length === 0 && (
-                <div className="text-sm text-gray-400">
-                  No items
-                </div>
-              )}
+          {cabinet.items.length === 0 && (
+            <div className="text-sm text-gray-400">
+              No items
             </div>
-          </div>
-        ))}
+          )}
+        </div>
       </div>
     </AppLayout>
   );

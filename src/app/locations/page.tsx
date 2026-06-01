@@ -1,23 +1,22 @@
 import AppLayout from "@/components/layout/app-layout";
 import RoomForm from "@/components/room-form";
 import CabinetForm from "@/components/cabinet-form";
-import ShelfForm from "@/components/shelf-form";
 import { prisma } from "@/lib/prisma";
 
 export default async function LocationsPage() {
   const rooms = await prisma.room.findMany({
-  include: {
-    cabinets: {
-      include: {
-        shelves: true,
+    include: {
+      cabinets: {
+        include: {
+          items: true,
+        },
       },
     },
-  },
   });
-    
-    const cabinets = rooms.flatMap(
-  (room) => room.cabinets
-);
+  
+  const cabinets = rooms.flatMap(
+    (room) => room.cabinets
+  );
 
   return (
     <AppLayout>
@@ -46,15 +45,6 @@ export default async function LocationsPage() {
                 </div>
               </details>
 
-              <details className="rounded-xl border bg-white p-4">
-                <summary className="cursor-pointer font-semibold">
-                  📦 Add Shelf
-                </summary>
-
-                <div className="mt-4">
-                  <ShelfForm cabinets={cabinets} />
-                </div>
-              </details>
 
         <div className="rounded-xl border bg-white p-4">
   <h2 className="mb-4 font-semibold">
@@ -87,9 +77,9 @@ export default async function LocationsPage() {
           </summary>
 
           <div className="mt-2 ml-4">
-            {cabinet.shelves.map((shelf) => (
-              <div key={shelf.id}>
-                📦 {shelf.code}
+            {cabinet.items.map((item) => (
+              <div key={item.id}>
+                📦 {item.name}
               </div>
             ))}
           </div>

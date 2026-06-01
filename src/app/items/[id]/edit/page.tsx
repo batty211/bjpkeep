@@ -1,5 +1,3 @@
-
-
 import AppLayout from "@/components/layout/app-layout";
 import ItemForm from "@/components/items/item-form";
 import { prisma } from "@/lib/prisma";
@@ -15,11 +13,16 @@ export default async function EditItemPage({
 }: Props) {
   const { id } = await params;
 
-  const [item, shelves] = await Promise.all([
+  const [item, cabinets] = await Promise.all([
     prisma.item.findUnique({
       where: { id },
+      select: {
+        id: true,
+        name: true,
+        cabinetId: true,
+      },
     }),
-    prisma.shelf.findMany({
+    prisma.cabinet.findMany({
       orderBy: {
         code: "asc",
       },
@@ -44,14 +47,11 @@ export default async function EditItemPage({
         </h1>
 
         <ItemForm
-          shelves={shelves}
+          cabinets={cabinets}
           initialData={{
             id: item.id,
             name: item.name,
-            quantity: item.quantity,
-            unit: item.unit,
-            category: item.category ?? "",
-            shelfId: item.shelfId,
+            cabinetId: item.cabinetId,
           }}
         />
       </div>

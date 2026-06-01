@@ -1,13 +1,32 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 
 export default function ItemSearch() {
   const [query, setQuery] = useState("");
   const [items, setItems] = useState<any[]>([]);
-  const [roomFilter, setRoomFilter] = useState("");
-  const [shelfFilter, setShelfFilter] = useState("");
+
+  useEffect(() => {
+    const trimmed = query.trim();
+
+    if (!trimmed) {
+      setItems([]);
+      return;
+    }
+
+    const timer = setTimeout(async () => {
+      const res = await fetch(
+        `/api/search?q=${encodeURIComponent(trimmed)}`
+      );
+
+      const data = await res.json();
+
+      setItems(data);
+    }, 250);
+
+    return () => clearTimeout(timer);
+  }, [query]);
 
   async function search() {
     const res = await fetch(
@@ -19,31 +38,15 @@ export default function ItemSearch() {
     setItems(data);
   }
 
-  const filteredItems = items.filter((item) => {
-    const roomMatch = roomFilter
-      ? item.shelf.cabinet.room.name
-          .toLowerCase()
-          .includes(roomFilter.toLowerCase())
-      : true;
-
-    const shelfMatch = shelfFilter
-      ? item.shelf.code
-          .toLowerCase()
-          .includes(shelfFilter.toLowerCase())
-      : true;
-
-    return roomMatch && shelfMatch;
-  });
-
   return (
     <div className="rounded-xl border bg-white p-4">
       <h2 className="mb-4 font-semibold">
         🔍 Search Items
       </h2>
 
-      <div className="flex gap-2">
+      <div className="relative">
         <input
-          className="flex-1 rounded border p-2"
+          className="w-full rounded border p-2 pr-10"
           value={query}
           onChange={(e) =>
             setQuery(e.target.value)
@@ -53,51 +56,31 @@ export default function ItemSearch() {
               search();
             }
           }}
-          placeholder="ค้นหาชื่อสินค้า หรือหมวดหมู่..."
+          placeholder="พิมพ์เพื่อค้นหาทันที..."
         />
 
-        <button
-          onClick={search}
-          className="rounded bg-black px-4 py-2 text-white"
-        >
-          Search
-        </button>
-
-        <button
-          onClick={() => {
-            setQuery("");
-            setItems([]);
-          }}
-          className="rounded border px-4 py-2"
-        >
-          Clear
-        </button>
+        {query && (
+          <button
+            type="button"
+            onClick={() => {
+              setQuery("");
+              setItems([]);
+            }}
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+          >
+            ✕
+          </button>
+        )}
       </div>
 
-      <div className="mt-3 flex gap-2">
-        <input
-          className="flex-1 rounded border p-2"
-          placeholder="Filter Room"
-          value={roomFilter}
-          onChange={(e) => setRoomFilter(e.target.value)}
-        />
-
-        <input
-          className="flex-1 rounded border p-2"
-          placeholder="Filter Shelf"
-          value={shelfFilter}
-          onChange={(e) => setShelfFilter(e.target.value)}
-        />
-      </div>
-
-      {filteredItems.length > 0 && (
+      {items.length > 0 && (
         <div className="mt-4 text-sm text-gray-500">
-          Found {filteredItems.length} item(s)
+          Found {items.length} item(s)
         </div>
       )}
 
       <div className="mt-4 space-y-2">
-        {filteredItems.map((item) => (
+        {items.map((item) => (
           <div
             key={item.id}
             className="rounded border p-3 transition hover:bg-gray-50"
@@ -112,7 +95,7 @@ export default function ItemSearch() {
                 </div>
 
                 <div className="text-sm font-medium text-blue-600">
-                  📍 {item.shelf.cabinet.room.name} &gt; {item.shelf.cabinet.code} &gt; {item.shelf.code}
+                  📍 {item.cabinet.room.name} &gt; {item.cabinet.code}
                 </div>
               </Link>
 

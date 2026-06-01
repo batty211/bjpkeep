@@ -4,13 +4,9 @@ import { NextResponse } from "next/server";
 export async function GET() {
   const items = await prisma.item.findMany({
     include: {
-      shelf: {
+      cabinet: {
         include: {
-          cabinet: {
-            include: {
-              room: true,
-            },
-          },
+          room: true,
         },
       },
     },
@@ -29,14 +25,7 @@ export async function POST(req: Request) {
   await prisma.item.create({
     data: {
       name: body.name,
-      quantity:
-        Number(body.quantity),
-      unit: body.unit,
-      category:
-        body.category,
-      shelfId:
-        body.shelfId,
-
+      cabinetId: body.cabinetId,
       images:
         body.imagePath
           ? {
@@ -71,26 +60,8 @@ export async function PUT(req: Request) {
     );
   }
 
-  if (existingItem?.quantity !== Number(body.quantity)) {
-    changes.push(
-      `Quantity: ${existingItem?.quantity ?? 0} -> ${body.quantity}`
-    );
-  }
-
-  if (existingItem?.unit !== body.unit) {
-    changes.push(
-      `Unit: ${existingItem?.unit ?? "-"} -> ${body.unit}`
-    );
-  }
-
-  if (existingItem?.category !== body.category) {
-    changes.push(
-      `Category: ${existingItem?.category ?? "-"} -> ${body.category}`
-    );
-  }
-
-  if (existingItem?.shelfId !== body.shelfId) {
-    changes.push("Shelf changed");
+  if (existingItem?.cabinetId !== body.cabinetId) {
+    changes.push("Cabinet changed");
   }
 
   const item = await prisma.item.update({
@@ -99,10 +70,7 @@ export async function PUT(req: Request) {
     },
     data: {
       name: body.name,
-      quantity: Number(body.quantity),
-      unit: body.unit,
-      category: body.category,
-      shelfId: body.shelfId,
+      cabinetId: body.cabinetId,
     },
   });
 
@@ -110,7 +78,7 @@ export async function PUT(req: Request) {
     await prisma.activityLog.create({
       data: {
         action: "UPDATE_ITEM",
-        details: changes.join(" | "),
+        details: `Item updated: ${item.name}`,
       },
     });
   }

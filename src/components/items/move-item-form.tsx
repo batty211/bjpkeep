@@ -4,14 +4,12 @@ import { useState } from "react";
 
 export default function MoveItemForm({
   itemId,
-  shelves,
+  cabinets,
 }: any) {
-  const [shelfId, setShelfId] = useState("");
+  const [cabinetId, setCabinetId] = useState("");
 
   async function move() {
-    const shelf = shelves.find(
-      (s: any) => s.id === shelfId
-    );
+    const cabinet = cabinets?.find(c => c.id === cabinetId);
 
     await fetch("/api/items/move", {
       method: "POST",
@@ -20,8 +18,7 @@ export default function MoveItemForm({
       },
       body: JSON.stringify({
         itemId,
-        shelfId,
-        shelfCode: shelf.code,
+        cabinetId,
       }),
     });
 
@@ -31,22 +28,14 @@ export default function MoveItemForm({
   return (
     <div className="flex gap-2 mt-2">
       <select
-        value={shelfId}
-        onChange={(e) =>
-          setShelfId(e.target.value)
-        }
+        value={cabinetId}
+        onChange={(e) => setCabinetId(e.target.value)}
         className="border rounded p-2"
       >
-        <option value="">
-          Move To
-        </option>
-
-        {shelves.map((s: any) => (
-          <option
-            key={s.id}
-            value={s.id}
-          >
-            {s.code}
+        <option value="">Move To Cabinet</option>
+        {cabinets?.map((c: any) => (
+          <option key={c.id} value={c.id}>
+            {c.code ?? c.name}
           </option>
         ))}
       </select>

@@ -1,6 +1,5 @@
 import AppLayout from "@/components/layout/app-layout";
 import ItemForm from "@/components/items/item-form";
-import MoveItemForm from "@/components/items/move-item-form";
 import Image from "next/image";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
@@ -24,22 +23,11 @@ export default async function InventoryPage() {
     revalidatePath("/inventory");
   }
 
-  const shelves = await prisma.shelf.findMany({
-    orderBy: {
-      code: "asc",
-    },
-  });
-    
-
 const items = await prisma.item.findMany({
   include: {
-    shelf: {
+    cabinet: {
       include: {
-        cabinet: {
-          include: {
-            room: true,
-          },
-        },
+        room: true,
       },
     },
     images: true,
@@ -48,7 +36,7 @@ const items = await prisma.item.findMany({
     name: "asc",
   },
 });
-
+const cabinets = await prisma.cabinet.findMany()
   return (
     <AppLayout>
       <div className="space-y-6">
@@ -63,7 +51,7 @@ const items = await prisma.item.findMany({
           </summary>
 
           <div className="mt-4">
-            <ItemForm shelves={shelves} />
+            <ItemForm cabinets={cabinets} />
           </div>
         </details>
 
@@ -104,11 +92,11 @@ const items = await prisma.item.findMany({
                     </div>
 
                     <div className="mt-1 text-sm font-medium text-blue-600">
-                      📍 {item.shelf.cabinet.room.name} &gt; {item.shelf.cabinet.code} &gt; {item.shelf.code}
+                      📍 {item.cabinet.room.name} &gt; {item.cabinet.code}
                     </div>
 
                     <div className="mt-1 text-sm text-gray-500">
-                      📦 {item.quantity} {item.unit}
+                      📦 Item
                     </div>
                   </div>
 
@@ -124,10 +112,6 @@ const items = await prisma.item.findMany({
                     </summary>
 
                     <div className="mt-3 space-y-3">
-                      <MoveItemForm
-                        itemId={item.id}
-                        shelves={shelves}
-                      />
 
                       <div className="flex gap-2">
                         <Link

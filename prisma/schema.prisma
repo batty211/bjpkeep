@@ -19,101 +19,80 @@ model User {
   passwordHash String
   role         UserRole @default(MEMBER)
 
-  logs         ActivityLog[]
+  logs ActivityLog[]
 
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model Room {
-  id         String @id @default(cuid())
+  id String @id @default(cuid())
 
-  name       String
-  code       String @unique
+  name String
+  code String @unique
 
-  cabinets   Cabinet[]
+  cabinets Cabinet[]
 
-  createdAt  DateTime @default(now())
+  createdAt DateTime @default(now())
 }
 
 model Cabinet {
-  id         String @id @default(cuid())
+  id String @id @default(cuid())
 
-  roomId     String
-  room       Room @relation(fields: [roomId], references: [id])
+  roomId String
+  room   Room   @relation(fields: [roomId], references: [id])
 
-  name       String
-  code       String
+  name  String
+  code  String
+  items Item[]
 
-  shelves    Shelf[]
-
-  createdAt  DateTime @default(now())
-}
-
-model Shelf {
-  id         String @id @default(cuid())
-
-  cabinetId  String
-  cabinet    Cabinet @relation(fields: [cabinetId], references: [id])
-
-  code       String
-
-  items      Item[]
-
-  createdAt  DateTime @default(now())
+  createdAt DateTime @default(now())
 }
 
 model Item {
-  id            String @id @default(cuid())
+  id String @id @default(cuid())
 
-  name          String
-  category      String?
+  name String
 
-  quantity      Int @default(1)
-  unit          String?
+  image String?
 
-  buyer         String?
+  cabinetId String
 
-  purchaseDate  DateTime?
+  cabinet Cabinet     @relation(fields: [cabinetId], references: [id])
+  images  ItemImage[]
 
-  notes         String?
-
-  shelfId       String
-  shelf         Shelf @relation(fields: [shelfId], references: [id])
-
-  images        ItemImage[]
   activityLogs ActivityLog[]
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+
+  createdAt DateTime @default(now())
+
+  updatedAt DateTime @updatedAt
 }
 
 model ItemImage {
-  id        String @id @default(cuid())
+  id String @id @default(cuid())
 
-  itemId    String
-  item      Item @relation(fields: [itemId], references: [id])
+  itemId String
+  item   Item   @relation(fields: [itemId], references: [id])
 
-  path      String
+  path String
 
   createdAt DateTime @default(now())
 }
 
 model ActivityLog {
+  id String @id @default(cuid())
 
-  id        String @id @default(cuid())
+  userId String?
 
-  userId    String?
+  user User? @relation(fields: [userId], references: [id])
 
-  user      User? @relation(fields: [userId], references: [id])
+  itemId String?
 
-  itemId    String?
+  item Item? @relation(fields: [itemId], references: [id])
 
-  item      Item? @relation(fields: [itemId], references: [id])
+  action String
 
-  action    String
-
-  details   String?
+  details String?
 
   createdAt DateTime @default(now())
-
 }

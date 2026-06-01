@@ -15,20 +15,14 @@ export async function GET(req: Request) {
           },
         },
         {
-          category: {
-            contains: q,
-          },
+          
         },
       ],
     },
     include: {
-      shelf: {
+      cabinet: {
         include: {
-          cabinet: {
-            include: {
-              room: true,
-            },
-          },
+          room: true,
         },
       },
     },
