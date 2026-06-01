@@ -1,5 +1,6 @@
 import AppLayout from "@/components/layout/app-layout";
 import { prisma } from "@/lib/prisma";
+import ItemSearch from "@/components/search/item-search";
 
 export default async function Home() {
   const [
@@ -30,6 +31,7 @@ export default async function Home() {
         <h1 className="text-3xl font-bold">
           BJP Keep Dashboard
         </h1>
+        <ItemSearch />
 
         <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
           <div className="rounded-xl border bg-white p-4">

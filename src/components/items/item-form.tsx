@@ -9,18 +9,29 @@ type Shelf = {
 
 export default function ItemForm({
   shelves,
+  initialData,
 }: {
   shelves: Shelf[];
+  initialData?: {
+    id?: string;
+    name: string;
+    quantity: number;
+    unit: string;
+    category: string;
+    shelfId: string;
+  };
 }) {
-  const [name, setName] = useState("");
-  const [quantity, setQuantity] = useState(1);
-  const [unit, setUnit] = useState("");
-  const [category, setCategory] = useState("");
-  const [shelfId, setShelfId] = useState("");
+  const [name, setName] = useState(initialData?.name ?? "");
+  const [quantity, setQuantity] = useState(initialData?.quantity ?? 1);
+  const [unit, setUnit] = useState(initialData?.unit ?? "");
+  const [category, setCategory] = useState(initialData?.category ?? "");
+  const [shelfId, setShelfId] = useState(initialData?.shelfId ?? "");
   const [file, setFile] =
   useState<File | null>(null);
+  const [saving, setSaving] = useState(false);
 
   async function save() {
+    setSaving(true);
     let imagePath = "";
 
 if (file) {
@@ -43,12 +54,15 @@ if (file) {
   imagePath =
     uploaded.path;
 }
-    await fetch("/api/items", {
-      method: "POST",
+    const method = initialData?.id ? "PUT" : "POST";
+
+    const response = await fetch("/api/items", {
+      method,
       headers: {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
+        id: initialData?.id,
         name,
         quantity,
         unit,
@@ -58,6 +72,19 @@ if (file) {
       }),
     });
 
+    setSaving(false);
+
+    if (!response.ok) {
+      alert("Failed to save item");
+      return;
+    }
+
+    if (initialData?.id) {
+      window.location.href = `/items/${initialData.id}`;
+      return;
+    }
+
+    alert("Item created successfully");
     location.reload();
   }
 
@@ -126,9 +153,14 @@ if (file) {
 />
       <button
         onClick={save}
-        className="rounded bg-black px-4 py-2 text-white"
+        disabled={saving}
+        className="rounded bg-black px-4 py-2 text-white disabled:opacity-50"
       >
-        Save
+        {saving
+          ? "Saving..."
+          : initialData
+            ? "Save Changes"
+            : "Save"}
       </button>
     </div>
   );

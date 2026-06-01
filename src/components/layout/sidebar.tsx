@@ -11,45 +11,72 @@ const menu = [
 ];
 
 export default function Sidebar() {
-  return (
-    <aside className="w-64 border-r bg-white">
-      <div className="p-6">
-        <h1 className="text-xl font-bold">
-          BJP Keep
-        </h1>
+  async function handleLogout() {
+    await fetch('/api/auth/logout', {
+      method: 'POST',
+    });
 
-        <p className="text-sm text-gray-500">
-          Store • Track • Find
-        </p>
+    window.location.href = '/login';
+  }
+
+  return (
+    <>
+      <div className="fixed left-0 right-0 top-0 z-50 border-b bg-white lg:hidden">
+        <details>
+          <summary className="cursor-pointer list-none p-4 font-semibold">
+            ☰ BJP Keep
+          </summary>
+
+          <div className="space-y-1 border-t p-2">
+            {menu.map((item) => (
+              <Link
+                key={item.href}
+                href={item.href}
+                className="block rounded px-3 py-2 hover:bg-gray-100"
+              >
+                {item.name}
+              </Link>
+            ))}
+
+            <button
+              onClick={handleLogout}
+              className="mt-2 w-full rounded border px-3 py-2 text-left"
+            >
+              Logout
+            </button>
+          </div>
+        </details>
       </div>
 
-      <nav className="space-y-1 px-3">
-        {menu.map((item) => (
-          <Link
-            key={item.href}
-            href={item.href}
-            className="block rounded-lg px-4 py-2 hover:bg-gray-100"
-          >
-            {item.name}
-          </Link>
-        ))}
-        <button
-  onClick={async () => {
-    await fetch(
-      "/api/auth/logout",
-      {
-        method: "POST",
-      }
-    );
+      <aside className="hidden w-64 border-r bg-white lg:block">
+        <div className="p-6">
+          <h1 className="text-xl font-bold">
+            BJP Keep
+          </h1>
 
-    window.location.href =
-      "/login";
-  }}
-  className="mt-6 w-full rounded-lg border px-4 py-2"
->
-  Logout
-</button>
-      </nav>
-    </aside>
+          <p className="text-sm text-gray-500">
+            Store • Track • Find
+          </p>
+        </div>
+
+        <nav className="space-y-1 px-3">
+          {menu.map((item) => (
+            <Link
+              key={item.href}
+              href={item.href}
+              className="block rounded-lg px-4 py-2 hover:bg-gray-100"
+            >
+              {item.name}
+            </Link>
+          ))}
+          <button
+            onClick={handleLogout}
+            className="mt-6 w-full rounded-lg border px-4 py-2"
+          >
+            Logout
+          </button>
+        </nav>
+      </aside>
+    </>
   );
 }

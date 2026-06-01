@@ -82,7 +82,7 @@ model Item {
   shelf         Shelf @relation(fields: [shelfId], references: [id])
 
   images        ItemImage[]
-
+  activityLogs ActivityLog[]
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 }
@@ -99,14 +99,21 @@ model ItemImage {
 }
 
 model ActivityLog {
+
   id        String @id @default(cuid())
 
   userId    String?
+
   user      User? @relation(fields: [userId], references: [id])
+
+  itemId    String?
+
+  item      Item? @relation(fields: [itemId], references: [id])
 
   action    String
 
   details   String?
 
   createdAt DateTime @default(now())
+
 }

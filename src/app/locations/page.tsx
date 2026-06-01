@@ -26,9 +26,35 @@ export default async function LocationsPage() {
           Locations
         </h1>
 
-              <RoomForm />
-              <CabinetForm rooms={rooms} />
-              <ShelfForm cabinets={cabinets} />
+              <details className="rounded-xl border bg-white p-4">
+                <summary className="cursor-pointer font-semibold">
+                  ➕ Add Room
+                </summary>
+
+                <div className="mt-4">
+                  <RoomForm />
+                </div>
+              </details>
+
+              <details className="rounded-xl border bg-white p-4">
+                <summary className="cursor-pointer font-semibold">
+                  🗄️ Add Cabinet
+                </summary>
+
+                <div className="mt-4">
+                  <CabinetForm rooms={rooms} />
+                </div>
+              </details>
+
+              <details className="rounded-xl border bg-white p-4">
+                <summary className="cursor-pointer font-semibold">
+                  📦 Add Shelf
+                </summary>
+
+                <div className="mt-4">
+                  <ShelfForm cabinets={cabinets} />
+                </div>
+              </details>
 
         <div className="rounded-xl border bg-white p-4">
   <h2 className="mb-4 font-semibold">
@@ -36,40 +62,42 @@ export default async function LocationsPage() {
   </h2>
 
   {rooms.map((room) => (
-    <div
-      key={room.id}
-      className="mb-4 rounded border p-4"
-    >
+  <details
+    key={room.id}
+    className="mb-4 rounded border p-4"
+  >
+    <summary className="cursor-pointer list-none">
       <div className="font-bold">
-        {room.name}
+        🏠 {room.name}
       </div>
 
       <div className="text-sm text-gray-500">
-        {room.code}
+        {room.code} • {room.cabinets.length} cabinet(s)
       </div>
+    </summary>
 
-      <div className="mt-3 ml-4">
-  {room.cabinets.map((cabinet) => (
-    <div
-      key={cabinet.id}
-      className="mb-2"
-    >
-      <div>
-        🗄️ {cabinet.name} ({cabinet.code})
-      </div>
+    <div className="mt-3 ml-4">
+      {room.cabinets.map((cabinet) => (
+        <details
+          key={cabinet.id}
+          className="mb-2 rounded border p-2"
+        >
+          <summary className="cursor-pointer">
+            🗄️ {cabinet.name} ({cabinet.code})
+          </summary>
 
-      <div className="ml-6">
-        {cabinet.shelves.map((shelf) => (
-          <div key={shelf.id}>
-            📦 {shelf.code}
+          <div className="mt-2 ml-4">
+            {cabinet.shelves.map((shelf) => (
+              <div key={shelf.id}>
+                📦 {shelf.code}
+              </div>
+            ))}
           </div>
-        ))}
-      </div>
+        </details>
+      ))}
     </div>
-  ))}
-</div>
-    </div>
-  ))}
+  </details>
+))}
 </div>
       </div>
     </AppLayout>
