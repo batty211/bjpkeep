@@ -1,0 +1,110 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  ADMIN
+  MEMBER
+  VIEWER
+}
+
+model User {
+  id           String   @id @default(cuid())
+  username     String   @unique
+  passwordHash String
+  role         UserRole @default(MEMBER)
+
+  logs         ActivityLog[]
+
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model Room {
+  id         String @id @default(cuid())
+
+  name       String
+  code       String @unique
+
+  cabinets   Cabinet[]
+
+  createdAt  DateTime @default(now())
+}
+
+model Cabinet {
+  id         String @id @default(cuid())
+
+  roomId     String
+  room       Room @relation(fields: [roomId], references: [id])
+
+  name       String
+  code       String
+
+  shelves    Shelf[]
+
+  createdAt  DateTime @default(now())
+}
+
+model Shelf {
+  id         String @id @default(cuid())
+
+  cabinetId  String
+  cabinet    Cabinet @relation(fields: [cabinetId], references: [id])
+
+  code       String
+
+  items      Item[]
+
+  createdAt  DateTime @default(now())
+}
+
+model Item {
+  id            String @id @default(cuid())
+
+  name          String
+  category      String?
+
+  quantity      Int @default(1)
+  unit          String?
+
+  buyer         String?
+
+  purchaseDate  DateTime?
+
+  notes         String?
+
+  shelfId       String
+  shelf         Shelf @relation(fields: [shelfId], references: [id])
+
+  images        ItemImage[]
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model ItemImage {
+  id        String @id @default(cuid())
+
+  itemId    String
+  item      Item @relation(fields: [itemId], references: [id])
+
+  path      String
+
+  createdAt DateTime @default(now())
+}
+
+model ActivityLog {
+  id        String @id @default(cuid())
+
+  userId    String
+  user      User @relation(fields: [userId], references: [id])
+
+  action    String
+
+  createdAt DateTime @default(now())
+}
