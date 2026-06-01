@@ -1,3 +1,4 @@
+"use client";
 import Link from "next/link";
 
 const menu = [
@@ -32,6 +33,22 @@ export default function Sidebar() {
             {item.name}
           </Link>
         ))}
+        <button
+  onClick={async () => {
+    await fetch(
+      "/api/auth/logout",
+      {
+        method: "POST",
+      }
+    );
+
+    window.location.href =
+      "/login";
+  }}
+  className="mt-6 w-full rounded-lg border px-4 py-2"
+>
+  Logout
+</button>
       </nav>
     </aside>
   );
