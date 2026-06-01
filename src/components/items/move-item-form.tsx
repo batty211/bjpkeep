@@ -9,7 +9,9 @@ export default function MoveItemForm({
   const [cabinetId, setCabinetId] = useState("");
 
   async function move() {
-    const cabinet = cabinets?.find(c => c.id === cabinetId);
+    if (!cabinetId) {
+      return;
+    }
 
     await fetch("/api/items/move", {
       method: "POST",
@@ -42,7 +44,8 @@ export default function MoveItemForm({
 
       <button
         onClick={move}
-        className="bg-blue-500 text-white px-3 py-2 rounded"
+        disabled={!cabinetId}
+        className="bg-blue-500 text-white px-3 py-2 rounded disabled:opacity-50"
       >
         Move
       </button>

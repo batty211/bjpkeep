@@ -1,12 +1,19 @@
 import AppLayout from "@/components/layout/app-layout";
 import ItemForm from "@/components/items/item-form";
+import MoveItemForm from "@/components/items/move-item-form";
 import Image from "next/image";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import ItemSearch from "@/components/search/item-search";
 
-export default async function InventoryPage() {
+export default async function InventoryPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ cabinetId?: string }>;
+}) {
+  const { cabinetId } = await searchParams;
+
   async function deleteItem(formData: FormData) {
     "use server";
 
@@ -47,11 +54,14 @@ const cabinets = await prisma.cabinet.findMany()
 
         <details className="rounded-xl border bg-white p-4">
           <summary className="cursor-pointer font-semibold">
-            ➕ Add Item
+            {cabinetId ? "➕ Add Item to Selected Cabinet" : "➕ Add Item"}
           </summary>
 
           <div className="mt-4">
-            <ItemForm cabinets={cabinets} />
+            <ItemForm
+              cabinets={cabinets}
+              cabinetId={cabinetId}
+            />
           </div>
         </details>
 
@@ -112,6 +122,19 @@ const cabinets = await prisma.cabinet.findMany()
                     </summary>
 
                     <div className="mt-3 space-y-3">
+
+                      <details>
+                        <summary className="cursor-pointer rounded border px-3 py-2 text-center text-sm list-none">
+                          📦 Move Item
+                        </summary>
+
+                        <div className="mt-3">
+                          <MoveItemForm
+                            itemId={item.id}
+                            cabinets={cabinets}
+                          />
+                        </div>
+                      </details>
 
                       <div className="flex gap-2">
                         <Link

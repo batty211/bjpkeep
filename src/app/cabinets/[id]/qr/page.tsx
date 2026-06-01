@@ -60,8 +60,8 @@ export default async function CabinetQrPage({
           className="mx-auto"
         />
 
-        <Link
-          href={`/items/new?cabinetId=${cabinet.id}`}
+      <Link
+          href={`/inventory?cabinetId=${cabinet.id}`}
           className="mt-4 inline-block rounded border px-4 py-2"
         >
           ➕ Add Item in this Cabinet

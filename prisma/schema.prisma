@@ -19,8 +19,6 @@ model User {
   passwordHash String
   role         UserRole @default(MEMBER)
 
-  logs ActivityLog[]
-
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
@@ -80,19 +78,19 @@ model ItemImage {
 }
 
 model ActivityLog {
+
   id String @id @default(cuid())
 
-  userId String?
+  actorName String?
 
-  user User? @relation(fields: [userId], references: [id])
+  itemId     String?
 
-  itemId String?
-
-  item Item? @relation(fields: [itemId], references: [id])
+  item       Item? @relation(fields: [itemId], references: [id])
 
   action String
 
   details String?
 
   createdAt DateTime @default(now())
+
 }

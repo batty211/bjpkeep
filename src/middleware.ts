@@ -1,59 +1,42 @@
-import { jwtVerify } from "jose";
 import { NextRequest, NextResponse } from "next/server";
-
-const secret = new TextEncoder().encode(
-  process.env.JWT_SECRET
-);
 
 export async function middleware(
   req: NextRequest
 ) {
-  const token =
-    req.cookies.get(
-      "bjpkeep-token"
-    )?.value;
+  const userName = req.cookies.get(
+    "bjpkeep-user"
+  )?.value;
 
   const isLoginPage =
     req.nextUrl.pathname === "/login";
 
-  if (!token) {
-    if (isLoginPage) {
-      return NextResponse.next();
-    }
+  const pathname = req.nextUrl.pathname;
 
-    return NextResponse.redirect(
-      new URL("/login", req.url)
-    );
-  }
-
-  try {
-    await jwtVerify(
-      token,
-      secret
-    );
-
-    if (isLoginPage) {
-      return NextResponse.redirect(
-        new URL("/", req.url)
-      );
-    }
-
+  if (
+    pathname.startsWith("/_next") ||
+    pathname.startsWith("/api") ||
+    pathname === "/favicon.ico"
+  ) {
     return NextResponse.next();
-  } catch {
+  }
+
+  if (!userName && !isLoginPage) {
     return NextResponse.redirect(
       new URL("/login", req.url)
     );
   }
+
+  if (userName && isLoginPage) {
+    return NextResponse.redirect(
+      new URL("/", req.url)
+    );
+  }
+
+  return NextResponse.next();
 }
 
 export const config = {
   matcher: [
-    "/",
-    "/inventory/:path*",
-    "/locations/:path*",
-    "/assets/:path*",
-    "/activity/:path*",
-    "/settings/:path*",
-    "/login",
+    "/((?!_next/static|_next/image|favicon.ico).*)",
   ],
 };

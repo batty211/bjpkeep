@@ -5,6 +5,7 @@ import { useState } from "react";
 type Room = {
   id: string;
   name: string;
+  code?: string;
 };
 
 export default function CabinetForm({
@@ -15,6 +16,14 @@ export default function CabinetForm({
   const [roomId, setRoomId] = useState("");
   const [name, setName] = useState("");
   const [code, setCode] = useState("");
+
+  const selectedRoom = rooms.find(
+    (room) => room.id === roomId
+  );
+
+  const generatedPreview = selectedRoom?.code
+    ? `${selectedRoom.code}-CXX`
+    : "Select a room first";
 
   async function save() {
     await fetch("/api/cabinets", {
@@ -61,10 +70,20 @@ export default function CabinetForm({
 
       <input
         className="mb-2 w-full rounded border p-2"
-        placeholder="Code"
+        placeholder="Leave blank for auto-generated code"
         value={code}
         onChange={(e) => setCode(e.target.value)}
       />
+
+      <p className="mb-1 text-sm text-gray-500">
+        Leave blank to auto-generate from the selected room.
+      </p>
+
+      {!code && (
+        <p className="mb-2 text-sm text-blue-600">
+          Generated code: {generatedPreview}
+        </p>
+      )}
 
       <button
         onClick={save}

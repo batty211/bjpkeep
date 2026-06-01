@@ -4,9 +4,6 @@ import { prisma } from "@/lib/prisma";
 export default async function Page() {
 const logs =
   await prisma.activityLog.findMany({
-    include: {
-      user: true,
-    },
     orderBy: {
       createdAt: "desc",
     },
@@ -25,14 +22,7 @@ const logs =
             className="border rounded p-3 bg-white"
           >
             <div className="font-medium">
-              {log.action}
-              <div className="text-sm font-medium text-blue-600">
-
-  {log.user?.username ??
-
-    "Unknown"}
-
-</div>
+              {log.actorName ?? "Unknown"} → {log.action}
             </div>
 
             <div>

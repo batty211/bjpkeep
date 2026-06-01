@@ -1,29 +1,16 @@
 import { cookies } from "next/headers";
-import { jwtVerify } from "jose";
-
-const secret = new TextEncoder().encode(
-  process.env.JWT_SECRET
-);
 
 export async function getCurrentUser() {
-  const token =
+  const userName =
     (await cookies()).get(
-      "bjpkeep-token"
+      "bjpkeep-user"
     )?.value;
 
-  if (!token) {
+  if (!userName) {
     return null;
   }
 
-  try {
-    const { payload } =
-      await jwtVerify(
-        token,
-        secret
-      );
-
-    return payload;
-  } catch {
-    return null;
-  }
+  return {
+    name: userName,
+  };
 }

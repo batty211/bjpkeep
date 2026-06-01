@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
+import { cookies } from "next/headers";
 
 export async function GET() {
   const items = await prisma.item.findMany({
@@ -45,6 +46,10 @@ export async function POST(req: Request) {
 
 export async function PUT(req: Request) {
   const body = await req.json();
+  const actorName =
+    (await cookies()).get(
+      "bjpkeep-user"
+    )?.value;
 
   const existingItem = await prisma.item.findUnique({
     where: {
@@ -78,7 +83,8 @@ export async function PUT(req: Request) {
     await prisma.activityLog.create({
       data: {
         action: "UPDATE_ITEM",
-        details: `Item updated: ${item.name}`,
+        actorName,
+        details: changes.join(" | "),
       },
     });
   }

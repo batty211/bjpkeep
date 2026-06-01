@@ -16,7 +16,7 @@ export default function ItemForm({
 }) {
   const [name, setName] = useState(initialData?.name ?? "");
   const [cabinetIdState, setCabinetIdState] = useState(
-    initialData?.cabinetId ?? ""
+    cabinetId ?? initialData?.cabinetId ?? ""
   );
   const isFromQR = !!cabinetId;
   const [file, setFile] =
@@ -91,11 +91,17 @@ if (file) {
         onChange={(e) => setName(e.target.value)}
       />
 
+      {isFromQR && (
+        <div className="mb-2 rounded border bg-gray-50 p-2 text-sm">
+          Cabinet: {cabinets.find((c) => c.id === cabinetId)?.code ?? "Selected Cabinet"}
+        </div>
+      )}
+
+      {!isFromQR && (
       <select
         className="mb-2 w-full rounded border p-2"
         value={cabinetIdState}
         onChange={(e) => setCabinetIdState(e.target.value)}
-        disabled={isFromQR}
       >
         <option value="">Select Cabinet</option>
         {cabinets.map((c) => (
@@ -104,6 +110,7 @@ if (file) {
           </option>
         ))}
       </select>
+      )}
 
 <input
   type="file"

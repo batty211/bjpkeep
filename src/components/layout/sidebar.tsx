@@ -11,13 +11,7 @@ const menu = [
 ];
 
 export default function Sidebar() {
-  async function handleLogout() {
-    await fetch('/api/auth/logout', {
-      method: 'POST',
-    });
-
-    window.location.href = '/login';
-  }
+  
 
   return (
     <>
@@ -38,12 +32,7 @@ export default function Sidebar() {
               </Link>
             ))}
 
-            <button
-              onClick={handleLogout}
-              className="mt-2 w-full rounded border px-3 py-2 text-left"
-            >
-              Logout
-            </button>
+
           </div>
         </details>
       </div>
@@ -69,12 +58,7 @@ export default function Sidebar() {
               {item.name}
             </Link>
           ))}
-          <button
-            onClick={handleLogout}
-            className="mt-6 w-full rounded-lg border px-4 py-2"
-          >
-            Logout
-          </button>
+       
         </nav>
       </aside>
     </>

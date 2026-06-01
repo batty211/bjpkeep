@@ -1,11 +1,22 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import MoveItemForm from "@/components/items/move-item-form";
 import Link from "next/link";
 
 export default function ItemSearch() {
   const [query, setQuery] = useState("");
   const [items, setItems] = useState<any[]>([]);
+  const [cabinets, setCabinets] = useState<any[]>([]);
+  useEffect(() => {
+    async function loadCabinets() {
+      const res = await fetch("/api/cabinets");
+      const data = await res.json();
+      setCabinets(data);
+    }
+
+    loadCabinets();
+  }, []);
 
   useEffect(() => {
     const trimmed = query.trim();
@@ -95,16 +106,29 @@ export default function ItemSearch() {
                 </div>
 
                 <div className="text-sm font-medium text-blue-600">
-                  📍 {item.cabinet.room.name} &gt; {item.cabinet.code}
+                  📍 {item.cabinet.room.name} → {item.cabinet.name} ({item.cabinet.code})
                 </div>
               </Link>
 
-              <Link
-                href={`/items/${item.id}/edit`}
-                className="rounded border px-3 py-1 text-sm"
-              >
-                ✏️ Edit
-              </Link>
+              <div className="relative flex gap-2">
+                <details>
+                  <summary className="cursor-pointer rounded border px-3 py-1 text-sm list-none">
+                    📦 Move
+                  </summary>
+                  <div className="absolute right-0 z-10 mt-2 w-80 rounded border bg-white p-3 shadow-lg">
+                    <MoveItemForm
+                      itemId={item.id}
+                      cabinets={cabinets}
+                    />
+                  </div>
+                </details>
+                <Link
+                  href={`/items/${item.id}/edit`}
+                  className="rounded border px-3 py-1 text-sm"
+                >
+                  ✏️ Edit
+                </Link>
+              </div>
             </div>
           </div>
         ))}
