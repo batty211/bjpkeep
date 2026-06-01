@@ -1,5 +1,6 @@
 import AppLayout from "@/components/layout/app-layout";
 import ItemForm from "@/components/items/item-form";
+import MoveItemForm from "@/components/items/move-item-form";
 import { prisma } from "@/lib/prisma";
 
 export default async function InventoryPage() {
@@ -8,6 +9,7 @@ export default async function InventoryPage() {
       code: "asc",
     },
   });
+    
 
   const items = await prisma.item.findMany({
     include: {
@@ -42,7 +44,11 @@ export default async function InventoryPage() {
               </div>
 
               <div className="text-sm text-gray-500">
-                {item.quantity} {item.unit}
+                      {item.quantity} {item.unit}
+                      <MoveItemForm
+  itemId={item.id}
+  shelves={shelves}
+/>
               </div>
 
               <div className="text-sm text-gray-500">
