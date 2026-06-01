@@ -2,7 +2,11 @@ import AppLayout from "@/components/layout/app-layout";
 import { prisma } from "@/lib/prisma";
 
 export default async function Page() {
-  const logs = await prisma.activityLog.findMany({
+const logs =
+  await prisma.activityLog.findMany({
+    include: {
+      user: true,
+    },
     orderBy: {
       createdAt: "desc",
     },
@@ -22,6 +26,13 @@ export default async function Page() {
           >
             <div className="font-medium">
               {log.action}
+              <div className="text-sm font-medium text-blue-600">
+
+  {log.user?.username ??
+
+    "Unknown"}
+
+</div>
             </div>
 
             <div>
