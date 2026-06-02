@@ -3,6 +3,8 @@ import Link from "next/link";
 import AppLayout from "@/components/layout/app-layout";
 import UploadImageForm from "@/components/items/upload-image-form";
 import MoveItemForm from "@/components/items/move-item-form";
+import DeleteImageButton from "@/components/items/delete-image-button";
+import ImageGallery from "@/components/items/image-gallery";
 import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
 
@@ -103,46 +105,19 @@ export default async function ItemDetailPage({ params }: Props) {
 
         <div className="rounded-xl border border-[var(--border-color)] bg-[var(--bg-card)] p-6">
           {item.images.length > 0 && (
-            <>
-              <Image
-                src={item.images[0].path}
-                alt={item.name}
-                width={800}
-                height={800}
-                className="mb-4 max-h-[500px] w-full rounded-lg object-contain"
-                unoptimized
-              />
-
-              {item.images.length > 1 && (
-                <div className="mb-6 grid grid-cols-2 gap-2 md:grid-cols-4">
-                  {item.images.map((image) => (
-                    <Image
-                      key={image.id}
-                      src={image.path}
-                      alt={item.name}
-                      width={200}
-                      height={200}
-                      className="h-28 w-full rounded border border-[var(--border-color)] object-cover"
-                      unoptimized
-                    />
-                  ))}
-                </div>
-              )}
-            </>
+            <ImageGallery
+              itemName={item.name}
+              images={item.images.map((image) => ({
+                id: image.id,
+                path: image.path,
+              }))}
+            />
           )}
 
           <div className="grid gap-4 md:grid-cols-2">
             <div>
               <div className="text-sm text-[var(--text-secondary)]">Name</div>
               <div className="font-medium">{item.name}</div>
-            </div>
-
-            <div>
-              <div className="text-sm text-[var(--text-secondary)]">Category</div>
-            </div>
-
-            <div>
-              <div className="text-sm text-[var(--text-secondary)]">Quantity</div>
             </div>
 
             <div>

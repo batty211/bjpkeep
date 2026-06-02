@@ -17,15 +17,15 @@ export default function ItemForm({
   const [name, setName] = useState(initialData?.name ?? "");
   const [cabinetIdState, setCabinetIdState] = useState(cabinetId ?? initialData?.cabinetId ?? "");
   const isFromQR = !!cabinetId;
-  const [file, setFile] = useState<File | null>(null);
+  const [files, setFiles] = useState<File[]>([]);
   const [fileName, setFileName] = useState("");
   const [saving, setSaving] = useState(false);
 
   async function save() {
     setSaving(true);
-    let imagePath = "";
+    const imagePaths: string[] = [];
 
-    if (file) {
+    for (const file of files) {
       const fd = new FormData();
 
       fd.append("file", file);
@@ -37,7 +37,7 @@ export default function ItemForm({
 
       const uploaded = await upload.json();
 
-      imagePath = uploaded.path;
+      imagePaths.push(uploaded.path);
     }
     const method = initialData?.id ? "PUT" : "POST";
 
@@ -50,7 +50,7 @@ export default function ItemForm({
         id: initialData?.id,
         name,
         cabinetId: cabinetIdState,
-        imagePath,
+        imagePath: imagePaths[0] ?? "",
       }),
     });
 
@@ -59,6 +59,23 @@ export default function ItemForm({
     if (!response.ok) {
       alert("Failed to save item");
       return;
+    }
+
+    if (!initialData?.id && imagePaths.length > 1) {
+      const createdItem = await response.json();
+
+      for (let i = 1; i < imagePaths.length; i++) {
+        await fetch("/api/items/add-image", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            itemId: createdItem.id,
+            path: imagePaths[i],
+          }),
+        });
+      }
     }
 
     if (initialData?.id) {
@@ -117,11 +134,12 @@ export default function ItemForm({
           <input
             type="file"
             accept="image/*"
+            multiple
             className="hidden"
             onChange={(e) => {
-              const selected = e.target.files?.[0] ?? null;
-              setFile(selected);
-              setFileName(selected?.name ?? "");
+              const selected = Array.from(e.target.files ?? []);
+              setFiles(selected);
+              setFileName(selected.length > 0 ? `${selected.length} image(s) selected` : "");
             }}
           />
         </label>

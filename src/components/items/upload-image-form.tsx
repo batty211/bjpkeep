@@ -3,39 +3,41 @@
 import { useState } from "react";
 
 export default function UploadImageForm({ itemId }: { itemId: string }) {
-  const [file, setFile] = useState<File | null>(null);
+  const [files, setFiles] = useState<File[]>([]);
   const [fileName, setFileName] = useState("");
   const [loading, setLoading] = useState(false);
 
   async function uploadImage() {
-    if (!file) {
-      alert("Please select an image");
+    if (files.length === 0) {
+      alert("Please select at least one image");
       return;
     }
 
     setLoading(true);
 
     try {
-      const fd = new FormData();
-      fd.append("file", file);
+      for (const file of files) {
+        const fd = new FormData();
+        fd.append("file", file);
 
-      const uploadRes = await fetch("/api/upload", {
-        method: "POST",
-        body: fd,
-      });
+        const uploadRes = await fetch("/api/upload", {
+          method: "POST",
+          body: fd,
+        });
 
-      const uploaded = await uploadRes.json();
+        const uploaded = await uploadRes.json();
 
-      await fetch("/api/items/add-image", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          itemId,
-          path: uploaded.path,
-        }),
-      });
+        await fetch("/api/items/add-image", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            itemId,
+            path: uploaded.path,
+          }),
+        });
+      }
 
       location.reload();
     } finally {
@@ -60,11 +62,12 @@ export default function UploadImageForm({ itemId }: { itemId: string }) {
           <input
             type="file"
             accept="image/*"
+            multiple
             className="hidden"
             onChange={(e) => {
-              const selected = e.target.files?.[0] ?? null;
-              setFile(selected);
-              setFileName(selected?.name ?? "");
+              const selected = Array.from(e.target.files ?? []);
+              setFiles(selected);
+              setFileName(selected.length > 0 ? `${selected.length} image(s) selected` : "");
             }}
           />
         </label>
@@ -75,7 +78,7 @@ export default function UploadImageForm({ itemId }: { itemId: string }) {
         disabled={loading}
         className="rounded bg-black px-4 py-2 text-white disabled:opacity-50"
       >
-        {loading ? "Uploading..." : "Upload Image"}
+        {loading ? "Uploading..." : "Upload Images"}
       </button>
     </div>
   );
