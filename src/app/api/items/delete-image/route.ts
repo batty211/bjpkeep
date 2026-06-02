@@ -3,6 +3,8 @@ import { NextResponse } from "next/server";
 import fs from "node:fs/promises";
 import path from "node:path";
 
+const UPLOAD_DIR = process.env.UPLOAD_DIR ?? path.join(process.cwd(), "public/uploads/items");
+
 export async function POST(req: Request) {
   const { imageId } = await req.json();
 
@@ -17,7 +19,7 @@ export async function POST(req: Request) {
   }
 
   if (image.path?.startsWith("/uploads/")) {
-    const filePath = path.join(process.cwd(), "public", image.path);
+    const filePath = path.join(UPLOAD_DIR, path.basename(image.path));
 
     try {
       await fs.unlink(filePath);
