@@ -1,6 +1,6 @@
 # BJP Keep
 
-BJP Keep is a simple home inventory management system designed to help track where items are stored around the house.
+BJP Keep is a simple home inventory management system designed to help track where items are stored around the house.:)
 
 Features include:
 
