@@ -5,9 +5,7 @@ const menu = [
   { name: "Dashboard", href: "/" },
   { name: "Inventory", href: "/inventory" },
   { name: "Locations", href: "/locations" },
-  { name: "Assets", href: "/assets" },
   { name: "Activity", href: "/activity" },
-  { name: "Settings", href: "/settings" },
 ];
 
 export default function Sidebar() {
