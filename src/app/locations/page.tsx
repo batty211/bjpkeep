@@ -3,7 +3,7 @@ import RoomForm from "@/components/room-form";
 import CabinetForm from "@/components/cabinet-form";
 import { prisma } from "@/lib/prisma";
 import Link from "next/link";
-
+export const dynamic = "force-dynamic";
 export default async function LocationsPage() {
   const rooms = await prisma.room.findMany({
     include: {

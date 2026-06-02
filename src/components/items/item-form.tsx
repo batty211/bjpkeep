@@ -12,6 +12,7 @@ export default function ItemForm({
   initialData?: {
     id?: string;
     name: string;
+    cabinetId?: string;
   };
 }) {
   const [name, setName] = useState(initialData?.name ?? "");
