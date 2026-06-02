@@ -87,7 +87,14 @@ export default async function InventoryPage({
 
   const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
   const queryString = q ? `&q=${encodeURIComponent(q)}` : "";
-  const cabinets = await prisma.cabinet.findMany();
+  const cabinets = await prisma.cabinet.findMany({
+    include: {
+      room: true,
+    },
+    orderBy: {
+      name: "asc",
+    },
+  });
   return (
     <AppLayout>
       <div className="space-y-6">

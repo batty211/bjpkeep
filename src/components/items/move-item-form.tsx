@@ -34,7 +34,7 @@ export default function MoveItemForm({ itemId, cabinets }: any) {
         <option value="">Move To Cabinet</option>
         {cabinets?.map((c: any) => (
           <option key={c.id} value={c.id}>
-            {c.code ?? c.name}
+            {[c.room?.name, c.code, c.name].filter(Boolean).join(" > ")}
           </option>
         ))}
       </select>

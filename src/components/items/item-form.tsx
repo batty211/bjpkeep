@@ -8,7 +8,14 @@ export default function ItemForm({
   cabinets,
 }: {
   cabinetId?: string;
-  cabinets: { id: string; name?: string; code?: string }[];
+  cabinets: {
+    id: string;
+    name?: string;
+    code?: string;
+    room?: {
+      name: string;
+    };
+  }[];
   initialData?: {
     id?: string;
     name: string;
@@ -87,7 +94,6 @@ export default function ItemForm({
     alert("Item created successfully");
     location.reload();
   }
-
   return (
     <div className="rounded-xl border border-[var(--border-color)] bg-[var(--bg-card)] p-4">
       <h2 className="mb-4 font-semibold">Add Item</h2>
@@ -101,7 +107,13 @@ export default function ItemForm({
 
       {isFromQR && (
         <div className="mb-2 rounded border border-[var(--border-color)] bg-[var(--bg-hover)] p-2 text-sm">
-          Cabinet: {cabinets.find((c) => c.id === cabinetId)?.code ?? "Selected Cabinet"}
+          Cabinet:{" "}
+          {(() => {
+            const cabinet = cabinets.find((c) => c.id === cabinetId);
+            return cabinet
+              ? [cabinet.room?.name, cabinet.code, cabinet.name].filter(Boolean).join(" > ")
+              : "Selected Cabinet";
+          })()}
         </div>
       )}
 
@@ -114,7 +126,7 @@ export default function ItemForm({
           <option value="">Select Cabinet</option>
           {cabinets.map((c) => (
             <option key={c.id} value={c.id}>
-              {c.code ?? c.name}
+              {[c.room?.name, c.code, c.name].filter(Boolean).join(" > ")}
             </option>
           ))}
         </select>

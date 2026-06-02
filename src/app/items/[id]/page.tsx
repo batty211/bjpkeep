@@ -45,6 +45,9 @@ export default async function ItemDetailPage({ params }: Props) {
   });
 
   const cabinets = await prisma.cabinet.findMany({
+    include: {
+      room: true,
+    },
     orderBy: {
       name: "asc",
     },

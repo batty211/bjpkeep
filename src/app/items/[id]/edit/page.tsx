@@ -21,6 +21,9 @@ export default async function EditItemPage({ params }: Props) {
       },
     }),
     prisma.cabinet.findMany({
+      include: {
+        room: true,
+      },
       orderBy: {
         code: "asc",
       },
