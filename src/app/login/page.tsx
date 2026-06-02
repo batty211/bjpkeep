@@ -3,8 +3,7 @@
 import { useState } from "react";
 
 export default function LoginPage() {
-  const [username, setUsername] =
-    useState("");
+  const [username, setUsername] = useState("");
 
   function login() {
     if (!username.trim()) {
@@ -18,29 +17,22 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-100">
-      <div className="w-96 rounded-xl bg-white p-6 shadow">
-        <h1 className="mb-4 text-2xl font-bold">
-          Welcome to BJP Keep
-        </h1>
+    <div className="flex min-h-screen items-center justify-center bg-[var(--background)]">
+      <div className="w-96 rounded-xl border border-[var(--border-color)] bg-[var(--bg-card)] p-6 shadow">
+        <h1 className="mb-4 text-2xl font-bold">Welcome to BJP Keep</h1>
 
         <input
-          className="mb-2 w-full rounded border p-2"
+          className="mb-2 w-full rounded border border-[var(--border-color)] bg-[var(--bg-card)] p-2 text-[var(--foreground)]"
           placeholder="Your name"
           value={username}
-          onChange={(e) =>
-            setUsername(e.target.value)
-          }
+          onChange={(e) => setUsername(e.target.value)}
         />
 
-        <p className="mb-4 text-sm text-gray-500">
+        <p className="mb-4 text-sm text-[var(--text-secondary)]">
           Enter your name once. This device will remember it.
         </p>
 
-        <button
-          onClick={login}
-          className="w-full rounded bg-black py-2 text-white"
-        >
+        <button onClick={login} className="w-full rounded bg-black py-2 text-white">
           Start Using BJP Keep
         </button>
       </div>

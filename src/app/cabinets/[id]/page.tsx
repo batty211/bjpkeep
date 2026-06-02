@@ -2,11 +2,7 @@ import AppLayout from "@/components/layout/app-layout";
 import { prisma } from "@/lib/prisma";
 import Link from "next/link";
 
-export default async function CabinetPage({
-  params,
-}: {
-  params: Promise<{ id: string }>;
-}) {
+export default async function CabinetPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
 
   const cabinet = await prisma.cabinet.findUnique({
@@ -36,13 +32,9 @@ export default async function CabinetPage({
     <AppLayout>
       <div className="space-y-6">
         <div>
-          <h1 className="text-3xl font-bold">
-            🗄️ {cabinet.name}
-          </h1>
+          <h1 className="text-3xl font-bold">🗄️ {cabinet.name}</h1>
 
-          <div className="text-gray-500">
-            📍 {cabinet.room.name}
-          </div>
+          <div className="text-[var(--text-secondary)]">📍 {cabinet.room.name}</div>
         </div>
 
         <div className="space-y-3">
@@ -50,16 +42,14 @@ export default async function CabinetPage({
             <Link
               key={item.id}
               href={`/items/${item.id}`}
-              className="block rounded-xl border bg-white p-4 hover:bg-gray-50"
+              className="block rounded-xl border border-[var(--border-color)] bg-[var(--bg-card)] p-4 hover:bg-[var(--bg-hover)]"
             >
               {item.name}
             </Link>
           ))}
 
           {cabinet.items.length === 0 && (
-            <div className="text-sm text-gray-400">
-              No items
-            </div>
+            <div className="text-sm text-[var(--text-secondary)]">No items</div>
           )}
         </div>
       </div>

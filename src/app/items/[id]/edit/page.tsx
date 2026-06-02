@@ -8,9 +8,7 @@ type Props = {
   }>;
 };
 
-export default async function EditItemPage({
-  params,
-}: Props) {
+export default async function EditItemPage({ params }: Props) {
   const { id } = await params;
 
   const [item, cabinets] = await Promise.all([
@@ -32,9 +30,7 @@ export default async function EditItemPage({
   if (!item) {
     return (
       <AppLayout>
-        <div className="text-xl font-semibold">
-          Item not found
-        </div>
+        <div className="text-xl font-semibold text-[var(--foreground)]">Item not found</div>
       </AppLayout>
     );
   }
@@ -42,9 +38,7 @@ export default async function EditItemPage({
   return (
     <AppLayout>
       <div className="space-y-6">
-        <h1 className="text-3xl font-bold">
-          Edit Item
-        </h1>
+        <h1 className="text-3xl font-bold">Edit Item</h1>
 
         <ItemForm
           cabinets={cabinets}

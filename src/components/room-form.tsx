@@ -22,29 +22,24 @@ export default function RoomForm() {
   }
 
   return (
-    <div className="rounded-xl border bg-white p-4">
-      <h2 className="mb-4 font-semibold">
-        Add Room
-      </h2>
+    <div className="rounded-xl border border-[var(--border-color)] bg-[var(--bg-card)] p-4">
+      <h2 className="mb-4 font-semibold">Add Room</h2>
 
       <input
-        className="mb-2 w-full rounded border p-2"
+        className="mb-2 w-full rounded border border-[var(--border-color)] bg-[var(--bg-card)] p-2 text-[var(--foreground)]"
         placeholder="Room Name"
         value={name}
         onChange={(e) => setName(e.target.value)}
       />
 
       <input
-        className="mb-2 w-full rounded border p-2"
+        className="mb-2 w-full rounded border border-[var(--border-color)] bg-[var(--bg-card)] p-2 text-[var(--foreground)]"
         placeholder="Code"
         value={code}
         onChange={(e) => setCode(e.target.value)}
       />
 
-      <button
-        onClick={save}
-        className="rounded bg-black px-4 py-2 text-white"
-      >
+      <button onClick={save} className="rounded bg-black px-4 py-2 text-white">
         Save
       </button>
     </div>

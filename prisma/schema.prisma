@@ -38,13 +38,16 @@ model Cabinet {
   id String @id @default(cuid())
 
   roomId String
-  room   Room   @relation(fields: [roomId], references: [id])
+  room   Room   @relation(fields: [roomId], references: [id], onDelete: Cascade)
 
   name  String
   code  String
   items Item[]
 
   createdAt DateTime @default(now())
+
+  @@unique([roomId, code])
+  @@index([roomId])
 }
 
 model Item {
@@ -56,7 +59,7 @@ model Item {
 
   cabinetId String
 
-  cabinet Cabinet     @relation(fields: [cabinetId], references: [id])
+  cabinet Cabinet     @relation(fields: [cabinetId], references: [id], onDelete: Cascade)
   images  ItemImage[]
 
   activityLogs ActivityLog[]
@@ -64,28 +67,32 @@ model Item {
   createdAt DateTime @default(now())
 
   updatedAt DateTime @updatedAt
+
+  @@index([cabinetId])
+  @@index([name])
 }
 
 model ItemImage {
   id String @id @default(cuid())
 
   itemId String
-  item   Item   @relation(fields: [itemId], references: [id])
+  item   Item   @relation(fields: [itemId], references: [id], onDelete: Cascade)
 
   path String
 
   createdAt DateTime @default(now())
+
+  @@index([itemId])
 }
 
 model ActivityLog {
-
   id String @id @default(cuid())
 
   actorName String?
 
-  itemId     String?
+  itemId String?
 
-  item       Item? @relation(fields: [itemId], references: [id])
+  item Item? @relation(fields: [itemId], references: [id], onDelete: SetNull)
 
   action String
 
@@ -93,4 +100,6 @@ model ActivityLog {
 
   createdAt DateTime @default(now())
 
+  @@index([itemId])
+  @@index([createdAt])
 }

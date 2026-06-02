@@ -71,7 +71,7 @@ export default function ItemForm({
   }
 
   return (
-    <div className="rounded-xl border bg-white p-4">
+    <div className="rounded-xl border border-[var(--border-color)] bg-[var(--bg-card)] p-4">
       <h2 className="mb-4 font-semibold">Add Item</h2>
 
       <input
@@ -82,7 +82,7 @@ export default function ItemForm({
       />
 
       {isFromQR && (
-        <div className="mb-2 rounded border bg-gray-50 p-2 text-sm">
+        <div className="mb-2 rounded border border-[var(--border-color)] bg-[var(--bg-hover)] p-2 text-sm">
           Cabinet: {cabinets.find((c) => c.id === cabinetId)?.code ?? "Selected Cabinet"}
         </div>
       )}
@@ -103,10 +103,14 @@ export default function ItemForm({
       )}
 
       <div className="mb-4">
-        <label className="mb-2 block text-sm font-medium text-gray-700">Photo (optional)</label>
+        <label className="mb-2 block text-sm font-medium text-[var(--foreground)]">
+          Photo (optional)
+        </label>
 
-        <label className="flex cursor-pointer items-center justify-between rounded-lg border border-dashed p-3 transition hover:bg-gray-50">
-          <span className="truncate text-sm text-gray-600">{fileName || "Choose image..."}</span>
+        <label className="flex cursor-pointer items-center justify-between rounded-lg border border-[var(--border-color)] border-dashed p-3 transition hover:bg-[var(--bg-hover)]">
+          <span className="truncate text-sm text-[var(--text-secondary)]">
+            {fileName || "Choose image..."}
+          </span>
 
           <span className="rounded bg-black px-3 py-1 text-sm text-white">Browse</span>
 

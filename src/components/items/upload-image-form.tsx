@@ -44,14 +44,16 @@ export default function UploadImageForm({ itemId }: { itemId: string }) {
   }
 
   return (
-    <div className="rounded-xl border bg-white p-4">
+    <div className="rounded-xl border border-[var(--border-color)] bg-[var(--bg-card)] p-4">
       <h2 className="mb-4 text-lg font-semibold">Upload More Images</h2>
 
       <div className="mb-4">
-        <label className="mb-2 block text-sm font-medium text-gray-700">Photo</label>
+        <label className="mb-2 block text-sm font-medium text-[var(--foreground)]">Photo</label>
 
-        <label className="flex cursor-pointer items-center justify-between rounded-lg border border-dashed p-3 transition hover:bg-gray-50">
-          <span className="truncate text-sm text-gray-600">{fileName || "Choose image..."}</span>
+        <label className="flex cursor-pointer items-center justify-between rounded-lg border border-[var(--border-color)] border-dashed p-3 transition hover:bg-[var(--bg-hover)]">
+          <span className="truncate text-sm text-[var(--text-secondary)]">
+            {fileName || "Choose image..."}
+          </span>
 
           <span className="rounded bg-black px-3 py-1 text-sm text-white">Browse</span>
 

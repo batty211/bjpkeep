@@ -2,10 +2,7 @@
 
 import { useState } from "react";
 
-export default function MoveItemForm({
-  itemId,
-  cabinets,
-}: any) {
+export default function MoveItemForm({ itemId, cabinets }: any) {
   const [cabinetId, setCabinetId] = useState("");
 
   async function move() {
@@ -28,11 +25,11 @@ export default function MoveItemForm({
   }
 
   return (
-    <div className="flex gap-2 mt-2">
+    <div className="mt-2 flex gap-2">
       <select
         value={cabinetId}
         onChange={(e) => setCabinetId(e.target.value)}
-        className="border rounded p-2"
+        className="rounded border border-[var(--border-color)] bg-[var(--bg-card)] p-2 text-[var(--foreground)]"
       >
         <option value="">Move To Cabinet</option>
         {cabinets?.map((c: any) => (
@@ -45,7 +42,7 @@ export default function MoveItemForm({
       <button
         onClick={move}
         disabled={!cabinetId}
-        className="bg-blue-500 text-white px-3 py-2 rounded disabled:opacity-50"
+        className="rounded bg-blue-500 px-3 py-2 text-white disabled:opacity-50"
       >
         Move
       </button>
