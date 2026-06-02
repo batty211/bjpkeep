@@ -2,9 +2,8 @@
 
 mkdir -p /data/uploads/items
 
-if [ ! -f /data/bjpkeep.db ]; then
-  echo "Initializing database..."
-  npx prisma db push
-fi
+echo "Running database migrations..."
+
+npx prisma migrate deploy
 
 exec npm start
