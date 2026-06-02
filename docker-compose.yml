@@ -1,0 +1,16 @@
+services:
+  bjpkeep:
+    build: .
+    container_name: bjpkeep
+
+    ports:
+      - "3000:3000"
+
+    environment:
+      DATABASE_URL: file:/data/bjpkeep.db
+      UPLOAD_DIR: /data/uploads/items
+
+    volumes:
+      - ./data:/data
+
+    restart: unless-stopped

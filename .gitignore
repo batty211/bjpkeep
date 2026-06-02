@@ -53,3 +53,6 @@ prisma/*.db-journal
 # Local backups / exports
 /backup/
 /exports/
+
+#data
+data/
