@@ -1,4 +1,4 @@
-import { writeFile } from "fs/promises";
+import { writeFile, mkdir } from "fs/promises";
 import { v4 as uuid } from "uuid";
 import { NextResponse } from "next/server";
 import path from "path";
@@ -13,6 +13,16 @@ export async function POST(req: Request) {
   if (!file) {
     return NextResponse.json(
       { error: "No file" },
+      { status: 400 }
+    );
+  }
+
+  if (file.size > 10 * 1024 * 1024) {
+    return NextResponse.json(
+      {
+        error:
+          "File too large. Maximum size is 10MB.",
+      },
       { status: 400 }
     );
   }
@@ -35,12 +45,31 @@ export async function POST(req: Request) {
     filename
   );
 
-  await writeFile(
-    filepath,
-    buffer
+  await mkdir(
+    path.join(
+      process.cwd(),
+      "public/uploads/items"
+    ),
+    { recursive: true }
   );
 
-  return NextResponse.json({
-    path: `/uploads/items/${filename}`,
-  });
+  try {
+    await writeFile(
+      filepath,
+      buffer
+    );
+
+    return NextResponse.json({
+      path: `/uploads/items/${filename}`,
+    });
+  } catch (error) {
+    console.error(error);
+
+    return NextResponse.json(
+      {
+        error: "Failed to save file",
+      },
+      { status: 500 }
+    );
+  }
 }

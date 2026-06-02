@@ -22,22 +22,30 @@ export async function GET() {
 export async function POST(req: Request) {
   const body = await req.json();
 
-  const item =
-  await prisma.item.create({
+  const actorName = (await cookies()).get("bjpkeep-user")?.value;
+
+  const item = await prisma.item.create({
     data: {
       name: body.name,
       cabinetId: body.cabinetId,
-      images:
-        body.imagePath
-          ? {
-              create: {
-                path: body.imagePath,
-              },
-            }
-          : undefined,
+      images: body.imagePath
+        ? {
+            create: {
+              path: body.imagePath,
+            },
+          }
+        : undefined,
     },
     include: {
       images: true,
+    },
+  });
+
+  await prisma.activityLog.create({
+    data: {
+      action: "CREATE_ITEM",
+      actorName,
+      details: `Created item: ${item.name}`,
     },
   });
 
@@ -46,10 +54,7 @@ export async function POST(req: Request) {
 
 export async function PUT(req: Request) {
   const body = await req.json();
-  const actorName =
-    (await cookies()).get(
-      "bjpkeep-user"
-    )?.value;
+  const actorName = (await cookies()).get("bjpkeep-user")?.value;
 
   const existingItem = await prisma.item.findUnique({
     where: {
@@ -60,9 +65,7 @@ export async function PUT(req: Request) {
   const changes: string[] = [];
 
   if (existingItem?.name !== body.name) {
-    changes.push(
-      `Name: ${existingItem?.name ?? "-"} -> ${body.name}`
-    );
+    changes.push(`Name: ${existingItem?.name ?? "-"} -> ${body.name}`);
   }
 
   if (existingItem?.cabinetId !== body.cabinetId) {

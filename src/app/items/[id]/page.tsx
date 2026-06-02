@@ -10,9 +10,7 @@ type Props = {
   }>;
 };
 
-export default async function ItemDetailPage({
-  params,
-}: Props) {
+export default async function ItemDetailPage({ params }: Props) {
   const { id } = await params;
 
   const item = await prisma.item.findUnique({
@@ -35,9 +33,7 @@ export default async function ItemDetailPage({
         contains: item?.name ?? "",
       },
     },
-    include: {
-      user: true,
-    },
+
     orderBy: {
       createdAt: "desc",
     },
@@ -47,9 +43,7 @@ export default async function ItemDetailPage({
   if (!item) {
     return (
       <AppLayout>
-        <div className="text-xl font-semibold">
-          Item not found
-        </div>
+        <div className="text-xl font-semibold">Item not found</div>
       </AppLayout>
     );
   }
@@ -58,23 +52,15 @@ export default async function ItemDetailPage({
     <AppLayout>
       <div className="mx-auto max-w-4xl space-y-6">
         <div className="flex items-center gap-4">
-          <Link
-            href="/inventory"
-            className="text-sm text-blue-600 hover:underline"
-          >
+          <Link href="/inventory" className="text-sm text-blue-600 hover:underline">
             ← Back to Inventory
           </Link>
 
-          <Link
-            href={`/items/${item.id}/edit`}
-            className="text-sm text-green-600 hover:underline"
-          >
+          <Link href={`/items/${item.id}/edit`} className="text-sm text-green-600 hover:underline">
             ✏️ Edit Item
           </Link>
         </div>
-        <h1 className="text-3xl font-bold">
-          {item.name}
-        </h1>
+        <h1 className="text-3xl font-bold">{item.name}</h1>
 
         <div className="rounded-xl border bg-white p-6">
           {item.images.length > 0 && (
@@ -106,98 +92,55 @@ export default async function ItemDetailPage({
 
           <div className="grid gap-4 md:grid-cols-2">
             <div>
-              <div className="text-sm text-gray-500">
-                Name
-              </div>
-              <div className="font-medium">
-                {item.name}
-              </div>
+              <div className="text-sm text-gray-500">Name</div>
+              <div className="font-medium">{item.name}</div>
             </div>
 
             <div>
-              <div className="text-sm text-gray-500">
-                Category
-              </div>
-              <div className="font-medium">
-                {item.category ?? "-"}
-              </div>
+              <div className="text-sm text-gray-500">Category</div>
             </div>
 
             <div>
-              <div className="text-sm text-gray-500">
-                Quantity
-              </div>
-              <div className="font-medium">
-                {item.quantity} {item.unit}
-              </div>
+              <div className="text-sm text-gray-500">Quantity</div>
             </div>
 
             <div>
-              <div className="text-sm text-gray-500">
-                Cabinet
-              </div>
-              <div className="font-medium">
-                {item.cabinet.name}
-              </div>
+              <div className="text-sm text-gray-500">Cabinet</div>
+              <div className="font-medium">{item.cabinet.name}</div>
             </div>
 
             <div>
-              <div className="text-sm text-gray-500">
-                Room
-              </div>
-              <div className="font-medium">
-                {item.cabinet.room.name}
-              </div>
+              <div className="text-sm text-gray-500">Room</div>
+              <div className="font-medium">{item.cabinet.room.name}</div>
             </div>
 
             <div>
-              <div className="text-sm text-gray-500">
-                Created At
-              </div>
-              <div className="font-medium">
-                {new Date(item.createdAt).toLocaleString()}
-              </div>
+              <div className="text-sm text-gray-500">Created At</div>
+              <div className="font-medium">{new Date(item.createdAt).toLocaleString()}</div>
             </div>
           </div>
         </div>
         <div className="rounded-xl border bg-white p-6">
-          <h2 className="mb-4 text-xl font-semibold">
-            Media
-          </h2>
+          <h2 className="mb-4 text-xl font-semibold">Media</h2>
 
-          <div className="mb-4 text-sm text-gray-600">
-            Total Images: {item.images.length}
-          </div>
+          <div className="mb-4 text-sm text-gray-600">Total Images: {item.images.length}</div>
 
           <UploadImageForm itemId={item.id} />
         </div>
         <div className="rounded-xl border bg-white p-6">
-          <h2 className="mb-4 text-xl font-semibold">
-            Recent Activity
-          </h2>
+          <h2 className="mb-4 text-xl font-semibold">Recent Activity</h2>
 
           {activityLogs.length === 0 ? (
-            <div className="text-gray-500">
-              No activity found
-            </div>
+            <div className="text-gray-500">No activity found</div>
           ) : (
             <div className="space-y-3">
               {activityLogs.map((log) => (
-                <div
-                  key={log.id}
-                  className="rounded border p-3"
-                >
-                  <div className="font-medium">
-                    {log.action}
-                  </div>
+                <div key={log.id} className="rounded border p-3">
+                  <div className="font-medium">{log.action}</div>
 
-                  <div className="text-xs text-blue-600">
-                    By: {log.user?.username ?? log.user?.name ?? "Unknown User"}
-                  </div>
+                  <div className="text-xs text-blue-600">By: {log.actorName ?? "Unknown"}</div>
 
-                  <div className="text-sm text-gray-600">
-                    {log.details}
-                  </div>
+                  <div className="text-sm text-gray-600">{log.details}</div>
 
                   <div className="text-xs text-gray-400">
                     {new Date(log.createdAt).toLocaleString()}

@@ -15,38 +15,30 @@ export default function ItemForm({
   };
 }) {
   const [name, setName] = useState(initialData?.name ?? "");
-  const [cabinetIdState, setCabinetIdState] = useState(
-    cabinetId ?? initialData?.cabinetId ?? ""
-  );
+  const [cabinetIdState, setCabinetIdState] = useState(cabinetId ?? initialData?.cabinetId ?? "");
   const isFromQR = !!cabinetId;
-  const [file, setFile] =
-  useState<File | null>(null);
+  const [file, setFile] = useState<File | null>(null);
+  const [fileName, setFileName] = useState("");
   const [saving, setSaving] = useState(false);
 
   async function save() {
     setSaving(true);
     let imagePath = "";
 
-if (file) {
-  const fd = new FormData();
+    if (file) {
+      const fd = new FormData();
 
-  fd.append("file", file);
+      fd.append("file", file);
 
-  const upload =
-    await fetch(
-      "/api/upload",
-      {
+      const upload = await fetch("/api/upload", {
         method: "POST",
         body: fd,
-      }
-    );
+      });
 
-  const uploaded =
-    await upload.json();
+      const uploaded = await upload.json();
 
-  imagePath =
-    uploaded.path;
-}
+      imagePath = uploaded.path;
+    }
     const method = initialData?.id ? "PUT" : "POST";
 
     const response = await fetch("/api/items", {
@@ -80,9 +72,7 @@ if (file) {
 
   return (
     <div className="rounded-xl border bg-white p-4">
-      <h2 className="mb-4 font-semibold">
-        Add Item
-      </h2>
+      <h2 className="mb-4 font-semibold">Add Item</h2>
 
       <input
         className="mb-2 w-full rounded border p-2"
@@ -98,39 +88,46 @@ if (file) {
       )}
 
       {!isFromQR && (
-      <select
-        className="mb-2 w-full rounded border p-2"
-        value={cabinetIdState}
-        onChange={(e) => setCabinetIdState(e.target.value)}
-      >
-        <option value="">Select Cabinet</option>
-        {cabinets.map((c) => (
-          <option key={c.id} value={c.id}>
-            {c.code ?? c.name}
-          </option>
-        ))}
-      </select>
+        <select
+          className="mb-2 w-full rounded border p-2"
+          value={cabinetIdState}
+          onChange={(e) => setCabinetIdState(e.target.value)}
+        >
+          <option value="">Select Cabinet</option>
+          {cabinets.map((c) => (
+            <option key={c.id} value={c.id}>
+              {c.code ?? c.name}
+            </option>
+          ))}
+        </select>
       )}
 
-<input
-  type="file"
-  className="mb-2 w-full"
-  onChange={(e) =>
-    setFile(
-      e.target.files?.[0] ?? null
-    )
-  }
-/>
+      <div className="mb-4">
+        <label className="mb-2 block text-sm font-medium text-gray-700">Photo (optional)</label>
+
+        <label className="flex cursor-pointer items-center justify-between rounded-lg border border-dashed p-3 transition hover:bg-gray-50">
+          <span className="truncate text-sm text-gray-600">{fileName || "Choose image..."}</span>
+
+          <span className="rounded bg-black px-3 py-1 text-sm text-white">Browse</span>
+
+          <input
+            type="file"
+            accept="image/*"
+            className="hidden"
+            onChange={(e) => {
+              const selected = e.target.files?.[0] ?? null;
+              setFile(selected);
+              setFileName(selected?.name ?? "");
+            }}
+          />
+        </label>
+      </div>
       <button
         onClick={save}
         disabled={saving}
         className="rounded bg-black px-4 py-2 text-white disabled:opacity-50"
       >
-        {saving
-          ? "Saving..."
-          : initialData
-            ? "Save Changes"
-            : "Save"}
+        {saving ? "Saving..." : initialData ? "Save Changes" : "Save"}
       </button>
     </div>
   );
