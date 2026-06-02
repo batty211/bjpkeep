@@ -46,7 +46,7 @@ export default async function CabinetQrPage({ params }: { params: Promise<{ id: 
   ctx.drawImage(qrImage, 20, 20, 300, 300);
 
   ctx.fillStyle = "black";
-  ctx.font = "bold 20px Arial";
+  ctx.font = "24px 'Noto Sans Thai'";
   ctx.textAlign = "center";
   ctx.fillText(`${cabinet.name} (${cabinet.code})`, 170, 350);
 

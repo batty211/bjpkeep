@@ -7,6 +7,10 @@ RUN apt-get update && apt-get install -y \
     libjpeg62-turbo \
     libgif7 \
     libexpat1 \
+    fonts-noto-core \
+    fonts-noto-cjk \
+    fonts-noto-color-emoji \
+    fonts-thai-tlwg \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app

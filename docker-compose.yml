@@ -12,6 +12,5 @@ services:
 
     volumes:
       - ./data:/data
-      - ./data/uploads/items:/app/public/uploads/items
 
     restart: unless-stopped
