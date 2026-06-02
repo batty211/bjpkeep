@@ -1,36 +1,144 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# BJP Keep
 
-## Getting Started
+BJP Keep is a simple home inventory management system designed to help track where items are stored around the house.
 
-First, run the development server:
+Features include:
+
+- Room and cabinet management
+- Inventory item tracking
+- Item photos and image gallery
+- QR Code generation for cabinets
+- Item search and filtering
+- Item move history and activity logs
+- Responsive web interface
+- SQLite database
+- Docker and Synology NAS support
+
+---
+
+## Technology Stack
+
+- Next.js 16
+- React
+- TypeScript
+- Prisma ORM
+- SQLite
+- Tailwind CSS
+- Canvas (QR Code generation)
+
+---
+
+## Development
+
+Install dependencies:
+
+```bash
+npm install
+```
+
+Run development server:
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```text
+http://localhost:3000
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+---
 
-## Learn More
+## Database
 
-To learn more about Next.js, take a look at the following resources:
+Generate Prisma client:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```bash
+npx prisma generate
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Run migrations:
 
-## Deploy on Vercel
+```bash
+npx prisma migrate dev
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Open Prisma Studio:
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```bash
+npx prisma studio
+```
+
+---
+
+## Docker
+
+Build image:
+
+```bash
+docker build -t bjpkeep .
+```
+
+Run container:
+
+```bash
+docker run --rm \
+  -p 3000:3000 \
+  -e DATABASE_URL="file:/app/prisma/bjpkeep.db" \
+  bjpkeep
+```
+
+---
+
+## Docker Compose
+
+```bash
+docker compose up --build
+```
+
+Persistent data:
+
+```text
+/data
+├── bjpkeep.db
+└── uploads
+    └── items
+```
+
+Environment variables:
+
+```env
+DATABASE_URL=file:/data/bjpkeep.db
+UPLOAD_DIR=/data/uploads/items
+```
+
+---
+
+## Synology NAS Deployment
+
+BJP Keep has been tested in Docker and is designed to run in Synology Container Manager.
+
+Recommended persistent storage:
+
+```text
+/data
+├── bjpkeep.db
+└── uploads/items
+```
+
+---
+
+## Roadmap
+
+- Home Assistant Add-on
+- Backup and restore tools
+- Multi-user support
+- Improved reporting and analytics
+- Mobile-friendly enhancements
+
+---
+
+## License
+
+Private project for personal home inventory management.
