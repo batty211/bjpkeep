@@ -46,3 +46,35 @@ export async function POST(req: Request) {
 
   return NextResponse.json(cabinet);
 }
+
+export async function PUT(req: Request) {
+  const body = await req.json();
+
+  if (!body.id) {
+    return NextResponse.json({ error: "Cabinet id is required" }, { status: 400 });
+  }
+
+  const room = await prisma.room.findUnique({
+    where: { id: body.roomId },
+  });
+
+  if (!room) {
+    return NextResponse.json(
+      { error: "Room not found" },
+      { status: 404 }
+    );
+  }
+
+  const cabinet = await prisma.cabinet.update({
+    where: {
+      id: body.id,
+    },
+    data: {
+      roomId: body.roomId,
+      name: body.name,
+      code: body.code,
+    },
+  });
+
+  return NextResponse.json(cabinet);
+}

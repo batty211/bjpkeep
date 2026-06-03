@@ -23,3 +23,23 @@ export async function POST(req: Request) {
 
   return NextResponse.json(room);
 }
+
+export async function PUT(req: Request) {
+  const body = await req.json();
+
+  if (!body.id) {
+    return NextResponse.json({ error: "Room id is required" }, { status: 400 });
+  }
+
+  const room = await prisma.room.update({
+    where: {
+      id: body.id,
+    },
+    data: {
+      name: body.name,
+      code: body.code,
+    },
+  });
+
+  return NextResponse.json(room);
+}

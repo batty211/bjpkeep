@@ -1,4 +1,5 @@
 import AppLayout from "@/components/layout/app-layout";
+import CabinetForm from "@/components/cabinet-form";
 import ItemForm from "@/components/items/item-form";
 import { prisma } from "@/lib/prisma";
 import { BaseLink } from "@/lib/ingress-utils";
@@ -18,6 +19,11 @@ export default async function CabinetPage({ params }: { params: Promise<{ id: st
           name: "asc",
         },
       },
+    },
+  });
+  const rooms = await prisma.room.findMany({
+    orderBy: {
+      name: "asc",
     },
   });
 
@@ -55,6 +61,24 @@ export default async function CabinetPage({ params }: { params: Promise<{ id: st
             🖨️ Cabinet QR
           </BaseLink>
         </div>
+
+        <details className="rounded border border-[var(--border-color)] bg-[var(--bg-card)] p-4">
+          <summary className="cursor-pointer list-none font-semibold">
+            ✏️ Edit Cabinet
+          </summary>
+
+          <div className="mt-4">
+            <CabinetForm
+              rooms={rooms}
+              initialData={{
+                id: cabinet.id,
+                roomId: cabinet.roomId,
+                name: cabinet.name,
+                code: cabinet.code,
+              }}
+            />
+          </div>
+        </details>
 
         <details className="rounded border border-[var(--border-color)] bg-[var(--bg-card)] p-4">
           <summary className="cursor-pointer list-none font-semibold">

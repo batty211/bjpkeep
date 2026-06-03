@@ -52,6 +52,22 @@ export default async function LocationsPage() {
               </summary>
 
               <div className="mt-3 ml-4">
+                <details className="mb-3 rounded border border-[var(--border-color)] p-3">
+                  <summary className="cursor-pointer list-none text-sm font-medium">
+                    ✏️ Edit Room
+                  </summary>
+
+                  <div className="mt-3">
+                    <RoomForm
+                      initialData={{
+                        id: room.id,
+                        name: room.name,
+                        code: room.code,
+                      }}
+                    />
+                  </div>
+                </details>
+
                 {room.cabinets.map((cabinet) => (
                   <details
                     key={cabinet.id}
@@ -71,6 +87,24 @@ export default async function LocationsPage() {
                     </summary>
 
                     <div className="mt-2 ml-4">
+                      <details className="mb-3 rounded border border-[var(--border-color)] p-3">
+                        <summary className="cursor-pointer list-none text-sm font-medium">
+                          ✏️ Edit Cabinet
+                        </summary>
+
+                        <div className="mt-3">
+                          <CabinetForm
+                            rooms={rooms}
+                            initialData={{
+                              id: cabinet.id,
+                              roomId: cabinet.roomId,
+                              name: cabinet.name,
+                              code: cabinet.code,
+                            }}
+                          />
+                        </div>
+                      </details>
+
                       {cabinet.items.map((item) => (
                         <div key={item.id}>📦 {item.name}</div>
                       ))}
