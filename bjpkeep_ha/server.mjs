@@ -33,7 +33,6 @@ function shouldRewriteResponse(req) {
   const url = req.url || "";
 
   return !(
-    url.startsWith("/_next/") ||
     url.startsWith("/api/") ||
     url.startsWith("/uploads/") ||
     url.startsWith("/favicons/") ||
@@ -88,8 +87,13 @@ function installIngressAssetRewrite(req, res, ingressPath) {
     }
 
     const contentType = String(res.getHeader("content-type") || "");
-    const shouldPatch =
-      contentType.includes("text/html") || contentType.includes("text/x-component");
+    const shouldPatch = [
+      "text/html",
+      "text/x-component",
+      "text/css",
+      "application/javascript",
+      "text/javascript",
+    ].some((patchableContentType) => contentType.includes(patchableContentType));
 
     if (!shouldPatch) {
       for (const bufferedChunk of chunks) {
@@ -109,6 +113,10 @@ await app.prepare();
 
 createServer((req, res) => {
   const ingressPath = normalizeIngressPath(getHeaderValue(req.headers["x-ingress-path"]));
+
+  if (ingressPath) {
+    delete req.headers["accept-encoding"];
+  }
 
   stripIngressPath(req, ingressPath);
 
