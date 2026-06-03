@@ -43,6 +43,7 @@ function shouldRewriteResponse(req) {
 function rewriteIngressAssets(body, ingressPath) {
   return body
     .replaceAll("/_next/", `${ingressPath}/_next/`)
+    .replaceAll("/fonts/", `${ingressPath}/fonts/`)
     .replaceAll("/favicon.ico", `${ingressPath}/favicon.ico`);
 }
 

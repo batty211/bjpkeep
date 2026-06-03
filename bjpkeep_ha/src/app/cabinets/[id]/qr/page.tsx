@@ -4,6 +4,7 @@ import QRCode from "qrcode";
 import Image from "next/image";
 import { BaseLink } from "@/lib/ingress-utils";
 import { createCanvas, loadImage } from "canvas";
+import { getServerExternalUrl } from "@/lib/ingress-utils-server";
 
 export default async function CabinetQrPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -26,9 +27,7 @@ export default async function CabinetQrPage({ params }: { params: Promise<{ id: 
     );
   }
 
-  const baseUrl = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
-
-  const url = `${baseUrl}/cabinets/${cabinet.id}`;
+  const url = await getServerExternalUrl(`/cabinets/${cabinet.id}`);
 
   const qrOnlyDataUrl = await QRCode.toDataURL(url, {
     margin: 2,

@@ -1,7 +1,7 @@
 name: BJP Keep
 slug: bjpkeep
-version: "0.4.2c"
-description: "Home Inventory Management System"
+version: "0.4.3"
+description: "BJP Home where are my stuff!!"
 startup: application
 boot: auto
 init: false

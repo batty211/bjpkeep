@@ -88,6 +88,11 @@ export default async function ItemDetailPage({ params }: Props) {
     );
   }
 
+  const prefixedImages = await Promise.all(item.images.map(async (image) => ({
+    id: image.id,
+    path: await getServerPrefixedPath(image.path),
+  })));
+
   return (
     <AppLayout>
       <div className="mx-auto max-w-4xl space-y-6">
@@ -112,10 +117,7 @@ export default async function ItemDetailPage({ params }: Props) {
           {item.images.length > 0 && (
             <ImageGallery
               itemName={item.name}
-              images={item.images.map((image) => ({
-                id: image.id,
-                path: image.path,
-              }))}
+              images={prefixedImages}
             />
           )}
 
