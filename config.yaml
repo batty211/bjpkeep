@@ -1,0 +1,20 @@
+name: BJP Keep
+slug: bjpkeep
+version: "0.1.0"
+description: "Home Inventory Management System"
+startup: application
+boot: auto
+init: false
+panel_icon: mdi:package-variant-closed
+ingress: true
+ingress_port: 3000
+arch:
+  - amd64
+  - aarch64
+  - armv7
+options:
+  log_level: info
+  app_url: ""
+schema:
+  log_level: "list(debug|info|warning|error|fatal)"
+  app_url: "str?"
