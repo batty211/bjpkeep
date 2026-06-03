@@ -4,9 +4,7 @@ const nextConfig: NextConfig = {
   experimental: {
     middlewareClientMaxBodySize: "50mb",
   },
-  // Forces Next.js to use relative paths for assets, 
-  // which is required for Home Assistant Ingress
-  assetPrefix: "./",
+  // Essential for Home Assistant Ingress to handle relative assets correctly
   trailingSlash: true,
 };
 

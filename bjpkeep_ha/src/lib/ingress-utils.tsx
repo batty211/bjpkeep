@@ -1,10 +1,11 @@
 "use client";
 
 import Link, { LinkProps } from "next/link";
-import { ReactNode, useEffect, useState } from "react";
+import { ReactNode } from "react";
 
 /**
  * Gets the current ingress path from the cookie set by middleware
+ * This is synchronous and can be used during render on the client.
  */
 export function getIngressPath(): string {
   if (typeof document === "undefined") return "";
@@ -21,6 +22,10 @@ export function getIngressPath(): string {
  * Prefixes a path with the current ingress path (client-side)
  */
 export function getPrefixedPath(path: string): string {
+  // If we are on the server, we can't reliably get the prefix without headers
+  // But this utility is mainly for client-side Link and Fetch
+  if (typeof document === "undefined") return path;
+
   const prefix = getIngressPath();
   if (prefix && path.startsWith("/") && !path.startsWith(prefix)) {
     return prefix + path;
@@ -42,14 +47,12 @@ interface BaseLinkProps extends LinkProps {
 }
 
 /**
- * A wrapper around Next.js Link that automatically prepends the Ingress path (Client Component)
+ * A wrapper around Next.js Link that automatically prepends the Ingress path.
+ * This version resolves the prefix synchronously during render to prevent 404s during prefetch.
  */
 export function BaseLink({ href, children, ...props }: BaseLinkProps) {
-  const [prefixedHref, setPrefixedHref] = useState(href);
-
-  useEffect(() => {
-    setPrefixedHref(getPrefixedPath(href));
-  }, [href]);
+  // Resolve prefix immediately during render
+  const prefixedHref = getPrefixedPath(href);
 
   return (
     <Link href={prefixedHref} {...props}>
