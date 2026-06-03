@@ -1,5 +1,6 @@
 import AppLayout from "@/components/layout/app-layout";
 import { prisma } from "@/lib/prisma";
+import { BaseLink } from "@/lib/ingress-utils";
 
 export default async function Page({
   searchParams,
@@ -73,21 +74,21 @@ export default async function Page({
 
         <div className="flex gap-2">
           {currentPage > 1 && (
-            <a
+            <BaseLink
               href={`/activity?page=${currentPage - 1}${q ? `&q=${encodeURIComponent(q)}` : ""}`}
               className="rounded border border-[var(--border-color)] px-3 py-1"
             >
               ← Prev
-            </a>
+            </BaseLink>
           )}
 
           {currentPage < totalPages && (
-            <a
+            <BaseLink
               href={`/activity?page=${currentPage + 1}${q ? `&q=${encodeURIComponent(q)}` : ""}`}
               className="rounded border border-[var(--border-color)] px-3 py-1"
             >
               Next →
-            </a>
+            </BaseLink>
           )}
         </div>
       </div>
