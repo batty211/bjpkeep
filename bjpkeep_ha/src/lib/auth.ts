@@ -1,12 +1,14 @@
 import { cookies, headers } from "next/headers";
 
 export async function getCurrentUser() {
-  // Try to get user from Home Assistant header
-  const haUserName = (await headers()).get("x-hass-user-name");
+  const headerList = await headers();
+  const haDisplayName = headerList.get("x-remote-user-display-name");
+  const haUserName = headerList.get("x-remote-user-name");
+  const haUserId = headerList.get("x-remote-user-id");
 
-  if (haUserName) {
+  if (haDisplayName || haUserName || haUserId) {
     return {
-      name: haUserName,
+      name: haDisplayName || haUserName || haUserId,
     };
   }
 

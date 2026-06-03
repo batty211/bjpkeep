@@ -63,11 +63,31 @@ function prefixLocationHeader(res, ingressPath) {
   }
 }
 
+function prefixLinkHeader(res, ingressPath) {
+  const link = res.getHeader("link");
+
+  if (!link) {
+    return;
+  }
+
+  const prefixLink = (value) => String(value)
+    .replaceAll("</_next/", `<${ingressPath}/_next/`)
+    .replaceAll("</fonts/", `<${ingressPath}/fonts/`)
+    .replaceAll("</favicon.ico", `<${ingressPath}/favicon.ico`);
+
+  res.setHeader("link", Array.isArray(link) ? link.map(prefixLink) : prefixLink(link));
+}
+
+function prefixResponseHeaders(res, ingressPath) {
+  prefixLocationHeader(res, ingressPath);
+  prefixLinkHeader(res, ingressPath);
+}
+
 function installIngressRedirectRewrite(res, ingressPath) {
   const originalWriteHead = res.writeHead.bind(res);
 
   res.writeHead = (...args) => {
-    prefixLocationHeader(res, ingressPath);
+    prefixResponseHeaders(res, ingressPath);
     return originalWriteHead(...args);
   };
 }
@@ -80,7 +100,7 @@ function installIngressAssetRewrite(req, res, ingressPath) {
 
   res.writeHead = (...args) => {
     res.removeHeader("content-length");
-    prefixLocationHeader(res, ingressPath);
+    prefixResponseHeaders(res, ingressPath);
     return originalWriteHead(...args);
   };
 
