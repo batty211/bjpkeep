@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { prefixedFetch } from "@/lib/ingress-utils";
 
 export default function MoveItemForm({ itemId, cabinets }: any) {
   const [cabinetId, setCabinetId] = useState("");
@@ -10,7 +11,7 @@ export default function MoveItemForm({ itemId, cabinets }: any) {
       return;
     }
 
-    await fetch("/api/items/move", {
+    await prefixedFetch("/api/items/move", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

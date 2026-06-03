@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { prefixedFetch } from "@/lib/ingress-utils";
 
 type Room = {
   id: string;
@@ -18,7 +19,7 @@ export default function CabinetForm({ rooms }: { rooms: Room[] }) {
   const generatedPreview = selectedRoom?.code ? `${selectedRoom.code}-CXX` : "Select a room first";
 
   async function save() {
-    await fetch("/api/cabinets", {
+    await prefixedFetch("/api/cabinets", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

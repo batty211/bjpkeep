@@ -1,13 +1,14 @@
 "use client";
 
 import { useState } from "react";
+import { prefixedFetch } from "@/lib/ingress-utils";
 
 export default function RoomForm() {
   const [name, setName] = useState("");
   const [code, setCode] = useState("");
 
   async function save() {
-    await fetch("/api/rooms", {
+    await prefixedFetch("/api/rooms", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

@@ -2,7 +2,7 @@ import AppLayout from "@/components/layout/app-layout";
 import { prisma } from "@/lib/prisma";
 import QRCode from "qrcode";
 import Image from "next/image";
-import Link from "next/link";
+import { BaseLink } from "@/lib/ingress-utils";
 import { createCanvas, loadImage } from "canvas";
 
 export default async function CabinetQrPage({ params }: { params: Promise<{ id: string }> }) {
@@ -55,9 +55,9 @@ export default async function CabinetQrPage({ params }: { params: Promise<{ id: 
   return (
     <AppLayout>
       <div className="mx-auto max-w-md space-y-6 text-center">
-        <Link href="/locations" className="inline-block text-sm text-blue-600 hover:underline">
+        <BaseLink href="/locations" className="inline-block text-sm text-blue-600 hover:underline">
           ← Back to Locations
-        </Link>
+        </BaseLink>
         <h1 className="text-3xl font-bold">🗄️ {cabinet.name}</h1>
 
         <div className="text-[var(--text-secondary)]">{cabinet.room.name}</div>
@@ -67,12 +67,12 @@ export default async function CabinetQrPage({ params }: { params: Promise<{ id: 
           {cabinet.name} ({cabinet.code})
         </div>
 
-        <Link
+        <BaseLink
           href={`/inventory?cabinetId=${cabinet.id}`}
           className="mt-4 inline-block rounded border border-[var(--border-color)] px-4 py-2 hover:bg-[var(--bg-hover)]"
         >
           ➕ Add Item in this Cabinet
-        </Link>
+        </BaseLink>
 
         <a
           href={qrDataUrl}

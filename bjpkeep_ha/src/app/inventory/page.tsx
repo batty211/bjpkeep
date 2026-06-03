@@ -2,7 +2,7 @@ import AppLayout from "@/components/layout/app-layout";
 import ItemForm from "@/components/items/item-form";
 import MoveItemForm from "@/components/items/move-item-form";
 import Image from "next/image";
-import Link from "next/link";
+import { BaseLink } from "@/lib/ingress-utils";
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { getCurrentUser } from "@/lib/auth";
@@ -121,7 +121,7 @@ export default async function InventoryPage({
                 key={item.id}
                 className="overflow-hidden rounded-xl border border-[var(--border-color)] bg-[var(--bg-card)] shadow-sm transition hover:shadow-md"
               >
-                <Link href={`/items/${item.id}`} className="flex items-center gap-4 p-4">
+                <BaseLink href={`/items/${item.id}`} className="flex items-center gap-4 p-4">
                   <div className="h-20 w-20 flex-shrink-0 overflow-hidden rounded-lg bg-[var(--bg-hover)]">
                     {item.images?.[0] ? (
                       <Image
@@ -151,7 +151,7 @@ export default async function InventoryPage({
                   </div>
 
                   <div className="text-sm text-[var(--text-secondary)]">›</div>
-                </Link>
+                </BaseLink>
 
                 <div className="border-t p-4">
                   <details>
@@ -171,12 +171,12 @@ export default async function InventoryPage({
                       </details>
 
                       <div className="flex gap-2">
-                        <Link
+                        <BaseLink
                           href={`/items/${item.id}/edit`}
                           className="flex-1 rounded border px-3 py-2 text-center text-sm"
                         >
                           ✏️ Edit
-                        </Link>
+                        </BaseLink>
 
                         <details className="flex-1">
                           <summary className="cursor-pointer rounded border border-red-300 px-3 py-2 text-center text-sm text-red-600 list-none">
@@ -208,23 +208,23 @@ export default async function InventoryPage({
 
             <div className="flex gap-2">
               {currentPage > 1 && (
-                <Link
+                <BaseLink
                   href={`/inventory?page=${currentPage - 1}${queryString}`}
                   className="rounded border px-3 py-1"
                   prefetch={false}
                 >
                   ← Prev
-                </Link>
+                </BaseLink>
               )}
 
               {currentPage < totalPages && (
-                <Link
+                <BaseLink
                   href={`/inventory?page=${currentPage + 1}${queryString}`}
                   className="rounded border px-3 py-1"
                   prefetch={false}
                 >
                   Next →
-                </Link>
+                </BaseLink>
               )}
             </div>
           </div>

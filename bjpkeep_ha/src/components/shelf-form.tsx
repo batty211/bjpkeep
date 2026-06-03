@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { prefixedFetch } from "@/lib/ingress-utils";
 
 type Cabinet = {
   id: string;
@@ -17,7 +18,7 @@ export default function ShelfForm({
   const [code, setCode] = useState("");
 
   async function save() {
-    await fetch("/api/shelves", {
+    await prefixedFetch("/api/shelves", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

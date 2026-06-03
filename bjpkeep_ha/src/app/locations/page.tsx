@@ -2,8 +2,10 @@ import AppLayout from "@/components/layout/app-layout";
 import RoomForm from "@/components/room-form";
 import CabinetForm from "@/components/cabinet-form";
 import { prisma } from "@/lib/prisma";
-import Link from "next/link";
+import { BaseLink } from "@/lib/ingress-utils";
+
 export const dynamic = "force-dynamic";
+
 export default async function LocationsPage() {
   const rooms = await prisma.room.findMany({
     include: {
@@ -14,8 +16,6 @@ export default async function LocationsPage() {
       },
     },
   });
-
-  const cabinets = rooms.flatMap((room) => room.cabinets);
 
   return (
     <AppLayout>
@@ -58,16 +58,16 @@ export default async function LocationsPage() {
                     className="mb-2 rounded border border-[var(--border-color)] p-2"
                   >
                     <summary className="flex cursor-pointer items-center justify-between list-none">
-                      <span>
+                      <BaseLink href={`/cabinets/${cabinet.id}`} className="hover:underline">
                         🗄️ {cabinet.name} ({cabinet.code}) ({cabinet.items.length})
-                      </span>
+                      </BaseLink>
 
-                      <Link
+                      <BaseLink
                         href={`/cabinets/${cabinet.id}/qr`}
                         className="rounded border border-[var(--border-color)] px-2 py-1 text-xs hover:bg-[var(--bg-hover)]"
                       >
                         🏷️ QR
-                      </Link>
+                      </BaseLink>
                     </summary>
 
                     <div className="mt-2 ml-4">

@@ -1,6 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { prefixedFetch } from "@/lib/ingress-utils";
 
 export default function DeleteImageButton({
   imageId,
@@ -14,7 +15,7 @@ export default function DeleteImageButton({
       return;
     }
 
-    const res = await fetch("/api/items/delete-image", {
+    const res = await prefixedFetch("/api/items/delete-image", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

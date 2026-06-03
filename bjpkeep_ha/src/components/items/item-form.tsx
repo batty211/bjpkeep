@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { prefixedFetch, getPrefixedPath } from "@/lib/ingress-utils";
 
 export default function ItemForm({
   initialData,
@@ -30,69 +31,77 @@ export default function ItemForm({
   const [saving, setSaving] = useState(false);
 
   async function save() {
+    if (!name || !cabinetIdState) {
+      alert("Please fill in all fields");
+      return;
+    }
+
     setSaving(true);
     const imagePaths: string[] = [];
 
-    for (const file of files) {
-      const fd = new FormData();
+    try {
+      for (const file of files) {
+        const fd = new FormData();
+        fd.append("file", file);
 
-      fd.append("file", file);
+        const upload = await prefixedFetch("/api/upload", {
+          method: "POST",
+          body: fd,
+        });
 
-      const upload = await fetch("/api/upload", {
-        method: "POST",
-        body: fd,
+        if (!upload.ok) throw new Error("Upload failed");
+        const uploaded = await upload.json();
+        imagePaths.push(uploaded.path);
+      }
+
+      const method = initialData?.id ? "PUT" : "POST";
+      const response = await prefixedFetch("/api/items", {
+        method,
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          id: initialData?.id,
+          name,
+          cabinetId: cabinetIdState,
+          imagePath: imagePaths[0] ?? "",
+        }),
       });
 
-      const uploaded = await upload.json();
-
-      imagePaths.push(uploaded.path);
-    }
-    const method = initialData?.id ? "PUT" : "POST";
-
-    const response = await fetch("/api/items", {
-      method,
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        id: initialData?.id,
-        name,
-        cabinetId: cabinetIdState,
-        imagePath: imagePaths[0] ?? "",
-      }),
-    });
-
-    setSaving(false);
-
-    if (!response.ok) {
-      alert("Failed to save item");
-      return;
-    }
-
-    if (!initialData?.id && imagePaths.length > 1) {
-      const createdItem = await response.json();
-
-      for (let i = 1; i < imagePaths.length; i++) {
-        await fetch("/api/items/add-image", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            itemId: createdItem.id,
-            path: imagePaths[i],
-          }),
-        });
+      if (!response.ok) {
+        throw new Error("Failed to save item");
       }
-    }
 
-    if (initialData?.id) {
-      window.location.href = `/items/${initialData.id}`;
-      return;
-    }
+      if (!initialData?.id && imagePaths.length > 1) {
+        const createdItem = await response.json();
 
-    alert("Item created successfully");
-    location.reload();
+        for (let i = 1; i < imagePaths.length; i++) {
+          await prefixedFetch("/api/items/add-image", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              itemId: createdItem.id,
+              path: imagePaths[i],
+            }),
+          });
+        }
+      }
+
+      if (initialData?.id) {
+        window.location.href = getPrefixedPath(`/items/${initialData.id}`);
+        return;
+      }
+
+      alert("Item created successfully");
+      location.reload();
+    } catch (err) {
+      console.error(err);
+      alert(err instanceof Error ? err.message : "Failed to save item");
+    } finally {
+      setSaving(false);
+    }
   }
   return (
     <div className="rounded-xl border border-[var(--border-color)] bg-[var(--bg-card)] p-4">

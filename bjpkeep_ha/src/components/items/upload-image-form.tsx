@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { prefixedFetch } from "@/lib/ingress-utils";
 
 export default function UploadImageForm({ itemId }: { itemId: string }) {
   const [files, setFiles] = useState<File[]>([]);
@@ -20,14 +21,14 @@ export default function UploadImageForm({ itemId }: { itemId: string }) {
         const fd = new FormData();
         fd.append("file", file);
 
-        const uploadRes = await fetch("/api/upload", {
+        const uploadRes = await prefixedFetch("/api/upload", {
           method: "POST",
           body: fd,
         });
 
         const uploaded = await uploadRes.json();
 
-        await fetch("/api/items/add-image", {
+        await prefixedFetch("/api/items/add-image", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",

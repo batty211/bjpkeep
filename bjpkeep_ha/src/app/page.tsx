@@ -1,7 +1,7 @@
 import AppLayout from "@/components/layout/app-layout";
 import { prisma } from "@/lib/prisma";
 import ItemSearch from "@/components/search/item-search";
-import Link from "next/link";
+import { BaseLink } from "@/lib/ingress-utils";
 
 export default async function Home() {
   return (
@@ -18,19 +18,19 @@ export default async function Home() {
             <ItemSearch />
 
             <div className="grid grid-cols-2 gap-3">
-              <Link
+              <BaseLink
                 href="/inventory"
                 className="rounded-lg border border-[var(--border-color)] px-4 py-3 text-center font-medium hover:bg-[var(--bg-hover)]"
               >
                 ➕ Add Item
-              </Link>
+              </BaseLink>
 
-              <Link
+              <BaseLink
                 href="/locations"
                 className="rounded-lg border border-[var(--border-color)] px-4 py-3 text-center font-medium hover:bg-[var(--bg-hover)]"
               >
                 📍 Locations
-              </Link>
+              </BaseLink>
             </div>
           </div>
         </div>

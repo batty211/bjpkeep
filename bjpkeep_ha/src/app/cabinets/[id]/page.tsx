@@ -1,6 +1,6 @@
 import AppLayout from "@/components/layout/app-layout";
 import { prisma } from "@/lib/prisma";
-import Link from "next/link";
+import { BaseLink } from "@/lib/ingress-utils";
 
 export default async function CabinetPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -39,13 +39,13 @@ export default async function CabinetPage({ params }: { params: Promise<{ id: st
 
         <div className="space-y-3">
           {cabinet.items.map((item) => (
-            <Link
+            <BaseLink
               key={item.id}
               href={`/items/${item.id}`}
               className="block rounded-xl border border-[var(--border-color)] bg-[var(--bg-card)] p-4 hover:bg-[var(--bg-hover)]"
             >
               {item.name}
-            </Link>
+            </BaseLink>
           ))}
 
           {cabinet.items.length === 0 && (

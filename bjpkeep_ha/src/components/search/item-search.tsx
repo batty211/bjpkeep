@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import MoveItemForm from "@/components/items/move-item-form";
-import Link from "next/link";
+import { BaseLink, prefixedFetch } from "@/lib/ingress-utils";
 
 export default function ItemSearch() {
   const [query, setQuery] = useState("");
@@ -10,7 +10,7 @@ export default function ItemSearch() {
   const [cabinets, setCabinets] = useState<any[]>([]);
   useEffect(() => {
     async function loadCabinets() {
-      const res = await fetch("/api/cabinets");
+      const res = await prefixedFetch("/api/cabinets");
       const data = await res.json();
       setCabinets(data);
     }
@@ -27,7 +27,7 @@ export default function ItemSearch() {
     }
 
     const timer = setTimeout(async () => {
-      const res = await fetch(`/api/search?q=${encodeURIComponent(trimmed)}`);
+      const res = await prefixedFetch(`/api/search?q=${encodeURIComponent(trimmed)}`);
 
       const data = await res.json();
 
@@ -38,7 +38,7 @@ export default function ItemSearch() {
   }, [query]);
 
   async function search() {
-    const res = await fetch(`/api/search?q=${encodeURIComponent(query)}`);
+    const res = await prefixedFetch(`/api/search?q=${encodeURIComponent(query)}`);
 
     const data = await res.json();
 
@@ -89,13 +89,13 @@ export default function ItemSearch() {
             className="rounded border border-[var(--border-color)] p-3 transition hover:bg-[var(--bg-hover)]"
           >
             <div className="flex items-start justify-between gap-2">
-              <Link href={`/items/${item.id}`} className="min-w-0 flex-1">
+              <BaseLink href={`/items/${item.id}`} className="min-w-0 flex-1">
                 <div className="font-medium">{item.name}</div>
 
                 <div className="text-sm font-medium text-blue-600">
                   📍 {item.cabinet.room.name} → {item.cabinet.name} ({item.cabinet.code})
                 </div>
-              </Link>
+              </BaseLink>
 
               <div className="relative flex gap-2">
                 <details>
@@ -106,9 +106,9 @@ export default function ItemSearch() {
                     <MoveItemForm itemId={item.id} cabinets={cabinets} />
                   </div>
                 </details>
-                <Link href={`/items/${item.id}/edit`} className="rounded border px-3 py-1 text-sm">
+                <BaseLink href={`/items/${item.id}/edit`} className="rounded border px-3 py-1 text-sm">
                   ✏️ Edit
-                </Link>
+                </BaseLink>
               </div>
             </div>
           </div>

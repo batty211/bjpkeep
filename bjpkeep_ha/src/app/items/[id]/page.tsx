@@ -1,12 +1,12 @@
 import Image from "next/image";
-import Link from "next/link";
 import AppLayout from "@/components/layout/app-layout";
 import UploadImageForm from "@/components/items/upload-image-form";
 import MoveItemForm from "@/components/items/move-item-form";
-import DeleteImageButton from "@/components/items/delete-image-button";
 import ImageGallery from "@/components/items/image-gallery";
 import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
+import { BaseLink } from "@/lib/ingress-utils";
+import { getServerPrefixedPath } from "@/lib/ingress-utils-server";
 
 type Props = {
   params: Promise<{
@@ -75,7 +75,9 @@ export default async function ItemDetailPage({ params }: Props) {
         id,
       },
     });
-    redirect("/inventory");
+    
+    const target = await getServerPrefixedPath("/inventory");
+    redirect(target);
   }
 
   if (!item) {
@@ -90,13 +92,13 @@ export default async function ItemDetailPage({ params }: Props) {
     <AppLayout>
       <div className="mx-auto max-w-4xl space-y-6">
         <div className="flex flex-wrap items-center gap-4">
-          <Link href="/inventory" className="text-sm text-blue-600 hover:underline">
+          <BaseLink href="/inventory" className="text-sm text-blue-600 hover:underline">
             ← Back to Inventory
-          </Link>
+          </BaseLink>
 
-          <Link href={`/items/${item.id}/edit`} className="text-sm text-green-600 hover:underline">
+          <BaseLink href={`/items/${item.id}/edit`} className="text-sm text-green-600 hover:underline">
             ✏️ Edit Item
-          </Link>
+          </BaseLink>
 
           <form action={deleteItem}>
             <button type="submit" className="text-sm text-red-600 hover:underline">
