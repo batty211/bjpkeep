@@ -20,6 +20,15 @@ function normalizeIngressPath(value) {
   return value.replace(/\/+$/, "");
 }
 
+function stripIngressPath(req, ingressPath) {
+  if (!ingressPath || !req.url?.startsWith(ingressPath)) {
+    return;
+  }
+
+  const strippedUrl = req.url.slice(ingressPath.length) || "/";
+  req.url = strippedUrl.startsWith("/") ? strippedUrl : `/${strippedUrl}`;
+}
+
 function shouldRewriteResponse(req) {
   const url = req.url || "";
 
@@ -34,12 +43,8 @@ function shouldRewriteResponse(req) {
 
 function rewriteIngressAssets(body, ingressPath) {
   return body
-    .replaceAll('"/_next/', `"${ingressPath}/_next/`)
-    .replaceAll("'/_next/", `'${ingressPath}/_next/`)
-    .replaceAll('\\"/_next/', `\\"${ingressPath}/_next/`)
-    .replaceAll('"/favicon.ico', `"${ingressPath}/favicon.ico`)
-    .replaceAll("'/favicon.ico", `'${ingressPath}/favicon.ico`)
-    .replaceAll('\\"/favicon.ico', `\\"${ingressPath}/favicon.ico`);
+    .replaceAll("/_next/", `${ingressPath}/_next/`)
+    .replaceAll("/favicon.ico", `${ingressPath}/favicon.ico`);
 }
 
 function splitEncodingAndCallback(encoding, callback) {
@@ -104,6 +109,8 @@ await app.prepare();
 
 createServer((req, res) => {
   const ingressPath = normalizeIngressPath(getHeaderValue(req.headers["x-ingress-path"]));
+
+  stripIngressPath(req, ingressPath);
 
   if (ingressPath && shouldRewriteResponse(req)) {
     installIngressAssetRewrite(req, res, ingressPath);
