@@ -1,7 +1,6 @@
 "use client";
 
-import Link, { LinkProps } from "next/link";
-import { ReactNode, createContext, useContext } from "react";
+import { AnchorHTMLAttributes, ReactNode, createContext, useContext } from "react";
 
 declare global {
   interface Window {
@@ -27,16 +26,31 @@ export function useIngressPath(): string {
  * Prefixes a path with the current ingress path
  */
 export function getPrefixedPath(path: string, prefix: string): string {
-  const normalizedPath = normalizeApiPath(path);
+  const normalizedPrefix = normalizeIngressPrefix(prefix);
+  const normalizedPath = normalizeApiPath(stripKnownIngressPath(path, normalizedPrefix));
 
-  if (prefix && normalizedPath.startsWith("/") && !normalizedPath.startsWith(prefix)) {
-    return prefix + normalizedPath;
+  if (normalizedPrefix && normalizedPath.startsWith("/") && !normalizedPath.startsWith(normalizedPrefix)) {
+    return normalizedPrefix + normalizedPath;
   }
-  // Force relative path if not prefixed
-  if (normalizedPath.startsWith("/")) {
-    return "." + normalizedPath;
-  }
+
   return normalizedPath;
+}
+
+function normalizeIngressPrefix(prefix: string): string {
+  if (!prefix || !prefix.startsWith("/")) {
+    return "";
+  }
+
+  return prefix.replace(/\/+$/, "");
+}
+
+function stripKnownIngressPath(path: string, prefix: string): string {
+  if (prefix && path.startsWith(prefix)) {
+    const strippedPath = path.slice(prefix.length) || "/";
+    return strippedPath.startsWith("/") ? strippedPath : `/${strippedPath}`;
+  }
+
+  return path.replace(/^\/api\/hassio_ingress\/[^/]+(?=\/|$)/, "") || "/";
 }
 
 function normalizeApiPath(path: string): string {
@@ -99,22 +113,22 @@ export async function prefixedFetch(url: string, options?: RequestInit) {
   return fetch(getPrefixedPath(url, prefix), options);
 }
 
-interface BaseLinkProps extends LinkProps {
+interface BaseLinkProps extends Omit<AnchorHTMLAttributes<HTMLAnchorElement>, "href"> {
   children: ReactNode;
-  className?: string;
   href: string;
+  prefetch?: boolean;
 }
 
 /**
- * A wrapper around Next.js Link that automatically prepends the Ingress path.
+ * A link wrapper that automatically prepends the Ingress path.
  */
-export function BaseLink({ href, children, ...props }: BaseLinkProps) {
+export function BaseLink({ href, children, prefetch: _prefetch, ...props }: BaseLinkProps) {
   const prefix = useIngressPath();
   const prefixedHref = getPrefixedPath(href as string, prefix);
 
   return (
-    <Link href={prefixedHref} {...props}>
+    <a href={prefixedHref} {...props}>
       {children}
-    </Link>
+    </a>
   );
 }
