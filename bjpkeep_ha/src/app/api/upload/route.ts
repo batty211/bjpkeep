@@ -2,8 +2,8 @@ import { writeFile, mkdir } from "fs/promises";
 import { v4 as uuid } from "uuid";
 import { NextResponse } from "next/server";
 import path from "path";
-
-const UPLOAD_DIR = process.env.UPLOAD_DIR ?? path.join(process.cwd(), "public/uploads/items");
+import { UPLOAD_DIR } from "@/lib/item-images";
+import { createItemThumbnail } from "@/lib/item-thumbnails";
 
 export async function POST(req: Request) {
   const formData = await req.formData();
@@ -37,6 +37,7 @@ export async function POST(req: Request) {
 
   try {
     await writeFile(filepath, buffer);
+    await createItemThumbnail(filename, buffer);
 
     return NextResponse.json({
       path: `/uploads/items/${filename}`,

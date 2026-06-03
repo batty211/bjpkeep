@@ -2,8 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
 import fs from "node:fs/promises";
 import path from "node:path";
-
-const UPLOAD_DIR = process.env.UPLOAD_DIR ?? path.join(process.cwd(), "public/uploads/items");
+import { getThumbnailFilename, UPLOAD_DIR } from "@/lib/item-images";
 
 export async function POST(req: Request) {
   const { imageId } = await req.json();
@@ -19,10 +18,18 @@ export async function POST(req: Request) {
   }
 
   if (image.path?.startsWith("/uploads/")) {
-    const filePath = path.join(UPLOAD_DIR, path.basename(image.path));
+    const filename = path.basename(image.path);
+    const filePath = path.join(UPLOAD_DIR, filename);
+    const thumbnailPath = path.join(UPLOAD_DIR, "thumbs", getThumbnailFilename(filename));
 
     try {
       await fs.unlink(filePath);
+    } catch {
+      // ignore missing file
+    }
+
+    try {
+      await fs.unlink(thumbnailPath);
     } catch {
       // ignore missing file
     }

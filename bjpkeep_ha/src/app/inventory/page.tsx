@@ -8,6 +8,7 @@ import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { getCurrentUser } from "@/lib/auth";
 import InventoryFilter from "@/components/inventory/inventory-filter";
+import { getThumbnailPath } from "@/lib/item-images";
 
 export default async function InventoryPage({
   searchParams,
@@ -103,7 +104,7 @@ export default async function InventoryPage({
     ...item,
     images: await Promise.all(item.images.map(async (img) => ({
       ...img,
-      path: await getServerPrefixedPath(img.path)
+      path: await getServerPrefixedPath(getThumbnailPath(img.path))
     })))
   })));
 
