@@ -33,11 +33,12 @@ if ! npx prisma migrate deploy; then
     exit 1
 fi
 
-bashio::log.info "Starting BJP Keep..."
+bashio::log.info "Starting BJP Keep in production mode..."
+export NODE_ENV=production
 export HOSTNAME="0.0.0.0"
 
-# Run npm start and catch errors to show logs
-if ! npm start -- -H 0.0.0.0; then
+# Run next start and catch errors to show logs
+if ! npx next start -H 0.0.0.0; then
     bashio::log.error "BJP Keep crashed! Fetching npm debug logs..."
     # Find the latest log file and print it
     LATEST_LOG=$(ls -t /root/.npm/_logs/*.log | head -n 1)
