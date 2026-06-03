@@ -2,11 +2,12 @@
 
 import { useEffect, useRef, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { getPrefixedPath } from "@/lib/ingress-utils";
+import { getPrefixedPath, useIngressPath } from "@/lib/ingress-utils";
 
 export default function InventoryFilter({ initialValue }: { initialValue: string }) {
   const [value, setValue] = useState(initialValue);
   const firstRender = useRef(true);
+  const ingressPath = useIngressPath();
 
   const router = useRouter();
   const pathname = usePathname();
@@ -38,12 +39,12 @@ export default function InventoryFilter({ initialValue }: { initialValue: string
       params.set("page", "1");
 
       // Ensure we prepend the Ingress prefix to the current pathname
-      const prefixedPath = getPrefixedPath(pathname);
+      const prefixedPath = getPrefixedPath(pathname, ingressPath);
       router.replace(`${prefixedPath}?${params.toString()}`);
     }, 300);
 
     return () => clearTimeout(timer);
-  }, [value, initialValue, pathname, searchParams, router]);
+  }, [value, initialValue, pathname, searchParams, router, ingressPath]);
 
   return (
     <input
