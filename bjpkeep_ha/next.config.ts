@@ -4,7 +4,8 @@ const nextConfig: NextConfig = {
   experimental: {
     proxyClientMaxBodySize: "50mb",
   },
-  // Essential for Home Assistant Ingress to handle relative assets correctly
+  // Use the ASSET_PREFIX env var if set, otherwise fallback to empty
+  assetPrefix: process.env.ASSET_PREFIX || "",
   trailingSlash: true,
 };
 
