@@ -32,18 +32,14 @@ if ! npx prisma migrate deploy; then
     exit 1
 fi
 
-# In Home Assistant Ingress, the token is dynamic. 
-# We need to ensure that when the app starts, it knows its Ingress path.
-# We set ASSET_PREFIX to an empty string here to let Next.js use relative paths
-# which work better with the proxy.
 export ASSET_PREFIX=""
 export NODE_ENV=production
 export HOSTNAME="0.0.0.0"
 
 bashio::log.info "Starting BJP Keep in production mode..."
 
-# Run next start and catch errors
-if ! npx next start -H 0.0.0.0; then
+# Run the custom Next server so static asset URLs can be prefixed for HA Ingress.
+if ! node server.mjs; then
     bashio::log.error "BJP Keep crashed!"
     exit 1
 fi

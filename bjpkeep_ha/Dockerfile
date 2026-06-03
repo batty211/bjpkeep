@@ -64,6 +64,7 @@ COPY --from=builder /app/.next ./.next
 COPY --from=builder /app/public ./public
 COPY --from=builder /app/prisma ./prisma
 COPY --from=builder /app/run.sh ./run.sh
+COPY --from=builder /app/server.mjs ./server.mjs
 
 # Copy source for dev_mode support
 COPY --from=builder /app/src ./src
