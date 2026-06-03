@@ -41,6 +41,17 @@ export function usePrefixedFetch() {
   };
 }
 
+/**
+ * Legacy support for components not yet converted to usePrefixedFetch hook.
+ * NOTE: This is less robust than usePrefixedFetch.
+ */
+export async function prefixedFetch(url: string, options?: RequestInit) {
+  // Try to detect prefix, fallback to root if not available
+  const match = typeof window !== 'undefined' ? window.location.pathname.match(/^\/api\/hassio_ingress\/[^\/]+\//) : null;
+  const prefix = match ? match[0].replace(/\/$/, "") : "";
+  return fetch(getPrefixedPath(url, prefix), options);
+}
+
 interface BaseLinkProps extends LinkProps {
   children: ReactNode;
   className?: string;
