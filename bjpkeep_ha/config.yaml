@@ -1,7 +1,8 @@
 name: BJP Keep
 slug: bjpkeep
-version: "0.4.3c"
+version: "0.4.4"
 description: "BJP Home where are my stuff!!"
+image: ghcr.io/batty211/bjpkeep
 startup: application
 boot: auto
 init: false
