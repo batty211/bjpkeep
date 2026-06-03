@@ -1,7 +1,7 @@
 # Build stage
 FROM node:22-bookworm-slim AS builder
 
-# Install system dependencies for canvas (needed during build/prisma generate)
+# Install system dependencies
 RUN apt-get update && apt-get install -y \
     openssl \
     libcairo2-dev \
@@ -14,22 +14,22 @@ RUN apt-get update && apt-get install -y \
 
 WORKDIR /app
 
-# 1. Install dependencies (Cached)
+# 1. Install dependencies
 COPY package*.json ./
-RUN npm ci
+RUN npm install
 
-# 2. Generate Prisma Client (Cached unless schema changes)
+# 2. Generate Prisma Client
 COPY prisma/schema.prisma ./prisma/
 RUN npx prisma generate
 
-# 3. Build Application (Always runs if source changes)
+# 3. Build Application
 COPY . .
 RUN npm run build
 
 # Production stage
 FROM node:22-bookworm-slim
 
-# Install runtime dependencies for canvas and fonts
+# Install runtime dependencies
 RUN apt-get update && apt-get install -y \
     openssl \
     libcairo2 \
@@ -65,12 +65,11 @@ COPY --from=builder /app/public ./public
 COPY --from=builder /app/prisma ./prisma
 COPY --from=builder /app/run.sh ./run.sh
 
-# Also copy source for dev_mode support
+# Copy source for dev_mode support
 COPY --from=builder /app/src ./src
 COPY --from=builder /app/next.config.ts ./
 COPY --from=builder /app/tsconfig.json ./
 COPY --from=builder /app/postcss.config.mjs ./
-COPY --from=builder /app/tailwind.config.ts ./bjpkeep_ha/tailwind.config.ts 2>/dev/null || true
 
 # Make sure run.sh is executable
 RUN chmod +x /app/run.sh
