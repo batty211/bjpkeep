@@ -37,6 +37,21 @@ export default async function CabinetPage({ params }: { params: Promise<{ id: st
           <div className="text-[var(--text-secondary)]">📍 {cabinet.room.name}</div>
         </div>
 
+        <div className="flex flex-wrap gap-2">
+          <BaseLink
+            href={`/inventory?cabinetId=${cabinet.id}`}
+            className="rounded border border-[var(--border-color)] px-4 py-2 hover:bg-[var(--bg-hover)]"
+          >
+            ➕ Add Item in this Cabinet
+          </BaseLink>
+          <BaseLink
+            href={`/cabinets/${cabinet.id}/qr`}
+            className="rounded border border-[var(--border-color)] px-4 py-2 hover:bg-[var(--bg-hover)]"
+          >
+            🖨️ Cabinet QR
+          </BaseLink>
+        </div>
+
         <div className="space-y-3">
           {cabinet.items.map((item) => (
             <BaseLink

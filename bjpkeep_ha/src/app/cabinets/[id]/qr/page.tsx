@@ -4,7 +4,7 @@ import QRCode from "qrcode";
 import Image from "next/image";
 import { BaseLink } from "@/lib/ingress-utils";
 import { createCanvas, loadImage } from "canvas";
-import { getServerExternalUrl } from "@/lib/ingress-utils-server";
+import { createCabinetQrPayload } from "@/lib/cabinet-qr";
 
 export default async function CabinetQrPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -27,9 +27,9 @@ export default async function CabinetQrPage({ params }: { params: Promise<{ id: 
     );
   }
 
-  const url = await getServerExternalUrl(`/cabinets/${cabinet.id}`);
+  const qrPayload = createCabinetQrPayload(cabinet.id);
 
-  const qrOnlyDataUrl = await QRCode.toDataURL(url, {
+  const qrOnlyDataUrl = await QRCode.toDataURL(qrPayload, {
     margin: 2,
     width: 300,
   });
@@ -81,7 +81,7 @@ export default async function CabinetQrPage({ params }: { params: Promise<{ id: 
           🖨️ Download QR
         </a>
 
-        <div className="break-all text-sm text-[var(--text-secondary)]">{url}</div>
+        <div className="break-all text-sm text-[var(--text-secondary)]">{qrPayload}</div>
       </div>
     </AppLayout>
   );
