@@ -10,19 +10,21 @@ export async function middleware(req: NextRequest) {
     internalPath = pathname.replace(ingressPath, "") || "/";
   }
 
-  // If we are on an ingress path, rewrite to internal path so Next.js matches the route
-  if (internalPath !== pathname) {
-    // For assets and APIs, we just rewrite internally
-    if (
-      internalPath.startsWith("/_next") ||
-      internalPath.startsWith("/api") ||
-      internalPath.startsWith("/uploads") ||
-      internalPath === "/favicon.ico"
-    ) {
+  // Always rewrite assets/internal calls so they work even if requested with the prefix
+  if (
+    internalPath.startsWith("/_next") ||
+    internalPath.startsWith("/api") ||
+    internalPath.startsWith("/uploads") ||
+    internalPath === "/favicon.ico"
+  ) {
+    if (internalPath !== pathname) {
       return NextResponse.rewrite(new URL(internalPath, req.url));
     }
+    return NextResponse.next();
+  }
 
-    // For other routes, rewrite so Next.js can find the page
+  // For other routes, rewrite to internal path so Next.js matches the route
+  if (internalPath !== pathname) {
     return NextResponse.rewrite(new URL(internalPath, req.url));
   }
 
@@ -30,6 +32,6 @@ export async function middleware(req: NextRequest) {
 }
 
 export const config = {
-  // Match all paths except static files
-  matcher: ["/((?!_next/static|_next/image|favicon.ico).*)"],
+  // Match ALL paths to ensure we catch static assets
+  matcher: ["/:path*"],
 };

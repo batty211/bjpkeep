@@ -1,6 +1,6 @@
 name: BJP Keep
 slug: bjpkeep
-version: "0.1.1"
+version: "0.1.2"
 description: "Home Inventory Management System"
 startup: application
 boot: auto
@@ -12,6 +12,8 @@ arch:
   - amd64
   - aarch64
   - armv7
+map:
+  - share:rw
 options:
   log_level: info
   app_url: ""
