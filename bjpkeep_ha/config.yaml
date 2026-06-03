@@ -1,6 +1,6 @@
 name: BJP Keep
 slug: bjpkeep
-version: "0.1.9"
+version: "0.1.11"
 
 description: "Home Inventory Management System"
 startup: application
@@ -18,6 +18,8 @@ map:
 options:
   log_level: info
   app_url: ""
+  dev_mode: false
 schema:
   log_level: "list(debug|info|warning|error|fatal)"
   app_url: "str?"
+  dev_mode: bool

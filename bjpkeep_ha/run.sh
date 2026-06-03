@@ -33,17 +33,27 @@ if ! npx prisma migrate deploy; then
     exit 1
 fi
 
-bashio::log.info "Starting BJP Keep in production mode..."
-export NODE_ENV=production
 export HOSTNAME="0.0.0.0"
 
-# Run next start and catch errors to show logs
-if ! npx next start -H 0.0.0.0; then
-    bashio::log.error "BJP Keep crashed! Fetching npm debug logs..."
-    # Find the latest log file and print it
-    LATEST_LOG=$(ls -t /root/.npm/_logs/*.log | head -n 1)
-    if [ -f "$LATEST_LOG" ]; then
-        cat "$LATEST_LOG"
+if bashio::config.true 'dev_mode'; then
+    bashio::log.info "Starting BJP Keep in DEVELOPMENT mode..."
+    export NODE_ENV=development
+    # In dev mode, we use next dev
+    if ! npx next dev -p 3000 -H 0.0.0.0; then
+        bashio::log.error "BJP Keep (Dev) crashed!"
+        exit 1
     fi
-    exit 1
+else
+    bashio::log.info "Starting BJP Keep in production mode..."
+    export NODE_ENV=production
+    # Run next start and catch errors to show logs
+    if ! npx next start -H 0.0.0.0; then
+        bashio::log.error "BJP Keep crashed! Fetching npm debug logs..."
+        # Find the latest log file and print it
+        LATEST_LOG=$(ls -t /root/.npm/_logs/*.log | head -n 1 2>/dev/null || echo "")
+        if [ -f "$LATEST_LOG" ]; then
+            cat "$LATEST_LOG"
+        fi
+        exit 1
+    fi
 fi
