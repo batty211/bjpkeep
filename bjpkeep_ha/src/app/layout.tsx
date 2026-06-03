@@ -39,14 +39,9 @@ export default async function RootLayout({
 }>) {
   const headerList = await headers();
   const ingressPath = headerList.get("x-ingress-path") || "";
-  // Create a proper base URL for the <base> tag
-  const baseUrl = ingressPath ? `${ingressPath}/` : "/";
 
   return (
     <html lang="en" className={`${notoSansThai.variable} ${geistMono.variable} h-full antialiased`}>
-      <head>
-        <base href={baseUrl} />
-      </head>
       <body className="min-h-full flex flex-col">
         <IngressProvider path={ingressPath}>
           {children}

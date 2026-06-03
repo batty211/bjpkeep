@@ -3,6 +3,7 @@ import ItemForm from "@/components/items/item-form";
 import MoveItemForm from "@/components/items/move-item-form";
 import Image from "next/image";
 import { BaseLink } from "@/lib/ingress-utils";
+import { getServerPrefixedPath } from "@/lib/ingress-utils-server";
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
 import { getCurrentUser } from "@/lib/auth";
@@ -96,6 +97,16 @@ export default async function InventoryPage({
       name: "asc",
     },
   });
+
+  // Pre-calculate image paths with prefix
+  const itemsWithPrefixedImages = await Promise.all(items.map(async (item) => ({
+    ...item,
+    images: await Promise.all(item.images.map(async (img) => ({
+      ...img,
+      path: await getServerPrefixedPath(img.path)
+    })))
+  })));
+
   return (
     <AppLayout>
       <div className="space-y-6">
@@ -116,7 +127,7 @@ export default async function InventoryPage({
           <h2 className="mb-4 font-semibold">Items</h2>
 
           <div className="space-y-3">
-            {items.map((item) => (
+            {itemsWithPrefixedImages.map((item) => (
               <div
                 key={item.id}
                 className="overflow-hidden rounded-xl border border-[var(--border-color)] bg-[var(--bg-card)] shadow-sm transition hover:shadow-md"
