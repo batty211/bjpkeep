@@ -3,6 +3,12 @@
 import Link, { LinkProps } from "next/link";
 import { ReactNode, createContext, useContext } from "react";
 
+declare global {
+  interface Window {
+    __BJPKEEP_INGRESS_PATH__?: string;
+  }
+}
+
 // Context to store the ingress path
 const IngressContext = createContext<string>("");
 
@@ -21,14 +27,57 @@ export function useIngressPath(): string {
  * Prefixes a path with the current ingress path
  */
 export function getPrefixedPath(path: string, prefix: string): string {
-  if (prefix && path.startsWith("/") && !path.startsWith(prefix)) {
-    return prefix + path;
+  const normalizedPath = normalizeApiPath(path);
+
+  if (prefix && normalizedPath.startsWith("/") && !normalizedPath.startsWith(prefix)) {
+    return prefix + normalizedPath;
   }
   // Force relative path if not prefixed
-  if (path.startsWith("/")) {
-    return "." + path;
+  if (normalizedPath.startsWith("/")) {
+    return "." + normalizedPath;
   }
-  return path;
+  return normalizedPath;
+}
+
+function normalizeApiPath(path: string): string {
+  if (!path.startsWith("/api/")) {
+    return path;
+  }
+
+  const queryIndex = path.indexOf("?");
+  const pathname = queryIndex === -1 ? path : path.slice(0, queryIndex);
+  const search = queryIndex === -1 ? "" : path.slice(queryIndex);
+
+  if (pathname.endsWith("/")) {
+    return path;
+  }
+
+  return `${pathname}/${search}`;
+}
+
+function getBrowserIngressPath(): string {
+  if (typeof window === "undefined") {
+    return "";
+  }
+
+  if (window.__BJPKEEP_INGRESS_PATH__) {
+    return window.__BJPKEEP_INGRESS_PATH__;
+  }
+
+  const metaPath = document
+    .querySelector<HTMLMetaElement>('meta[name="bjpkeep-ingress-path"]')
+    ?.content;
+
+  if (metaPath) {
+    window.__BJPKEEP_INGRESS_PATH__ = metaPath;
+    return metaPath;
+  }
+
+  const match = window.location.pathname.match(/^\/api\/hassio_ingress\/[^/]+/);
+  const prefix = match ? match[0] : "";
+  window.__BJPKEEP_INGRESS_PATH__ = prefix;
+
+  return prefix;
 }
 
 /**
@@ -37,7 +86,7 @@ export function getPrefixedPath(path: string, prefix: string): string {
 export function usePrefixedFetch() {
   const prefix = useIngressPath();
   return async (url: string, options?: RequestInit) => {
-    return fetch(getPrefixedPath(url, prefix), options);
+    return fetch(getPrefixedPath(url, prefix || getBrowserIngressPath()), options);
   };
 }
 
@@ -46,9 +95,7 @@ export function usePrefixedFetch() {
  * NOTE: This is less robust than usePrefixedFetch.
  */
 export async function prefixedFetch(url: string, options?: RequestInit) {
-  // Try to detect prefix, fallback to root if not available
-  const match = typeof window !== 'undefined' ? window.location.pathname.match(/^\/api\/hassio_ingress\/[^\/]+\//) : null;
-  const prefix = match ? match[0].replace(/\/$/, "") : "";
+  const prefix = getBrowserIngressPath();
   return fetch(getPrefixedPath(url, prefix), options);
 }
 

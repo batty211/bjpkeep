@@ -54,6 +54,23 @@ function splitEncodingAndCallback(encoding, callback) {
   return { encoding, callback };
 }
 
+function prefixLocationHeader(res, ingressPath) {
+  const location = String(res.getHeader("location") || "");
+
+  if (location.startsWith("/") && !location.startsWith(ingressPath)) {
+    res.setHeader("location", `${ingressPath}${location}`);
+  }
+}
+
+function installIngressRedirectRewrite(res, ingressPath) {
+  const originalWriteHead = res.writeHead.bind(res);
+
+  res.writeHead = (...args) => {
+    prefixLocationHeader(res, ingressPath);
+    return originalWriteHead(...args);
+  };
+}
+
 function installIngressAssetRewrite(req, res, ingressPath) {
   const originalWrite = res.write.bind(res);
   const originalEnd = res.end.bind(res);
@@ -62,6 +79,7 @@ function installIngressAssetRewrite(req, res, ingressPath) {
 
   res.writeHead = (...args) => {
     res.removeHeader("content-length");
+    prefixLocationHeader(res, ingressPath);
     return originalWriteHead(...args);
   };
 
@@ -116,6 +134,7 @@ createServer((req, res) => {
 
   if (ingressPath) {
     delete req.headers["accept-encoding"];
+    installIngressRedirectRewrite(res, ingressPath);
   }
 
   stripIngressPath(req, ingressPath);

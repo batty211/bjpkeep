@@ -42,6 +42,14 @@ export default async function RootLayout({
 
   return (
     <html lang="en" className={`${notoSansThai.variable} ${geistMono.variable} h-full antialiased`}>
+      <head>
+        <meta name="bjpkeep-ingress-path" content={ingressPath} />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `window.__BJPKEEP_INGRESS_PATH__=${JSON.stringify(ingressPath)};`,
+          }}
+        />
+      </head>
       <body className="min-h-full flex flex-col">
         <IngressProvider path={ingressPath}>
           {children}
