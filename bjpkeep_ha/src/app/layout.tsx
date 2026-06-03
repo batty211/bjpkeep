@@ -42,6 +42,22 @@ export default async function RootLayout({
 
   return (
     <html lang="en" className={`${notoSansThai.variable} ${geistMono.variable} h-full antialiased`}>
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function() {
+                var path = window.location.pathname;
+                var match = path.match(/^\\/api\\/hassio_ingress\\/[^\\/]+/);
+                if (match) {
+                  window.__NEXT_DATA__ = window.__NEXT_DATA__ || {};
+                  window.__NEXT_DATA__.assetPrefix = match[0];
+                }
+              })();
+            `,
+          }}
+        />
+      </head>
       <body className="min-h-full flex flex-col">
         <IngressProvider path={ingressPath}>
           {children}
