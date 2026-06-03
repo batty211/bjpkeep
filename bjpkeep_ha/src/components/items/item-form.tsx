@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { prefixedFetch, getPrefixedPath } from "@/lib/ingress-utils";
+import { usePrefixedFetch, getPrefixedPath, useIngressPath } from "@/lib/ingress-utils";
 
 export default function ItemForm({
   initialData,
@@ -29,6 +29,8 @@ export default function ItemForm({
   const [files, setFiles] = useState<File[]>([]);
   const [fileName, setFileName] = useState("");
   const [saving, setSaving] = useState(false);
+  const prefixedFetch = usePrefixedFetch();
+  const ingressPath = useIngressPath();
 
   async function save() {
     if (!name || !cabinetIdState) {
@@ -90,7 +92,7 @@ export default function ItemForm({
       }
 
       if (initialData?.id) {
-        window.location.href = getPrefixedPath(`/items/${initialData.id}`);
+        window.location.href = getPrefixedPath(`/items/${initialData.id}`, ingressPath);
         return;
       }
 
