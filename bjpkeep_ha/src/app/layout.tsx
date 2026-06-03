@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import { Noto_Sans_Thai, Geist_Mono } from "next/font/google";
+import { headers } from "next/headers";
+import { IngressProvider } from "@/lib/ingress-utils";
 import "./globals.css";
 
 const notoSansThai = Noto_Sans_Thai({
@@ -30,14 +32,21 @@ export const metadata: Metadata = {
   manifest: "favicons/site.webmanifest",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const headerList = await headers();
+  const ingressPath = headerList.get("x-ingress-path") || "";
+
   return (
     <html lang="en" className={`${notoSansThai.variable} ${geistMono.variable} h-full antialiased`}>
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col">
+        <IngressProvider path={ingressPath}>
+          {children}
+        </IngressProvider>
+      </body>
     </html>
   );
 }

@@ -1,51 +1,44 @@
 "use client";
 
 import Link, { LinkProps } from "next/link";
-import { ReactNode } from "react";
+import { ReactNode, createContext, useContext } from "react";
 
-/**
- * Gets the current ingress path.
- * Tries the cookie first, then falls back to detecting it from the URL.
- */
-export function getIngressPath(): string {
-  if (typeof document === "undefined") return "";
-  
-  // 1. Try cookie
-  const value = `; ${document.cookie}`;
-  const parts = value.split(`; bjpkeep-ingress-path=`);
-  if (parts.length === 2) {
-    const cookiePath = parts.pop()?.split(";").shift();
-    if (cookiePath) return cookiePath;
-  }
+// Context to store the ingress path
+const IngressContext = createContext<string>("");
 
-  // 2. Fallback: Detect from URL (Home Assistant Ingress pattern)
-  // Matches: /api/hassio_ingress/some_token/
-  const match = window.location.pathname.match(/^\/api\/hassio_ingress\/[^\/]+\//);
-  if (match) {
-    return match[0].replace(/\/$/, ""); // Remove trailing slash
-  }
-
-  return "";
+export function IngressProvider({ children, path }: { children: ReactNode, path: string }) {
+  return <IngressContext.Provider value={path}>{children}</IngressContext.Provider>;
 }
 
 /**
- * Prefixes a path with the current ingress path (client-side)
+ * Gets the current ingress path from context.
  */
-export function getPrefixedPath(path: string): string {
-  if (typeof document === "undefined") return path;
+export function useIngressPath(): string {
+  return useContext(IngressContext);
+}
 
-  const prefix = getIngressPath();
+/**
+ * Prefixes a path with the current ingress path
+ */
+export function getPrefixedPath(path: string, prefix: string): string {
   if (prefix && path.startsWith("/") && !path.startsWith(prefix)) {
     return prefix + path;
+  }
+  // Force relative path if not prefixed
+  if (path.startsWith("/")) {
+    return "." + path;
   }
   return path;
 }
 
 /**
- * A fetch wrapper that automatically adds the Ingress prefix
+ * A fetch wrapper that automatically adds the Ingress prefix (Client-side)
  */
-export async function prefixedFetch(url: string, options?: RequestInit) {
-  return fetch(getPrefixedPath(url), options);
+export function usePrefixedFetch() {
+  const prefix = useIngressPath();
+  return async (url: string, options?: RequestInit) => {
+    return fetch(getPrefixedPath(url, prefix), options);
+  };
 }
 
 interface BaseLinkProps extends LinkProps {
@@ -58,7 +51,8 @@ interface BaseLinkProps extends LinkProps {
  * A wrapper around Next.js Link that automatically prepends the Ingress path.
  */
 export function BaseLink({ href, children, ...props }: BaseLinkProps) {
-  const prefixedHref = getPrefixedPath(href);
+  const prefix = useIngressPath();
+  const prefixedHref = getPrefixedPath(href as string, prefix);
 
   return (
     <Link href={prefixedHref} {...props}>

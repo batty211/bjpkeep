@@ -108,7 +108,7 @@ export default function ItemForm({
       <h2 className="mb-4 font-semibold">Add Item</h2>
 
       <input
-        className="mb-2 w-full rounded border p-2"
+        className="mb-2 w-full rounded border border-[var(--border-color)] bg-[var(--bg-card)] p-2 text-[var(--foreground)]"
         placeholder="Item Name"
         value={name}
         onChange={(e) => setName(e.target.value)}
@@ -128,7 +128,7 @@ export default function ItemForm({
 
       {!isFromQR && (
         <select
-          className="mb-2 w-full rounded border p-2"
+          className="mb-2 w-full rounded border border-[var(--border-color)] bg-[var(--bg-card)] p-2 text-[var(--foreground)]"
           value={cabinetIdState}
           onChange={(e) => setCabinetIdState(e.target.value)}
         >
