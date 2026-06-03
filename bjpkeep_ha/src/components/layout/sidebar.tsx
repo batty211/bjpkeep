@@ -1,5 +1,5 @@
 "use client";
-import Link from "next/link";
+import { BaseLink } from "@/lib/ingress-utils";
 
 const menu = [
   { name: "Dashboard", href: "/" },
@@ -17,13 +17,13 @@ export default function Sidebar() {
 
           <div className="space-y-1 border-t p-2">
             {menu.map((item) => (
-              <Link
+              <BaseLink
                 key={item.href}
                 href={item.href}
                 className="block rounded px-3 py-2 hover:bg-[var(--bg-hover)]"
               >
                 {item.name}
-              </Link>
+              </BaseLink>
             ))}
           </div>
         </details>
@@ -38,13 +38,13 @@ export default function Sidebar() {
 
         <nav className="space-y-1 px-3">
           {menu.map((item) => (
-            <Link
+            <BaseLink
               key={item.href}
               href={item.href}
               className="block rounded-lg px-4 py-2 hover:bg-[var(--bg-hover)]"
             >
               {item.name}
-            </Link>
+            </BaseLink>
           ))}
         </nav>
       </aside>

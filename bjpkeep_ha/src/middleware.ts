@@ -10,28 +10,24 @@ export async function middleware(req: NextRequest) {
     internalPath = pathname.replace(ingressPath, "") || "/";
   }
 
-  // Always rewrite assets/internal calls so they work even if requested with the prefix
-  if (
-    internalPath.startsWith("/_next") ||
-    internalPath.startsWith("/api") ||
-    internalPath.startsWith("/uploads") ||
-    internalPath === "/favicon.ico"
-  ) {
-    if (internalPath !== pathname) {
-      return NextResponse.rewrite(new URL(internalPath, req.url));
-    }
-    return NextResponse.next();
-  }
-
-  // For other routes, rewrite to internal path so Next.js matches the route
+  // Define response - if we are stripping prefix, we MUST rewrite
+  let res: NextResponse;
   if (internalPath !== pathname) {
-    return NextResponse.rewrite(new URL(internalPath, req.url));
+    res = NextResponse.rewrite(new URL(internalPath, req.url));
+  } else {
+    res = NextResponse.next();
   }
 
-  return NextResponse.next();
+  // Store the ingress path in a cookie so the client can use it for links
+  // We do this on every request to ensure it's always available
+  if (ingressPath) {
+    res.cookies.set("bjpkeep-ingress-path", ingressPath, { path: "/", sameSite: "lax" });
+  }
+
+  return res;
 }
 
 export const config = {
-  // Match ALL paths to ensure we catch static assets
+  // Match ALL paths to ensure we catch static assets and pages
   matcher: ["/:path*"],
 };
