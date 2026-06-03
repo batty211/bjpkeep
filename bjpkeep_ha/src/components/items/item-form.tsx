@@ -1,14 +1,17 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { usePrefixedFetch, getPrefixedPath, useIngressPath } from "@/lib/ingress-utils";
 
 export default function ItemForm({
   initialData,
   cabinetId,
   cabinets,
+  stayOnCreate = false,
 }: {
   cabinetId?: string;
+  stayOnCreate?: boolean;
   cabinets: {
     id: string;
     name?: string;
@@ -29,8 +32,10 @@ export default function ItemForm({
   const [files, setFiles] = useState<File[]>([]);
   const [fileName, setFileName] = useState("");
   const [saving, setSaving] = useState(false);
+  const [message, setMessage] = useState("");
   const prefixedFetch = usePrefixedFetch();
   const ingressPath = useIngressPath();
+  const router = useRouter();
 
   async function save() {
     if (!name || !cabinetIdState) {
@@ -74,9 +79,9 @@ export default function ItemForm({
         throw new Error("Failed to save item");
       }
 
-      if (!initialData?.id && imagePaths.length > 1) {
-        const createdItem = await response.json();
+      const createdItem = !initialData?.id ? await response.json() : null;
 
+      if (createdItem && imagePaths.length > 1) {
         for (let i = 1; i < imagePaths.length; i++) {
           await prefixedFetch("/api/items/add-image", {
             method: "POST",
@@ -93,6 +98,15 @@ export default function ItemForm({
 
       if (initialData?.id) {
         window.location.href = getPrefixedPath(`/items/${initialData.id}`, ingressPath);
+        return;
+      }
+
+      if (stayOnCreate) {
+        setName("");
+        setFiles([]);
+        setFileName("");
+        setMessage(`Added ${createdItem?.name ?? "item"}.`);
+        router.refresh();
         return;
       }
 
@@ -175,6 +189,12 @@ export default function ItemForm({
       >
         {saving ? "Saving..." : initialData ? "Save Changes" : "Save"}
       </button>
+
+      {message && (
+        <div className="mt-3 rounded border border-green-200 bg-green-50 p-2 text-sm text-green-700">
+          {message}
+        </div>
+      )}
     </div>
   );
 }
