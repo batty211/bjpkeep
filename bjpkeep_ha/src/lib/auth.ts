@@ -1,16 +1,25 @@
-import { cookies } from "next/headers";
+import { cookies, headers } from "next/headers";
 
 export async function getCurrentUser() {
-  const userName =
-    (await cookies()).get(
-      "bjpkeep-user"
-    )?.value;
+  // Try to get user from Home Assistant header
+  const haUserName = (await headers()).get("x-hass-user-name");
 
-  if (!userName) {
-    return null;
+  if (haUserName) {
+    return {
+      name: haUserName,
+    };
+  }
+
+  // Fallback to cookie for local development
+  const cookieUserName = (await cookies()).get("bjpkeep-user")?.value;
+
+  if (cookieUserName) {
+    return {
+      name: cookieUserName,
+    };
   }
 
   return {
-    name: userName,
+    name: "System",
   };
 }

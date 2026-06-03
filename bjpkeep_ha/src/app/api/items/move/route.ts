@@ -1,12 +1,10 @@
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
-import { cookies } from "next/headers";
+import { getCurrentUser } from "@/lib/auth";
 
 export async function POST(req: Request) {
-  const actorName =
-    (await cookies()).get(
-      "bjpkeep-user"
-    )?.value;
+  const user = await getCurrentUser();
+  const actorName = user.name;
   const body = await req.json();
 
   const item = await prisma.item.findUnique({

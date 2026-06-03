@@ -20,4 +20,5 @@ bashio::log.info "Running database migrations..."
 npx prisma migrate deploy
 
 bashio::log.info "Starting BJP Keep..."
-exec npm start
+export HOSTNAME="0.0.0.0"
+exec npm start -- -H 0.0.0.0

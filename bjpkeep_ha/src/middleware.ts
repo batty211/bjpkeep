@@ -1,32 +1,35 @@
 import { NextRequest, NextResponse } from "next/server";
 
 export async function middleware(req: NextRequest) {
-  const userName = req.cookies.get("bjpkeep-user")?.value;
+  const ingressPath = req.headers.get("x-ingress-path") || "";
+  const { pathname } = req.nextUrl;
 
-  const isLoginPage = req.nextUrl.pathname === "/login";
-
-  const pathname = req.nextUrl.pathname;
-
-  if (
-    pathname.startsWith("/_next") ||
-    pathname.startsWith("/api") ||
-    pathname.startsWith("/uploads") ||
-    pathname === "/favicon.ico"
-  ) {
-    return NextResponse.next();
+  // Compute the path without the ingress prefix for internal routing
+  let internalPath = pathname;
+  if (ingressPath && pathname.startsWith(ingressPath)) {
+    internalPath = pathname.replace(ingressPath, "") || "/";
   }
 
-  if (!userName && !isLoginPage) {
-    return NextResponse.redirect(new URL("/login", req.url));
-  }
+  // If we are on an ingress path, rewrite to internal path so Next.js matches the route
+  if (internalPath !== pathname) {
+    // For assets and APIs, we just rewrite internally
+    if (
+      internalPath.startsWith("/_next") ||
+      internalPath.startsWith("/api") ||
+      internalPath.startsWith("/uploads") ||
+      internalPath === "/favicon.ico"
+    ) {
+      return NextResponse.rewrite(new URL(internalPath, req.url));
+    }
 
-  if (userName && isLoginPage) {
-    return NextResponse.redirect(new URL("/", req.url));
+    // For other routes, rewrite so Next.js can find the page
+    return NextResponse.rewrite(new URL(internalPath, req.url));
   }
 
   return NextResponse.next();
 }
 
 export const config = {
-  matcher: ["/((?!_next/static|_next/image|uploads|favicon.ico).*)"],
+  // Match all paths except static files
+  matcher: ["/((?!_next/static|_next/image|favicon.ico).*)"],
 };

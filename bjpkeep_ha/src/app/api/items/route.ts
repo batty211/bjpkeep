@@ -1,6 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
-import { cookies } from "next/headers";
+import { getCurrentUser } from "@/lib/auth";
 
 export async function GET() {
   const items = await prisma.item.findMany({
@@ -22,7 +22,8 @@ export async function GET() {
 export async function POST(req: Request) {
   const body = await req.json();
 
-  const actorName = (await cookies()).get("bjpkeep-user")?.value;
+  const user = await getCurrentUser();
+  const actorName = user.name;
 
   const item = await prisma.item.create({
     data: {
@@ -54,7 +55,8 @@ export async function POST(req: Request) {
 
 export async function PUT(req: Request) {
   const body = await req.json();
-  const actorName = (await cookies()).get("bjpkeep-user")?.value;
+  const user = await getCurrentUser();
+  const actorName = user.name;
 
   const existingItem = await prisma.item.findUnique({
     where: {

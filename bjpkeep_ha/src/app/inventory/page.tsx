@@ -5,7 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
-import { cookies } from "next/headers";
+import { getCurrentUser } from "@/lib/auth";
 import InventoryFilter from "@/components/inventory/inventory-filter";
 
 export default async function InventoryPage({
@@ -22,7 +22,8 @@ export default async function InventoryPage({
     "use server";
 
     const itemId = formData.get("itemId") as string;
-    const actorName = (await cookies()).get("bjpkeep-user")?.value;
+    const user = await getCurrentUser();
+    const actorName = user.name;
 
     const item = await prisma.item.findUnique({
       where: { id: itemId },
