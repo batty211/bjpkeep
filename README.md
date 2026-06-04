@@ -1,0 +1,234 @@
+# BJP Keep Home Assistant Add-on
+
+BJP Keep is a private home inventory app for tracking where household items are stored. It runs as a Home Assistant add-on and can also expose a Lovelace dashboard card for non-admin dashboard users.
+
+This guide is written as a future reminder from the first Home Assistant setup step onward.
+
+## What You Need
+
+- Home Assistant with the Supervisor/Add-on Store.
+- A `/share/HAShare` folder mounted and writable by Home Assistant.
+- This add-on repository URL:
+
+```text
+https://github.com/batty211/bjpkeep
+```
+
+Current storage paths are personal/setup-specific:
+
+```text
+/share/HAShare/bjpkeep/bjpkeep.db
+/share/HAShare/bjpkeep/uploads/items
+```
+
+If `/share/HAShare` does not exist, the add-on will stop at startup. Create or mount that share first.
+
+## Install The Add-on Repository
+
+1. Open Home Assistant.
+2. Go to `Settings` > `Add-ons`.
+3. Open the three-dot menu in the top right.
+4. Choose `Repositories`.
+5. Paste this URL:
+
+```text
+https://github.com/batty211/bjpkeep
+```
+
+6. Click `Add`.
+7. Close the repositories dialog.
+8. Find `BJP Keep` in the Add-on Store.
+9. Open it and click `Install`.
+
+## Configure The Add-on
+
+Open the `Configuration` tab for the BJP Keep add-on.
+
+Recommended starting config:
+
+```yaml
+log_level: info
+app_url: ""
+lovelace_token: "choose-a-long-private-token"
+dev_mode: false
+```
+
+Notes:
+
+- `lovelace_token` is required for the Lovelace API/card. Use the same value later as `api_token` in the dashboard card.
+- Leave `app_url` empty unless a specific external app URL is needed.
+- The add-on exposes port `3000/tcp` for Lovelace usage.
+- Restart the add-on after changing `lovelace_token`.
+
+## Start BJP Keep
+
+1. Open the `Info` tab.
+2. Enable `Start on boot` if desired.
+3. Click `Start`.
+4. Open `Log` and confirm startup succeeded.
+5. Click `Open Web UI`.
+
+Inside the app:
+
+1. Create rooms.
+2. Create cabinets inside rooms.
+3. Print or save cabinet QR codes from each cabinet QR page.
+4. Add items to cabinets.
+
+Cabinet QR codes use permanent payloads like:
+
+```text
+bjpkeep:cabinet:<cabinetId>
+```
+
+They do not depend on Home Assistant Ingress URLs or temporary tokens.
+
+## Add The Lovelace Card Resource
+
+The add-on UI opened through Ingress is admin-only in Home Assistant. To let dashboard users interact with BJP Keep, add the Lovelace custom card resource.
+
+Use the Home Assistant host/IP and exposed add-on port:
+
+```text
+http://<home-assistant-ip>:3000/lovelace/bjpkeep-card.js
+```
+
+Example:
+
+```text
+http://192.168.1.222:3000/lovelace/bjpkeep-card.js
+```
+
+Steps:
+
+1. Go to `Settings` > `Dashboards`.
+2. Open the three-dot menu.
+3. Choose `Resources`.
+4. Click `Add Resource`.
+5. Set URL to:
+
+```text
+http://192.168.1.222:3000/lovelace/bjpkeep-card.js
+```
+
+6. Set resource type to `JavaScript Module`.
+7. Save.
+8. Refresh the browser or reload the Home Assistant app.
+
+## Add The Card To A Dashboard
+
+After the resource is loaded, BJP Keep should appear in Home Assistant's visual Add Card picker as a custom card.
+
+If it does not appear, add it manually:
+
+```yaml
+type: custom:bjpkeep-card
+api_url: http://192.168.1.222:3000
+api_token: "same-value-as-lovelace_token"
+actor: "Dashboard"
+title: "BJP Keep"
+page_size: 10
+show_images: true
+```
+
+Optional per-cabinet card:
+
+```yaml
+type: custom:bjpkeep-card
+api_url: http://192.168.1.222:3000
+api_token: "same-value-as-lovelace_token"
+actor: "Dashboard"
+title: "Kitchen Cabinet"
+cabinet_id: "paste-cabinet-id-here"
+page_size: 10
+show_images: true
+```
+
+Card behavior:
+
+- Select all cabinets or a specific cabinet.
+- Search items manually with Search or Enter.
+- Scan a cabinet QR photo.
+- Add Item opens as a popup.
+- The item list is compact: thumbnail, item name, and room/cabinet.
+- Click an item row to open a detail popup.
+- The detail popup supports rename, move, add photo, remove cover photo, and delete.
+
+## Test URLs
+
+Use these from a browser on the same network:
+
+```text
+http://192.168.1.222:3000/lovelace/bjpkeep-card.js
+http://192.168.1.222:3000/lovelace/jsQR.js
+```
+
+The API should return `401` without a token:
+
+```text
+http://192.168.1.222:3000/api/lovelace/
+```
+
+With token:
+
+```text
+http://192.168.1.222:3000/api/lovelace/?token=same-value-as-lovelace_token
+```
+
+## Troubleshooting
+
+If the add-on will not start:
+
+- Confirm `/share/HAShare` exists and is mounted.
+- Check the add-on log for Prisma/database write errors.
+- Confirm Home Assistant can write to `/share/HAShare/bjpkeep`.
+
+If the Lovelace card shows `401`:
+
+- Confirm `lovelace_token` is set in the add-on config.
+- Restart the add-on after setting/changing the token.
+- Confirm the card `api_token` exactly matches `lovelace_token`.
+
+If the card resource does not load:
+
+- Confirm the resource URL uses port `3000`.
+- Confirm the URL is reachable from the same device/browser running Home Assistant.
+- Hard refresh the browser or restart the Home Assistant mobile app.
+- If Home Assistant is served over HTTPS but the card API is HTTP, browser mixed-content rules may block requests.
+
+If item photos are slow or missing:
+
+- New uploads create thumbnails automatically.
+- Old uploads may generate thumbnails lazily on first request.
+- Original images are still used on item detail pages for quality.
+
+## Development Notes
+
+The app source is in `bjpkeep_ha/`.
+
+Useful local commands:
+
+```bash
+cd bjpkeep_ha
+npm install
+npm run dev
+npm run build
+```
+
+Local production-style test:
+
+```bash
+cd bjpkeep_ha
+PORT=3003 LOVELACE_API_TOKEN=testtoken npm start
+```
+
+Then open:
+
+```text
+http://127.0.0.1:3003/
+http://127.0.0.1:3003/lovelace/bjpkeep-card.js
+```
+
+## Project Memory
+
+Future AI/dev sessions should read `GEMINI.md` before changing the project. When code, config, or product behavior changes, update `GEMINI.md` in the same session so completed work and remaining TODOs stay accurate.

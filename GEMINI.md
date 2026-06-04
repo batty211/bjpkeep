@@ -17,6 +17,7 @@ It is currently packaged as a Home Assistant Add-on in the `bjpkeep_ha/` folder.
 The repository root contains:
 
 - `repository.yaml`: Home Assistant add-on repository metadata.
+- `README.md`: user-facing setup guide from adding the HA add-on repository through Lovelace card setup and troubleshooting.
 - `bjpkeep_ha/`: the actual add-on/app.
 
 ## Main User Goals
@@ -248,6 +249,7 @@ The custom card also provides a Home Assistant visual config editor via `getConf
 - Lovelace card registers custom-card metadata for Home Assistant's visual Add Card picker.
 - Lovelace card uses compact item rows with click-to-open item detail popup.
 - Lovelace Add Item form opens in a popup.
+- Root `README.md` documents the full Home Assistant installation flow, add-on configuration, Lovelace resource/card setup, test URLs, and troubleshooting.
 
 ## Known Caveats
 
