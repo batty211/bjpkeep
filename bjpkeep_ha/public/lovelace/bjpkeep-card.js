@@ -1,4 +1,5 @@
 const BJPKEEP_DEFAULT_ACTOR = "{{ user }}";
+const BJPKEEP_CABINET_FILTER_EVENT = "bjpkeep-cabinet-filter";
 
 class BjpKeepCard extends HTMLElement {
   static getConfigElement() {
@@ -62,6 +63,19 @@ class BjpKeepCard extends HTMLElement {
     }
 
     this.loadData();
+  }
+
+  connectedCallback() {
+    this._cabinetFilterHandler = this._cabinetFilterHandler || ((event) => {
+      this.applyExternalCabinetFilter(event.detail || {});
+    });
+    window.addEventListener(BJPKEEP_CABINET_FILTER_EVENT, this._cabinetFilterHandler);
+  }
+
+  disconnectedCallback() {
+    if (this._cabinetFilterHandler) {
+      window.removeEventListener(BJPKEEP_CABINET_FILTER_EVENT, this._cabinetFilterHandler);
+    }
   }
 
   getCardSize() {
@@ -216,6 +230,33 @@ class BjpKeepCard extends HTMLElement {
       ? Math.min(Math.max(0, this.state.detailPhotoIndex), imageCount - 1)
       : 0;
     this.state.items = this.state.items.map((candidate) => candidate.id === item.id ? item : candidate);
+  }
+
+  async applyExternalCabinetFilter(detail) {
+    if (!this.config || !this.state) {
+      return;
+    }
+
+    const cabinetId = detail.cabinetId || "";
+    const cabinet = detail.cabinet;
+
+    if (cabinet && !this.state.cabinets.some((candidate) => candidate.id === cabinet.id)) {
+      this.state.cabinets = [...this.state.cabinets, cabinet].sort((a, b) => {
+        const roomA = a.room?.name || "";
+        const roomB = b.room?.name || "";
+        return `${roomA} ${a.code || a.name}`.localeCompare(`${roomB} ${b.code || b.name}`);
+      });
+    }
+
+    if (this.state.selectedCabinetId === cabinetId) {
+      return;
+    }
+
+    this.state.selectedCabinetId = cabinetId;
+    this.state.message = cabinetId
+      ? `Filtered to ${cabinet?.name || "selected cabinet"}.`
+      : "Showing all cabinets.";
+    await this.refreshItems({ resetPage: true });
   }
 
   async refreshItems(options = {}) {
@@ -1260,12 +1301,437 @@ class BjpKeepCardEditor extends HTMLElement {
   }
 }
 
+class BjpKeepCabinetCard extends HTMLElement {
+  static getConfigElement() {
+    return document.createElement("bjpkeep-cabinet-card-editor");
+  }
+
+  static getStubConfig() {
+    const apiUrl = typeof window === "undefined"
+      ? ""
+      : `${window.location.protocol}//${window.location.hostname}:3000`;
+
+    return {
+      api_url: apiUrl,
+      api_token: "",
+      title: "Rooms & Cabinets",
+    };
+  }
+
+  setConfig(config) {
+    if (!config.api_url) {
+      throw new Error("api_url is required");
+    }
+
+    this.config = {
+      api_token: "",
+      title: "Rooms & Cabinets",
+      ...config,
+      api_url: String(config.api_url).replace(/\/+$/, ""),
+    };
+    this.state = {
+      rooms: [],
+      expandedRoomIds: new Set(),
+      selectedCabinetId: "",
+      loading: false,
+      error: "",
+    };
+
+    if (!this.shadowRoot) {
+      this.attachShadow({ mode: "open" });
+    }
+
+    this.loadData();
+  }
+
+  getCardSize() {
+    return 3;
+  }
+
+  apiPath(path) {
+    return `${this.config.api_url}${path}`;
+  }
+
+  headers() {
+    return {
+      Authorization: `Bearer ${this.config.api_token}`,
+      "Content-Type": "application/json",
+    };
+  }
+
+  async request(path, options = {}) {
+    const response = await fetch(this.apiPath(path), {
+      ...options,
+      headers: {
+        ...this.headers(),
+        ...(options.headers || {}),
+      },
+    });
+    const data = await response.json().catch(() => ({}));
+
+    if (!response.ok) {
+      const message = data.error || "BJP Keep request failed";
+      throw new Error(response.status === 401 ? `${message}. Check api_token in this card config.` : message);
+    }
+
+    return data;
+  }
+
+  async loadData() {
+    if (!this.config) {
+      return;
+    }
+
+    this.state.loading = true;
+    this.state.error = "";
+    this.render();
+
+    try {
+      const result = await this.request("/api/lovelace/?resource=cabinets&includeItems=0&includeItemCounts=1");
+      this.state.rooms = this.groupCabinets(result.cabinets || []);
+
+      if (this.state.expandedRoomIds.size === 0 && this.state.rooms[0]) {
+        this.state.expandedRoomIds.add(this.state.rooms[0].id);
+      }
+    } catch (error) {
+      this.state.error = error.message;
+    } finally {
+      this.state.loading = false;
+      this.render();
+    }
+  }
+
+  groupCabinets(cabinets) {
+    const rooms = new Map();
+
+    cabinets.forEach((cabinet) => {
+      const roomId = cabinet.room?.id || "unknown";
+      const roomName = cabinet.room?.name || "No room";
+
+      if (!rooms.has(roomId)) {
+        rooms.set(roomId, {
+          id: roomId,
+          name: roomName,
+          cabinets: [],
+        });
+      }
+
+      rooms.get(roomId).cabinets.push(cabinet);
+    });
+
+    return Array.from(rooms.values()).sort((a, b) => a.name.localeCompare(b.name));
+  }
+
+  totalCabinets() {
+    return this.state.rooms.reduce((total, room) => total + room.cabinets.length, 0);
+  }
+
+  totalItems() {
+    return this.state.rooms.reduce((total, room) => (
+      total + room.cabinets.reduce((roomTotal, cabinet) => roomTotal + this.cabinetItemCount(cabinet), 0)
+    ), 0);
+  }
+
+  cabinetItemCount(cabinet) {
+    return cabinet.itemCount ?? cabinet._count?.items ?? cabinet.items?.length ?? 0;
+  }
+
+  toggleRoom(roomId) {
+    if (this.state.expandedRoomIds.has(roomId)) {
+      this.state.expandedRoomIds.delete(roomId);
+    } else {
+      this.state.expandedRoomIds.add(roomId);
+    }
+
+    this.render();
+  }
+
+  selectAllCabinets() {
+    this.state.selectedCabinetId = "";
+    window.dispatchEvent(new CustomEvent(BJPKEEP_CABINET_FILTER_EVENT, {
+      detail: {
+        cabinetId: "",
+      },
+    }));
+    this.render();
+  }
+
+  selectCabinet(cabinet) {
+    this.state.selectedCabinetId = cabinet.id;
+    window.dispatchEvent(new CustomEvent(BJPKEEP_CABINET_FILTER_EVENT, {
+      detail: {
+        cabinetId: cabinet.id,
+        cabinet,
+      },
+    }));
+    this.render();
+  }
+
+  render() {
+    if (!this.shadowRoot || !this.config) {
+      return;
+    }
+
+    const totalCabinets = this.totalCabinets();
+    const totalItems = this.totalItems();
+
+    this.shadowRoot.innerHTML = `
+      <style>
+        :host { display: block; }
+        ha-card { padding: 12px; overflow: hidden; }
+        .stack { display: grid; gap: 8px; }
+        button {
+          box-sizing: border-box;
+          width: 100%;
+          border: 1px solid var(--divider-color, #ddd);
+          border-radius: 8px;
+          padding: 8px 10px;
+          font: inherit;
+          background: transparent;
+          color: var(--primary-text-color, #111);
+          cursor: pointer;
+          text-align: left;
+        }
+        button:hover {
+          background: var(--secondary-background-color, rgba(0, 0, 0, 0.04));
+        }
+        button.active {
+          border-color: var(--primary-color, #03a9f4);
+          background: color-mix(in srgb, var(--primary-color, #03a9f4) 10%, transparent);
+        }
+        button:disabled {
+          cursor: not-allowed;
+          opacity: 0.45;
+        }
+        .muted {
+          color: var(--secondary-text-color, #777);
+          font-size: 0.86em;
+        }
+        .error { color: var(--error-color, #db4437); }
+        .room {
+          display: grid;
+          gap: 6px;
+        }
+        .room-button,
+        .cabinet-button,
+        .all-button {
+          display: grid;
+          grid-template-columns: minmax(0, 1fr) auto;
+          gap: 8px;
+          align-items: center;
+        }
+        .room-name,
+        .cabinet-name {
+          min-width: 0;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+        .cabinet-list {
+          display: grid;
+          gap: 6px;
+          padding-left: 12px;
+        }
+        .cabinet-button {
+          font-size: 0.94em;
+        }
+        .count {
+          color: var(--secondary-text-color, #777);
+          font-size: 0.86em;
+          white-space: nowrap;
+        }
+      </style>
+      <ha-card header="${this.escape(this.config.title)}">
+        <div class="stack">
+          ${this.state.error ? `<div class="error">${this.escape(this.state.error)}</div>` : ""}
+          <button id="allCabinets" class="all-button ${this.state.selectedCabinetId ? "" : "active"}" ${this.state.loading ? "disabled" : ""}>
+            <span class="room-name">All cabinets</span>
+            <span class="count">${totalCabinets} cabinet${totalCabinets === 1 ? "" : "s"} · ${totalItems} item${totalItems === 1 ? "" : "s"}</span>
+          </button>
+          ${this.state.loading ? `<div class="muted">Loading rooms...</div>` : ""}
+          ${this.state.rooms.map((room) => {
+            const expanded = this.state.expandedRoomIds.has(room.id);
+
+            return `
+              <div class="room">
+                <button class="room-button" data-room-id="${this.escape(room.id)}">
+                  <span class="room-name">${this.escape(room.name)} (${room.cabinets.length})</span>
+                  <span class="count">${expanded ? "⌄" : "›"}</span>
+                </button>
+                ${expanded ? `
+                  <div class="cabinet-list">
+                    ${room.cabinets.map((cabinet) => {
+                      const itemCount = this.cabinetItemCount(cabinet);
+
+                      return `
+                        <button class="cabinet-button ${this.state.selectedCabinetId === cabinet.id ? "active" : ""}" data-cabinet-id="${this.escape(cabinet.id)}">
+                          <span class="cabinet-name">${this.escape(cabinet.name || cabinet.code)}</span>
+                          <span class="count">${itemCount} item${itemCount === 1 ? "" : "s"}</span>
+                        </button>
+                      `;
+                    }).join("")}
+                  </div>
+                ` : ""}
+              </div>
+            `;
+          }).join("")}
+        </div>
+      </ha-card>
+    `;
+
+    this.shadowRoot.getElementById("allCabinets")?.addEventListener("click", () => {
+      this.selectAllCabinets();
+    });
+    this.shadowRoot.querySelectorAll("[data-room-id]").forEach((button) => {
+      button.addEventListener("click", () => {
+        this.toggleRoom(button.dataset.roomId);
+      });
+    });
+    this.shadowRoot.querySelectorAll("[data-cabinet-id]").forEach((button) => {
+      button.addEventListener("click", () => {
+        const cabinet = this.state.rooms
+          .flatMap((room) => room.cabinets)
+          .find((candidate) => candidate.id === button.dataset.cabinetId);
+
+        if (cabinet) {
+          this.selectCabinet(cabinet);
+        }
+      });
+    });
+  }
+
+  escape(value) {
+    return String(value ?? "")
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;");
+  }
+}
+
+class BjpKeepCabinetCardEditor extends HTMLElement {
+  setConfig(config) {
+    this.config = {
+      api_url: "",
+      api_token: "",
+      title: "Rooms & Cabinets",
+      ...config,
+    };
+
+    if (!this.shadowRoot) {
+      this.attachShadow({ mode: "open" });
+    }
+
+    this.render();
+  }
+
+  updateConfig(patch) {
+    const nextConfig = {
+      ...this.config,
+      ...patch,
+    };
+
+    if (nextConfig.api_url) {
+      nextConfig.api_url = String(nextConfig.api_url).replace(/\/+$/, "");
+    }
+
+    this.config = nextConfig;
+    this.dispatchEvent(new CustomEvent("config-changed", {
+      bubbles: true,
+      composed: true,
+      detail: {
+        config: nextConfig,
+      },
+    }));
+    this.render();
+  }
+
+  render() {
+    if (!this.shadowRoot || !this.config) {
+      return;
+    }
+
+    this.shadowRoot.innerHTML = `
+      <style>
+        :host { display: block; }
+        .editor { display: grid; gap: 14px; }
+        label {
+          display: grid;
+          gap: 6px;
+          color: var(--primary-text-color, #111);
+          font: inherit;
+        }
+        .label {
+          font-size: 0.9em;
+          color: var(--secondary-text-color, #777);
+        }
+        input {
+          box-sizing: border-box;
+          width: 100%;
+          border: 1px solid var(--divider-color, #ddd);
+          border-radius: 8px;
+          padding: 10px;
+          font: inherit;
+          background: var(--card-background-color, white);
+          color: var(--primary-text-color, #111);
+        }
+        .hint {
+          color: var(--secondary-text-color, #777);
+          font-size: 0.85em;
+          line-height: 1.4;
+        }
+      </style>
+      <div class="editor">
+        <label>
+          <span class="label">API URL</span>
+          <input id="api_url" value="${this.escape(this.config.api_url)}" placeholder="http://192.168.1.222:3000">
+          <span class="hint">Use the same API URL as the BJP Keep inventory card.</span>
+        </label>
+        <label>
+          <span class="label">API Token</span>
+          <input id="api_token" type="password" value="${this.escape(this.config.api_token)}" placeholder="same value as lovelace_token">
+        </label>
+        <label>
+          <span class="label">Title</span>
+          <input id="title" value="${this.escape(this.config.title)}" placeholder="Rooms & Cabinets">
+        </label>
+      </div>
+    `;
+
+    this.shadowRoot.getElementById("api_url")?.addEventListener("change", (event) => {
+      this.updateConfig({ api_url: event.target.value.trim() });
+    });
+    this.shadowRoot.getElementById("api_token")?.addEventListener("change", (event) => {
+      this.updateConfig({ api_token: event.target.value });
+    });
+    this.shadowRoot.getElementById("title")?.addEventListener("change", (event) => {
+      this.updateConfig({ title: event.target.value || "Rooms & Cabinets" });
+    });
+  }
+
+  escape(value) {
+    return String(value ?? "")
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;");
+  }
+}
+
 if (!customElements.get("bjpkeep-card-editor")) {
   customElements.define("bjpkeep-card-editor", BjpKeepCardEditor);
 }
 
+if (!customElements.get("bjpkeep-cabinet-card-editor")) {
+  customElements.define("bjpkeep-cabinet-card-editor", BjpKeepCabinetCardEditor);
+}
+
 if (!customElements.get("bjpkeep-card")) {
   customElements.define("bjpkeep-card", BjpKeepCard);
+}
+
+if (!customElements.get("bjpkeep-cabinet-card")) {
+  customElements.define("bjpkeep-cabinet-card", BjpKeepCabinetCard);
 }
 
 window.customCards = window.customCards || [];
@@ -1274,6 +1740,14 @@ if (!window.customCards.some((card) => card.type === "bjpkeep-card")) {
     type: "bjpkeep-card",
     name: "BJP Keep",
     description: "Inventory search, QR cabinet selection, compact item list, and item creation.",
+    preview: true,
+  });
+}
+if (!window.customCards.some((card) => card.type === "bjpkeep-cabinet-card")) {
+  window.customCards.push({
+    type: "bjpkeep-cabinet-card",
+    name: "BJP Keep Rooms",
+    description: "Expandable room and cabinet list that filters the BJP Keep inventory card.",
     preview: true,
   });
 }

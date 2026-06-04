@@ -132,6 +132,17 @@ show_images: true
 
 The card automatically uses Home Assistant's current dashboard user in activity logs.
 
+Optional room/cabinet filter card:
+
+```yaml
+type: custom:bjpkeep-cabinet-card
+api_url: http://192.168.1.222:3000
+api_token: "same-value-as-lovelace_token"
+title: "Rooms & Cabinets"
+```
+
+Place it on the same dashboard view as the main BJP Keep card. Click a room to expand its cabinets, then click a cabinet to filter the main card.
+
 Card behavior:
 
 - Select all cabinets or a specific cabinet.
@@ -140,7 +151,8 @@ Card behavior:
 - Add Item opens as a popup.
 - The item list is compact: thumbnail, item name, and room/cabinet.
 - Click an item row to open a detail popup.
-- The detail popup supports rename, move, add photo, remove cover photo, and delete.
+- The detail popup supports rename, move, add photo, remove selected photo, and delete.
+- The optional room/cabinet card shows `room name (cabinet count)` and `cabinet name (item count)` and filters the main card when a cabinet is selected.
 
 ## Test URLs
 

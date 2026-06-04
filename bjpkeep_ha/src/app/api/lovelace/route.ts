@@ -250,8 +250,32 @@ export async function GET(req: Request) {
 
   if (resource === "cabinets") {
     const includeItems = searchParams.get("includeItems") !== "0";
+    const includeItemCounts = searchParams.get("includeItemCounts") === "1";
 
     if (!includeItems) {
+      if (includeItemCounts) {
+        const cabinets = await prisma.cabinet.findMany({
+          include: {
+            room: true,
+            _count: {
+              select: {
+                items: true,
+              },
+            },
+          },
+          orderBy: {
+            code: "asc",
+          },
+        });
+
+        return lovelaceJson({
+          cabinets: cabinets.map(({ _count, ...cabinet }) => ({
+            ...cabinet,
+            itemCount: _count.items,
+          })),
+        });
+      }
+
       const cabinets = await prisma.cabinet.findMany({
         include: {
           room: true,
