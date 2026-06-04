@@ -164,15 +164,20 @@ Resources:
 
 - `GET /api/lovelace/?resource=rooms`
 - `GET /api/lovelace/?resource=cabinets`
+- `GET /api/lovelace/?resource=cabinets&includeItems=0` for a lightweight cabinet list without nested items
 - `GET /api/lovelace/?resource=cabinet&id=<cabinetId>`
 - `GET /api/lovelace/?resource=items&q=<query>`
 - `GET /api/lovelace/?resource=items&cabinetId=<cabinetId>`
+- `GET /api/lovelace/?resource=items&page=1&pageSize=10` for paginated item lists. `pageSize` is capped at 50.
 
 Actions:
 
 - `POST /api/lovelace/` with `{ "action": "create_item", "name": "...", "cabinetId": "..." }`
 - `POST /api/lovelace/` with `{ "action": "update_item", "id": "...", "name": "...", "cabinetId": "..." }`
 - `POST /api/lovelace/` with `{ "action": "delete_item", "id": "..." }`
+- `POST /api/lovelace/` multipart form with `action=create_item`, `name`, `cabinetId`, and one or more `files` to create an item with photos.
+- `POST /api/lovelace/` multipart form with `action=add_images`, `itemId`, and one or more `files` to add photos to an existing item.
+- `POST /api/lovelace/` with `{ "action": "delete_image", "imageId": "..." }` to remove an item photo and its thumbnail/original file.
 
 Static Lovelace card assets:
 
@@ -200,9 +205,12 @@ type: custom:bjpkeep-card
 api_url: http://192.168.1.222:3000
 api_token: "same-value-as-lovelace_token"
 actor: "Dashboard"
+page_size: 10
 ```
 
-The card currently supports all-cabinet or per-cabinet item lists, item thumbnails, cabinet selection, search with clear/refresh controls, QR photo scan, add item, edit item name, move item to another cabinet, and delete item.
+The card currently supports all-cabinet or per-cabinet item lists, item thumbnails, cabinet selection, manual search with Search button/Enter (no auto-refresh while typing), clear/refresh controls, pagination, QR photo scan, add item with photos, edit item name, add/remove item photos, move item to another cabinet, and delete item.
+
+The custom card also provides a Home Assistant visual config editor via `getConfigElement()` / `bjpkeep-card-editor`, so dashboard users can manage `api_url`, `api_token`, `title`, `actor`, `cabinet_id`, `page_size`, and `show_images` from the HA card editor UI after the JS resource has been added.
 
 ## Features Already Implemented
 
@@ -220,6 +228,9 @@ The card currently supports all-cabinet or per-cabinet item lists, item thumbnai
 - Image thumbnails for fast Inventory.
 - Lovelace public API + custom card MVP.
 - Add-on icon/logo files exist at add-on root.
+- Lovelace item API supports pagination and lightweight cabinet fetches for large inventories.
+- Lovelace card/API supports photo upload while adding an item, adding photos to an existing item, and deleting an item photo.
+- Lovelace card has a visual Home Assistant config editor and stub config for UI-based card creation/editing.
 
 ## Known Caveats
 
@@ -227,9 +238,18 @@ The card currently supports all-cabinet or per-cabinet item lists, item thumbnai
 - Lovelace card talks to exposed port `3000`, not HA Ingress.
 - If HA is served over HTTPS and card API is HTTP, browser mixed-content policies may matter. For local HA app usage this needs real-device testing.
 - `LOVELACE_API_TOKEN` must be set or `/api/lovelace/` returns 401.
-- Current public API does not yet support image upload from Lovelace card.
+- If the Lovelace card shows repeated `/api/lovelace/?resource=cabinets` 401 errors, the dashboard card config is missing `api_token`, the token does not match `lovelace_token`, or the add-on was not restarted after changing the token.
+- Lovelace card photo removal currently removes the first/cover photo shown in the card. Full multi-photo gallery management still belongs in the main app UI.
+- The Lovelace JS resource still has to be added to HA resources before the visual card editor can appear.
 - Runtime paths are currently personal/setup-specific (`/share/HAShare/...`).
 - Build emits a recurring Turbopack warning about upload/thumb route tracing. Builds still pass.
+
+## Suggested Next Lovelace Work
+
+- Add a compact/read-only card mode for dashboard summaries.
+- Consider optional sorting and page-size controls in the card UI if 100+ item inventories become common.
+- Consider a token health/status endpoint or clearer setup diagnostics for first-time Lovelace configuration.
+- Consider fuller Lovelace image management if dashboard users need to choose/reorder/delete specific photos instead of only the cover photo.
 
 ## Useful Commands
 
