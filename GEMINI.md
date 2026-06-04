@@ -214,7 +214,6 @@ Example card:
 type: custom:bjpkeep-card
 api_url: http://192.168.1.222:3000
 api_token: "same-value-as-lovelace_token"
-actor: "{{ user }}"
 page_size: 10
 ```
 
@@ -228,7 +227,7 @@ Current Lovelace card UX:
 - Add Item opens as a popup instead of being permanently expanded in the card.
 - The custom card registers `window.customCards` metadata so it can appear in Home Assistant's visual Add Card picker after the JS resource is loaded.
 
-The custom card also provides a Home Assistant visual config editor via `getConfigElement()` / `bjpkeep-card-editor`, so dashboard users can manage `api_url`, `api_token`, `title`, `actor`, `cabinet_id`, `page_size`, and `show_images` from the HA card editor UI after the JS resource has been added.
+The custom card also provides a Home Assistant visual config editor via `getConfigElement()` / `bjpkeep-card-editor`, so dashboard users can manage `api_url`, `api_token`, `title`, `page_size`, and `show_images` from the HA card editor UI after the JS resource has been added. `actor` and `cabinet_id` are intentionally hidden from the editor because actor resolves automatically from the current HA user and cabinet IDs are not practical to type manually.
 
 Recent Lovelace card UX fixes:
 
@@ -237,6 +236,7 @@ Recent Lovelace card UX fixes:
 - The Lovelace search submit control is now an icon button inside the search field.
 - The item detail popup now keeps its own current item/photo state. Adding photos updates the popup immediately, all item photos can be selected from thumbnails, and Remove Photo deletes the currently displayed photo instead of always deleting the first image.
 - The Lovelace card default actor is `{{ user }}`. The custom card resolves that token itself from Home Assistant `hass.user.name`/`hass.user.id` before sending `X-BJPKeep-Actor`, because arbitrary custom card config is not Markdown-rendered by Home Assistant.
+- The Lovelace visual config editor no longer exposes `actor` or `cabinet_id`; new stub configs also omit `actor` so activity logs use the current HA dashboard user by default.
 
 Recent Docker/build fix:
 

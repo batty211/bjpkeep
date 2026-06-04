@@ -125,26 +125,12 @@ If it does not appear, add it manually:
 type: custom:bjpkeep-card
 api_url: http://192.168.1.222:3000
 api_token: "same-value-as-lovelace_token"
-actor: "{{ user }}"
 title: "BJP Keep"
 page_size: 10
 show_images: true
 ```
 
-`actor: "{{ user }}"` is resolved by the BJP Keep custom card from Home Assistant's current dashboard user and is used in activity logs. You can replace it with a fixed name if preferred.
-
-Optional per-cabinet card:
-
-```yaml
-type: custom:bjpkeep-card
-api_url: http://192.168.1.222:3000
-api_token: "same-value-as-lovelace_token"
-actor: "{{ user }}"
-title: "Kitchen Cabinet"
-cabinet_id: "paste-cabinet-id-here"
-page_size: 10
-show_images: true
-```
+The card automatically uses Home Assistant's current dashboard user in activity logs.
 
 Card behavior:
 

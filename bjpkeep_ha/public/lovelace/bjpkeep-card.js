@@ -13,7 +13,6 @@ class BjpKeepCard extends HTMLElement {
     return {
       api_url: apiUrl,
       api_token: "",
-      actor: BJPKEEP_DEFAULT_ACTOR,
       title: "BJP Keep",
       page_size: 10,
       show_images: true,
@@ -1115,11 +1114,9 @@ class BjpKeepCardEditor extends HTMLElement {
     this.config = {
       api_url: "",
       api_token: "",
-      actor: BJPKEEP_DEFAULT_ACTOR,
       title: "BJP Keep",
       page_size: 10,
       show_images: true,
-      cabinet_id: "",
       ...config,
     };
 
@@ -1142,6 +1139,10 @@ class BjpKeepCardEditor extends HTMLElement {
 
     if (!nextConfig.cabinet_id) {
       delete nextConfig.cabinet_id;
+    }
+
+    if (!nextConfig.actor || nextConfig.actor === BJPKEEP_DEFAULT_ACTOR) {
+      delete nextConfig.actor;
     }
 
     if (nextConfig.api_url) {
@@ -1222,14 +1223,6 @@ class BjpKeepCardEditor extends HTMLElement {
           <input id="title" value="${this.escape(this.config.title)}" placeholder="BJP Keep">
         </label>
         <label>
-          <span class="label">Actor</span>
-          <input id="actor" value="${this.escape(this.config.actor)}" placeholder="${this.escape(BJPKEEP_DEFAULT_ACTOR)}">
-        </label>
-        <label>
-          <span class="label">Cabinet ID</span>
-          <input id="cabinet_id" value="${this.escape(this.config.cabinet_id || "")}" placeholder="Optional: lock this card to one cabinet">
-        </label>
-        <label>
           <span class="label">Page Size</span>
           <input id="page_size" type="number" min="1" max="50" value="${Number(this.config.page_size || 10)}">
         </label>
@@ -1248,12 +1241,6 @@ class BjpKeepCardEditor extends HTMLElement {
     });
     this.shadowRoot.getElementById("title")?.addEventListener("change", (event) => {
       this.updateConfig({ title: event.target.value || "BJP Keep" });
-    });
-    this.shadowRoot.getElementById("actor")?.addEventListener("change", (event) => {
-      this.updateConfig({ actor: event.target.value || BJPKEEP_DEFAULT_ACTOR });
-    });
-    this.shadowRoot.getElementById("cabinet_id")?.addEventListener("change", (event) => {
-      this.updateConfig({ cabinet_id: event.target.value.trim() });
     });
     this.shadowRoot.getElementById("page_size")?.addEventListener("change", (event) => {
       const pageSize = Math.min(Math.max(Number(event.target.value) || 10, 1), 50);
