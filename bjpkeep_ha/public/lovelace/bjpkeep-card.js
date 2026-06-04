@@ -1,3 +1,5 @@
+const BJPKEEP_DEFAULT_ACTOR = "{{ user }}";
+
 class BjpKeepCard extends HTMLElement {
   static getConfigElement() {
     return document.createElement("bjpkeep-card-editor");
@@ -11,7 +13,7 @@ class BjpKeepCard extends HTMLElement {
     return {
       api_url: apiUrl,
       api_token: "",
-      actor: "Dashboard",
+      actor: BJPKEEP_DEFAULT_ACTOR,
       title: "BJP Keep",
       page_size: 10,
       show_images: true,
@@ -25,7 +27,7 @@ class BjpKeepCard extends HTMLElement {
 
     this.config = {
       api_token: "",
-      actor: "Lovelace",
+      actor: BJPKEEP_DEFAULT_ACTOR,
       title: "BJP Keep",
       show_images: true,
       page_size: 10,
@@ -47,7 +49,9 @@ class BjpKeepCard extends HTMLElement {
       itemFilesLabel: "",
       addDialogOpen: false,
       detailDialogItemId: "",
+      detailItem: null,
       detailItemName: "",
+      detailPhotoIndex: 0,
       loading: false,
       error: "",
       message: "",
@@ -65,13 +69,16 @@ class BjpKeepCard extends HTMLElement {
     return 3;
   }
 
+  set hass(hass) {
+    this._hass = hass;
+  }
+
   apiPath(path) {
     return `${this.config.api_url}${path}`;
   }
 
-  itemImageUrl(item) {
-    const image = item.images?.[0];
-    const path = image?.thumbnailPath || image?.path;
+  imageUrl(image, options = {}) {
+    const path = options.original ? image?.path : image?.thumbnailPath || image?.path;
 
     if (!path) {
       return "";
@@ -84,11 +91,26 @@ class BjpKeepCard extends HTMLElement {
     return this.apiPath(path.startsWith("/") ? path : `/${path}`);
   }
 
+  itemImageUrl(item) {
+    const image = item.images?.[0];
+    return this.imageUrl(image);
+  }
+
+  actorName() {
+    const configuredActor = String(this.config.actor || "").trim();
+
+    if (configuredActor === BJPKEEP_DEFAULT_ACTOR) {
+      return this._hass?.user?.name || this._hass?.user?.id || "Dashboard";
+    }
+
+    return configuredActor || this._hass?.user?.name || "Dashboard";
+  }
+
   headers() {
     return {
       Authorization: `Bearer ${this.config.api_token}`,
       "Content-Type": "application/json",
-      "X-BJPKeep-Actor": this.config.actor,
+      "X-BJPKeep-Actor": this.actorName(),
     };
   }
 
@@ -175,7 +197,26 @@ class BjpKeepCard extends HTMLElement {
   }
 
   selectedDetailItem() {
+    if (this.state.detailItem?.id === this.state.detailDialogItemId) {
+      return this.state.detailItem;
+    }
+
     return this.state.items.find((item) => item.id === this.state.detailDialogItemId);
+  }
+
+  setDetailItem(item) {
+    if (!item) {
+      return;
+    }
+
+    const imageCount = item.images?.length || 0;
+    this.state.detailItem = item;
+    this.state.detailDialogItemId = item.id;
+    this.state.detailItemName = item.name;
+    this.state.detailPhotoIndex = imageCount > 0
+      ? Math.min(Math.max(0, this.state.detailPhotoIndex), imageCount - 1)
+      : 0;
+    this.state.items = this.state.items.map((candidate) => candidate.id === item.id ? item : candidate);
   }
 
   async refreshItems(options = {}) {
@@ -281,14 +322,18 @@ class BjpKeepCard extends HTMLElement {
 
   openDetailDialog(item) {
     this.state.detailDialogItemId = item.id;
+    this.state.detailItem = item;
     this.state.detailItemName = item.name;
+    this.state.detailPhotoIndex = 0;
     this.state.error = "";
     this.render();
   }
 
   closeDetailDialog() {
     this.state.detailDialogItemId = "";
+    this.state.detailItem = null;
     this.state.detailItemName = "";
+    this.state.detailPhotoIndex = 0;
     this.render();
   }
 
@@ -303,10 +348,15 @@ class BjpKeepCard extends HTMLElement {
     files.forEach((file) => formData.append("files", file));
 
     try {
-      await this.request("/api/lovelace/", {
+      const result = await this.request("/api/lovelace/", {
         method: "POST",
         body: formData,
       });
+      const previousImageCount = item.images?.length || 0;
+      if (result.item) {
+        this.setDetailItem(result.item);
+        this.state.detailPhotoIndex = previousImageCount;
+      }
       this.state.message = `Added ${files.length} photo${files.length === 1 ? "" : "s"} to ${item.name}.`;
       await this.refreshItems();
     } catch (error) {
@@ -321,13 +371,16 @@ class BjpKeepCard extends HTMLElement {
     }
 
     try {
-      await this.request("/api/lovelace/", {
+      const result = await this.request("/api/lovelace/", {
         method: "POST",
         body: JSON.stringify({
           action: "delete_image",
           imageId: image.id,
         }),
       });
+      if (result.item) {
+        this.setDetailItem(result.item);
+      }
       this.state.message = `Removed photo from ${item.name}.`;
       await this.refreshItems();
     } catch (error) {
@@ -355,6 +408,10 @@ class BjpKeepCard extends HTMLElement {
           cabinetId: item.cabinetId,
         }),
       });
+      this.setDetailItem({
+        ...item,
+        name: name.trim(),
+      });
       this.state.message = `Updated ${name.trim()}.`;
       await this.refreshItems();
     } catch (error) {
@@ -380,6 +437,16 @@ class BjpKeepCard extends HTMLElement {
           name: item.name,
           cabinetId,
         }),
+      });
+      this.setDetailItem({
+        ...item,
+        cabinetId,
+        cabinet: cabinet ? {
+          id: cabinet.id,
+          name: cabinet.name,
+          code: cabinet.code,
+          room: cabinet.room,
+        } : item.cabinet,
       });
       this.state.message = `Moved ${item.name} to ${label}.`;
       await this.refreshItems();
@@ -485,8 +552,9 @@ class BjpKeepCard extends HTMLElement {
 
     const selectedCabinet = this.selectedCabinet();
     const detailItem = this.selectedDetailItem();
-    const detailImageUrl = detailItem ? this.itemImageUrl(detailItem) : "";
-    const detailImage = detailItem?.images?.[0];
+    const detailImages = detailItem?.images || [];
+    const detailImage = detailImages[this.state.detailPhotoIndex] || detailImages[0];
+    const detailImageUrl = this.imageUrl(detailImage, { original: true });
     const totalItems = this.state.totalItems;
     const page = this.state.page;
     const totalPages = this.state.totalPages || 1;
@@ -527,7 +595,7 @@ class BjpKeepCard extends HTMLElement {
         }
         .search-row {
           display: grid;
-          grid-template-columns: minmax(0, 1fr) auto auto;
+          grid-template-columns: minmax(0, 1fr) auto;
           gap: 8px;
           align-items: center;
         }
@@ -536,12 +604,12 @@ class BjpKeepCard extends HTMLElement {
           min-width: 0;
         }
         .search-field input {
-          padding-right: 44px;
+          padding-right: 82px;
         }
+        .search-field .inline-search,
         .search-field .clear-inline {
           position: absolute;
           top: 50%;
-          right: 4px;
           transform: translateY(-50%);
           width: 34px;
           min-width: 34px;
@@ -552,15 +620,20 @@ class BjpKeepCard extends HTMLElement {
           color: var(--secondary-text-color, #777);
           line-height: 1;
         }
+        .search-field .inline-search {
+          right: 4px;
+        }
+        .search-field .clear-inline {
+          right: 40px;
+        }
+        .search-field .inline-search ha-icon {
+          --mdc-icon-size: 18px;
+          display: inline-flex;
+          vertical-align: middle;
+        }
+        .search-field .inline-search:hover,
         .search-field .clear-inline:hover {
           background: var(--secondary-background-color, rgba(0, 0, 0, 0.04));
-        }
-        #applySearch {
-          width: auto;
-          min-width: 76px;
-          padding-left: 12px;
-          padding-right: 12px;
-          white-space: nowrap;
         }
         .item {
           border: 1px solid var(--divider-color, #ddd);
@@ -729,6 +802,34 @@ class BjpKeepCard extends HTMLElement {
           object-fit: cover;
           display: block;
         }
+        .detail-gallery {
+          display: grid;
+          gap: 8px;
+        }
+        .detail-thumbs {
+          display: grid;
+          grid-template-columns: repeat(auto-fill, minmax(54px, 1fr));
+          gap: 6px;
+        }
+        .detail-thumb {
+          aspect-ratio: 1;
+          min-width: 0;
+          padding: 0;
+          border-radius: 8px;
+          overflow: hidden;
+          background: var(--secondary-background-color, #f3f3f3);
+          border-color: var(--divider-color, #ddd);
+        }
+        .detail-thumb.active {
+          border-color: var(--primary-color, #03a9f4);
+          box-shadow: 0 0 0 2px color-mix(in srgb, var(--primary-color, #03a9f4) 28%, transparent);
+        }
+        .detail-thumb img {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+          display: block;
+        }
       </style>
       <ha-card header="${this.escape(this.config.title)}">
         <div class="stack">
@@ -751,8 +852,10 @@ class BjpKeepCard extends HTMLElement {
               <div class="search-field">
                 <input id="search" placeholder="Search items" value="${this.escape(this.state.searchText)}">
                 <button id="clearSearch" class="secondary icon clear-inline" title="Clear search" ${this.state.searchText || this.state.query ? "" : "disabled"}>×</button>
+                <button id="applySearch" class="secondary icon inline-search" title="Search" aria-label="Search">
+                  <ha-icon icon="mdi:magnify"></ha-icon>
+                </button>
               </div>
-              <button id="applySearch" class="secondary">Search</button>
               <button id="refresh" class="secondary icon" title="Refresh">↻</button>
             </div>
             <button id="openAdd" style="width:auto; white-space:nowrap;">Add item</button>
@@ -826,8 +929,19 @@ class BjpKeepCard extends HTMLElement {
                 <div class="dialog-title">Item detail</div>
                 <button id="closeDetail" class="secondary icon" title="Close">×</button>
               </div>
-              <div class="detail-photo">
-                ${detailImageUrl ? `<img src="${this.escape(detailImageUrl)}" alt="${this.escape(detailItem.name)}">` : "📦"}
+              <div class="detail-gallery">
+                <div class="detail-photo">
+                  ${detailImageUrl ? `<img src="${this.escape(detailImageUrl)}" alt="${this.escape(detailItem.name)}">` : "📦"}
+                </div>
+                ${detailImages.length > 1 ? `
+                  <div class="detail-thumbs" aria-label="Item photos">
+                    ${detailImages.map((image, index) => `
+                      <button class="secondary detail-thumb ${index === this.state.detailPhotoIndex ? "active" : ""}" data-detail-photo-index="${index}" title="Photo ${index + 1}">
+                        <img src="${this.escape(this.imageUrl(image))}" alt="${this.escape(detailItem.name)} photo ${index + 1}" loading="lazy">
+                      </button>
+                    `).join("")}
+                  </div>
+                ` : ""}
               </div>
               <input id="detailItemName" placeholder="Item name" value="${this.escape(this.state.detailItemName)}">
               <div class="muted">
@@ -953,7 +1067,7 @@ class BjpKeepCard extends HTMLElement {
     });
     this.shadowRoot.getElementById("detailDeletePhoto")?.addEventListener("click", () => {
       const item = this.selectedDetailItem();
-      const image = item?.images?.[0];
+      const image = item?.images?.[this.state.detailPhotoIndex] || item?.images?.[0];
       if (item && image) {
         this.deleteItemPhoto(item, image);
       }
@@ -979,6 +1093,12 @@ class BjpKeepCard extends HTMLElement {
         }
       });
     });
+    this.shadowRoot.querySelectorAll("[data-detail-photo-index]").forEach((button) => {
+      button.addEventListener("click", () => {
+        this.state.detailPhotoIndex = Number(button.dataset.detailPhotoIndex || 0);
+        this.render();
+      });
+    });
   }
 
   escape(value) {
@@ -995,7 +1115,7 @@ class BjpKeepCardEditor extends HTMLElement {
     this.config = {
       api_url: "",
       api_token: "",
-      actor: "Dashboard",
+      actor: BJPKEEP_DEFAULT_ACTOR,
       title: "BJP Keep",
       page_size: 10,
       show_images: true,
@@ -1103,7 +1223,7 @@ class BjpKeepCardEditor extends HTMLElement {
         </label>
         <label>
           <span class="label">Actor</span>
-          <input id="actor" value="${this.escape(this.config.actor)}" placeholder="Dashboard">
+          <input id="actor" value="${this.escape(this.config.actor)}" placeholder="${this.escape(BJPKEEP_DEFAULT_ACTOR)}">
         </label>
         <label>
           <span class="label">Cabinet ID</span>
@@ -1130,7 +1250,7 @@ class BjpKeepCardEditor extends HTMLElement {
       this.updateConfig({ title: event.target.value || "BJP Keep" });
     });
     this.shadowRoot.getElementById("actor")?.addEventListener("change", (event) => {
-      this.updateConfig({ actor: event.target.value || "Dashboard" });
+      this.updateConfig({ actor: event.target.value || BJPKEEP_DEFAULT_ACTOR });
     });
     this.shadowRoot.getElementById("cabinet_id")?.addEventListener("change", (event) => {
       this.updateConfig({ cabinet_id: event.target.value.trim() });

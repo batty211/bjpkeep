@@ -1,6 +1,6 @@
 # BJP Keep Project Context
 
-This file is a working memory note for future AI/dev sessions. Read it before making changes.
+This file is a working memory note for future AI/dev sessions. Read it at the start of every new chat/session before answering or making changes.
 
 IMPORTANT: Update this file every time code, config, docs, UX, packaging, or behavior changes. This is the durable memory for new chat sessions, so do not rely on the previous chat history being available.
 
@@ -214,7 +214,7 @@ Example card:
 type: custom:bjpkeep-card
 api_url: http://192.168.1.222:3000
 api_token: "same-value-as-lovelace_token"
-actor: "Dashboard"
+actor: "{{ user }}"
 page_size: 10
 ```
 
@@ -224,7 +224,7 @@ Current Lovelace card UX:
 
 - The item list is compact: thumbnail, item name, and room/cabinet location only.
 - Clicking an item row opens an item detail popup.
-- Item rename/edit, move, add photo, remove cover photo, and delete actions live in the item detail popup instead of cluttering the list.
+- Item rename/edit, move, add photo, remove selected photo, and delete actions live in the item detail popup instead of cluttering the list.
 - Add Item opens as a popup instead of being permanently expanded in the card.
 - The custom card registers `window.customCards` metadata so it can appear in Home Assistant's visual Add Card picker after the JS resource is loaded.
 
@@ -234,6 +234,9 @@ Recent Lovelace card UX fixes:
 
 - Search controls were cleaned up for narrow Home Assistant cards. The clear `x` button now sits inside the search input, and the Search/Refresh/Add item controls use a responsive grid so button text does not overflow.
 - Add item now works when the card is showing `All cabinets`. The Add item popup includes its own cabinet dropdown. If a cabinet filter is already selected, that cabinet is preselected in the popup.
+- The Lovelace search submit control is now an icon button inside the search field.
+- The item detail popup now keeps its own current item/photo state. Adding photos updates the popup immediately, all item photos can be selected from thumbnails, and Remove Photo deletes the currently displayed photo instead of always deleting the first image.
+- The Lovelace card default actor is `{{ user }}`. The custom card resolves that token itself from Home Assistant `hass.user.name`/`hass.user.id` before sending `X-BJPKeep-Actor`, because arbitrary custom card config is not Markdown-rendered by Home Assistant.
 
 Recent Docker/build fix:
 
@@ -265,6 +268,7 @@ Recent Docker/build fix:
 - Lovelace Add Item form opens in a popup.
 - Lovelace Add Item popup can create an item from `All cabinets` by selecting a cabinet in the popup.
 - Lovelace search controls are responsive; clear search is an inline `x` inside the input.
+- Lovelace item detail popup supports multi-photo thumbnails and deletes the currently selected/displayed photo.
 - Root `README.md` documents the full Home Assistant installation flow, add-on configuration, Lovelace resource/card setup, test URLs, and troubleshooting.
 
 ## Known Caveats
@@ -274,7 +278,6 @@ Recent Docker/build fix:
 - If HA is served over HTTPS and card API is HTTP, browser mixed-content policies may matter. For local HA app usage this needs real-device testing.
 - `LOVELACE_API_TOKEN` must be set or `/api/lovelace/` returns 401.
 - If the Lovelace card shows repeated `/api/lovelace/?resource=cabinets` 401 errors, the dashboard card config is missing `api_token`, the token does not match `lovelace_token`, or the add-on was not restarted after changing the token.
-- Lovelace card photo removal currently removes the first/cover photo shown in the card. Full multi-photo gallery management still belongs in the main app UI.
 - The Lovelace JS resource still has to be added to HA resources before the visual card editor can appear.
 - Runtime paths are currently personal/setup-specific (`/share/HAShare/...`).
 - Build emits a recurring Turbopack warning about upload/thumb route tracing. Builds still pass.
@@ -284,7 +287,6 @@ Recent Docker/build fix:
 - Add an optional read-only dashboard summary mode.
 - Consider optional sorting and page-size controls in the card UI if 100+ item inventories become common.
 - Consider a token health/status endpoint or clearer setup diagnostics for first-time Lovelace configuration.
-- Consider fuller Lovelace image management if dashboard users need to choose/reorder/delete specific photos instead of only the cover photo.
 
 ## Useful Commands
 
