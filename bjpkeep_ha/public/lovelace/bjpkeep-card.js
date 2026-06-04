@@ -39,6 +39,7 @@ class BjpKeepCard extends HTMLElement {
       query: "",
       searchText: "",
       itemName: "",
+      itemCabinetId: "",
       page: 1,
       pageSize: Number(config.page_size || 10),
       totalItems: 0,
@@ -220,8 +221,9 @@ class BjpKeepCard extends HTMLElement {
 
   async createItem() {
     const name = this.state.itemName.trim();
+    const cabinetId = this.state.itemCabinetId || this.state.selectedCabinetId;
 
-    if (!name || !this.state.selectedCabinetId) {
+    if (!name || !cabinetId) {
       this.state.error = "Select a cabinet and enter an item name.";
       this.render();
       return;
@@ -234,7 +236,7 @@ class BjpKeepCard extends HTMLElement {
         const formData = new FormData();
         formData.append("action", "create_item");
         formData.append("name", name);
-        formData.append("cabinetId", this.state.selectedCabinetId);
+        formData.append("cabinetId", cabinetId);
         this.newItemFiles.forEach((file) => formData.append("files", file));
 
         await this.request("/api/lovelace/", {
@@ -247,12 +249,13 @@ class BjpKeepCard extends HTMLElement {
           body: JSON.stringify({
             action: "create_item",
             name,
-            cabinetId: this.state.selectedCabinetId,
+            cabinetId,
           }),
         });
       }
 
       this.state.itemName = "";
+      this.state.itemCabinetId = this.state.selectedCabinetId;
       this.newItemFiles = [];
       this.state.itemFilesLabel = "";
       this.state.addDialogOpen = false;
@@ -266,6 +269,7 @@ class BjpKeepCard extends HTMLElement {
 
   openAddDialog() {
     this.state.addDialogOpen = true;
+    this.state.itemCabinetId = this.state.selectedCabinetId;
     this.state.error = "";
     this.render();
   }
@@ -521,6 +525,43 @@ class BjpKeepCard extends HTMLElement {
           padding-left: 12px;
           padding-right: 12px;
         }
+        .search-row {
+          display: grid;
+          grid-template-columns: minmax(0, 1fr) auto auto;
+          gap: 8px;
+          align-items: center;
+        }
+        .search-field {
+          position: relative;
+          min-width: 0;
+        }
+        .search-field input {
+          padding-right: 44px;
+        }
+        .search-field .clear-inline {
+          position: absolute;
+          top: 50%;
+          right: 4px;
+          transform: translateY(-50%);
+          width: 34px;
+          min-width: 34px;
+          height: 34px;
+          padding: 0;
+          border-color: transparent;
+          background: transparent;
+          color: var(--secondary-text-color, #777);
+          line-height: 1;
+        }
+        .search-field .clear-inline:hover {
+          background: var(--secondary-background-color, rgba(0, 0, 0, 0.04));
+        }
+        #applySearch {
+          width: auto;
+          min-width: 76px;
+          padding-left: 12px;
+          padding-right: 12px;
+          white-space: nowrap;
+        }
         .item {
           border: 1px solid var(--divider-color, #ddd);
           border-radius: 8px;
@@ -624,9 +665,17 @@ class BjpKeepCard extends HTMLElement {
         }
         .toolbar {
           display: grid;
-          grid-template-columns: 1fr auto;
+          grid-template-columns: minmax(0, 1fr) auto;
           gap: 8px;
           align-items: center;
+        }
+        @media (max-width: 460px) {
+          .toolbar {
+            grid-template-columns: 1fr;
+          }
+          #openAdd {
+            width: 100%;
+          }
         }
         .dialog-backdrop {
           position: fixed;
@@ -698,10 +747,12 @@ class BjpKeepCard extends HTMLElement {
             `).join("")}
           </select>
           <div class="toolbar">
-            <div class="row">
-              <input id="search" placeholder="Search items" value="${this.escape(this.state.searchText)}">
-              <button id="applySearch" class="secondary" style="width:auto; white-space:nowrap;">Search</button>
-              <button id="clearSearch" class="secondary icon" title="Clear search">×</button>
+            <div class="search-row">
+              <div class="search-field">
+                <input id="search" placeholder="Search items" value="${this.escape(this.state.searchText)}">
+                <button id="clearSearch" class="secondary icon clear-inline" title="Clear search" ${this.state.searchText || this.state.query ? "" : "disabled"}>×</button>
+              </div>
+              <button id="applySearch" class="secondary">Search</button>
               <button id="refresh" class="secondary icon" title="Refresh">↻</button>
             </div>
             <button id="openAdd" style="width:auto; white-space:nowrap;">Add item</button>
@@ -743,17 +794,27 @@ class BjpKeepCard extends HTMLElement {
                 <button id="closeAdd" class="secondary icon" title="Close">×</button>
               </div>
               <input id="itemName" placeholder="New item name" value="${this.escape(this.state.itemName)}">
+              <select id="itemCabinet">
+                <option value="" ${!this.state.itemCabinetId ? "selected" : ""}>Select cabinet</option>
+                ${this.state.cabinets.map((cabinet) => `
+                  <option value="${cabinet.id}" ${cabinet.id === this.state.itemCabinetId ? "selected" : ""}>
+                    ${this.escape(cabinet.room?.name || "")} > ${this.escape(cabinet.name)} (${this.escape(cabinet.code)})
+                  </option>
+                `).join("")}
+              </select>
               <label class="file-row">
                 <span>${this.escape(this.state.itemFilesLabel || "Choose photos...")}</span>
                 <strong>Browse</strong>
                 <input type="file" accept="image/*" multiple id="itemFiles" hidden>
               </label>
               <div class="muted">
-                ${selectedCabinet ? `${this.escape(selectedCabinet.room?.name || "")} > ${this.escape(selectedCabinet.name)} (${this.escape(selectedCabinet.code)})` : "Select a cabinet before saving."}
+                ${this.state.itemCabinetId
+                  ? "Item will be added to the selected cabinet."
+                  : "Choose a cabinet before saving."}
               </div>
               <div class="dialog-actions">
                 <button id="cancelAdd" class="secondary">Cancel</button>
-                <button id="add" ${!this.state.selectedCabinetId || this.state.loading ? "disabled" : ""}>Save</button>
+                <button id="add" ${!this.state.itemCabinetId || this.state.loading ? "disabled" : ""}>Save</button>
               </div>
             </div>
           </div>
@@ -845,6 +906,10 @@ class BjpKeepCard extends HTMLElement {
       if (event.key === "Enter") {
         this.createItem();
       }
+    });
+    this.shadowRoot.getElementById("itemCabinet")?.addEventListener("change", (event) => {
+      this.state.itemCabinetId = event.target.value;
+      this.render();
     });
     this.shadowRoot.getElementById("itemFiles")?.addEventListener("change", (event) => {
       this.newItemFiles = Array.from(event.target.files || []);

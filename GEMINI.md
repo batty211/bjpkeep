@@ -2,11 +2,14 @@
 
 This file is a working memory note for future AI/dev sessions. Read it before making changes.
 
+IMPORTANT: Update this file every time code, config, docs, UX, packaging, or behavior changes. This is the durable memory for new chat sessions, so do not rely on the previous chat history being available.
+
 Whenever the user asks for code/config/product changes, update this file in the same work session:
 
 - Record what changed.
 - Remove or revise any TODO/next-work items that were completed.
 - Keep notes factual and useful for the next AI/dev session.
+- Include enough detail that a new AI/dev session can understand the current project state without seeing older chat logs.
 
 ## What This Project Is
 
@@ -227,6 +230,17 @@ Current Lovelace card UX:
 
 The custom card also provides a Home Assistant visual config editor via `getConfigElement()` / `bjpkeep-card-editor`, so dashboard users can manage `api_url`, `api_token`, `title`, `actor`, `cabinet_id`, `page_size`, and `show_images` from the HA card editor UI after the JS resource has been added.
 
+Recent Lovelace card UX fixes:
+
+- Search controls were cleaned up for narrow Home Assistant cards. The clear `x` button now sits inside the search input, and the Search/Refresh/Add item controls use a responsive grid so button text does not overflow.
+- Add item now works when the card is showing `All cabinets`. The Add item popup includes its own cabinet dropdown. If a cabinet filter is already selected, that cabinet is preselected in the popup.
+
+Recent Docker/build fix:
+
+- `bjpkeep_ha/Dockerfile` uses `npm ci` instead of `npm install` for deterministic image builds from `package-lock.json`.
+- Docker build npm retry/timeout environment settings were added to reduce Home Assistant Supervisor build failures from slow or flaky network reads.
+- Keep `package.json`, `package-lock.json`, and `config.yaml` versions in sync when bumping releases.
+
 ## Features Already Implemented
 
 - Home Assistant add-on packaging.
@@ -249,6 +263,8 @@ The custom card also provides a Home Assistant visual config editor via `getConf
 - Lovelace card registers custom-card metadata for Home Assistant's visual Add Card picker.
 - Lovelace card uses compact item rows with click-to-open item detail popup.
 - Lovelace Add Item form opens in a popup.
+- Lovelace Add Item popup can create an item from `All cabinets` by selecting a cabinet in the popup.
+- Lovelace search controls are responsive; clear search is an inline `x` inside the input.
 - Root `README.md` documents the full Home Assistant installation flow, add-on configuration, Lovelace resource/card setup, test URLs, and troubleshooting.
 
 ## Known Caveats
