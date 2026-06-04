@@ -29,6 +29,36 @@ function stripIngressPath(req, ingressPath) {
   req.url = strippedUrl.startsWith("/") ? strippedUrl : `/${strippedUrl}`;
 }
 
+function normalizeLovelaceApiPath(req) {
+  if (!req.url?.startsWith("/api/lovelace")) {
+    return;
+  }
+
+  if (req.url === "/api/lovelace") {
+    req.url = "/api/lovelace/";
+    return;
+  }
+
+  if (req.url.startsWith("/api/lovelace?")) {
+    req.url = req.url.replace("/api/lovelace?", "/api/lovelace/?");
+  }
+}
+
+function applyPublicCorsHeaders(req, res) {
+  const url = req.url || "";
+
+  if (!url.startsWith("/api/lovelace") && !url.startsWith("/lovelace/")) {
+    return;
+  }
+
+  res.setHeader("access-control-allow-origin", "*");
+  res.setHeader("access-control-allow-methods", "GET,POST,PUT,DELETE,OPTIONS");
+  res.setHeader(
+    "access-control-allow-headers",
+    "Authorization,Content-Type,X-BJPKeep-Token,X-BJPKeep-Actor"
+  );
+}
+
 function shouldRewriteResponse(req) {
   const url = req.url || "";
 
@@ -159,6 +189,8 @@ createServer((req, res) => {
   }
 
   stripIngressPath(req, ingressPath);
+  normalizeLovelaceApiPath(req);
+  applyPublicCorsHeaders(req, res);
 
   if (ingressPath && shouldRewriteResponse(req)) {
     installIngressAssetRewrite(req, res, ingressPath);

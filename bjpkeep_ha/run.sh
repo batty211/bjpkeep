@@ -11,6 +11,13 @@ if bashio::config.has_value 'app_url'; then
     bashio::log.info "Setting APP URL to ${NEXT_PUBLIC_APP_URL}"
 fi
 
+if bashio::config.has_value 'lovelace_token'; then
+    export LOVELACE_API_TOKEN=$(bashio::config 'lovelace_token')
+    bashio::log.info "Lovelace API is enabled"
+else
+    bashio::log.info "Lovelace API is disabled until lovelace_token is set"
+fi
+
 # Check if HAShare is available
 if [ ! -d "/share/HAShare" ]; then
     bashio::log.error "---------------------------------------------------------"

@@ -1,6 +1,6 @@
 name: BJP Keep
 slug: bjpkeep
-version: "0.4.5"
+version: "0.4.5a"
 description: "BJP Home where are my stuff!!"
 startup: application
 boot: auto
@@ -8,6 +8,8 @@ init: false
 panel_icon: mdi:package-variant-closed
 ingress: true
 ingress_port: 3000
+ports:
+  3000/tcp: 3000
 arch:
   - amd64
   - aarch64
@@ -17,8 +19,10 @@ map:
 options:
   log_level: info
   app_url: ""
+  lovelace_token: ""
   dev_mode: false
 schema:
   log_level: "list(debug|info|warning|error|fatal)"
   app_url: "str?"
+  lovelace_token: "str?"
   dev_mode: bool
