@@ -44,6 +44,9 @@ class BjpKeepCard extends HTMLElement {
       totalItems: 0,
       totalPages: 1,
       itemFilesLabel: "",
+      addDialogOpen: false,
+      detailDialogItemId: "",
+      detailItemName: "",
       loading: false,
       error: "",
       message: "",
@@ -58,7 +61,7 @@ class BjpKeepCard extends HTMLElement {
   }
 
   getCardSize() {
-    return 5;
+    return 3;
   }
 
   apiPath(path) {
@@ -170,6 +173,10 @@ class BjpKeepCard extends HTMLElement {
     return this.state.cabinets.find((cabinet) => cabinet.id === this.state.selectedCabinetId);
   }
 
+  selectedDetailItem() {
+    return this.state.items.find((item) => item.id === this.state.detailDialogItemId);
+  }
+
   async refreshItems(options = {}) {
     if (options.resetPage) {
       this.state.page = 1;
@@ -248,12 +255,37 @@ class BjpKeepCard extends HTMLElement {
       this.state.itemName = "";
       this.newItemFiles = [];
       this.state.itemFilesLabel = "";
+      this.state.addDialogOpen = false;
       this.state.message = photoCount > 0 ? `Added ${name} with ${photoCount} photo${photoCount === 1 ? "" : "s"}.` : `Added ${name}.`;
       await this.refreshItems({ resetPage: true });
     } catch (error) {
       this.state.error = error.message;
       this.render();
     }
+  }
+
+  openAddDialog() {
+    this.state.addDialogOpen = true;
+    this.state.error = "";
+    this.render();
+  }
+
+  closeAddDialog() {
+    this.state.addDialogOpen = false;
+    this.render();
+  }
+
+  openDetailDialog(item) {
+    this.state.detailDialogItemId = item.id;
+    this.state.detailItemName = item.name;
+    this.state.error = "";
+    this.render();
+  }
+
+  closeDetailDialog() {
+    this.state.detailDialogItemId = "";
+    this.state.detailItemName = "";
+    this.render();
   }
 
   async addItemPhotos(item, files) {
@@ -301,9 +333,11 @@ class BjpKeepCard extends HTMLElement {
   }
 
   async editItem(item) {
-    const name = window.prompt("Item name", item.name);
+    const name = this.state.detailItemName.trim();
 
     if (!name || !name.trim()) {
+      this.state.error = "Enter an item name.";
+      this.render();
       return;
     }
 
@@ -365,6 +399,9 @@ class BjpKeepCard extends HTMLElement {
         }),
       });
       this.state.message = `Deleted ${item.name}.`;
+      if (this.state.detailDialogItemId === item.id) {
+        this.closeDetailDialog();
+      }
       await this.refreshItems();
     } catch (error) {
       this.state.error = error.message;
@@ -443,14 +480,17 @@ class BjpKeepCard extends HTMLElement {
     }
 
     const selectedCabinet = this.selectedCabinet();
+    const detailItem = this.selectedDetailItem();
+    const detailImageUrl = detailItem ? this.itemImageUrl(detailItem) : "";
+    const detailImage = detailItem?.images?.[0];
     const totalItems = this.state.totalItems;
     const page = this.state.page;
     const totalPages = this.state.totalPages || 1;
     this.shadowRoot.innerHTML = `
       <style>
         :host { display: block; }
-        ha-card { padding: 16px; overflow: hidden; }
-        .stack { display: grid; gap: 12px; }
+        ha-card { padding: 12px; overflow: hidden; }
+        .stack { display: grid; gap: 10px; }
         .row { display: flex; gap: 8px; align-items: center; }
         .row > * { min-width: 0; }
         input, select, button, label.scan {
@@ -458,7 +498,7 @@ class BjpKeepCard extends HTMLElement {
           width: 100%;
           border: 1px solid var(--divider-color, #ddd);
           border-radius: 8px;
-          padding: 10px;
+          padding: 8px 10px;
           font: inherit;
           background: var(--card-background-color, white);
           color: var(--primary-text-color, #111);
@@ -484,22 +524,28 @@ class BjpKeepCard extends HTMLElement {
         .item {
           border: 1px solid var(--divider-color, #ddd);
           border-radius: 8px;
-          padding: 10px;
+          padding: 8px;
           display: grid;
-          grid-template-columns: ${this.config.show_images ? "56px 1fr" : "1fr"};
-          gap: 10px;
-          align-items: start;
+          grid-template-columns: ${this.config.show_images ? "44px 1fr" : "1fr"};
+          gap: 8px;
+          align-items: center;
+          cursor: pointer;
+          text-align: left;
+          background: transparent;
+          color: inherit;
+          width: 100%;
         }
+        .item:hover { background: var(--secondary-background-color, rgba(0, 0, 0, 0.04)); }
         .thumb {
-          width: 56px;
-          height: 56px;
+          width: 44px;
+          height: 44px;
           border-radius: 8px;
           overflow: hidden;
           background: var(--secondary-background-color, #f3f3f3);
           display: grid;
           place-items: center;
           color: var(--secondary-text-color, #777);
-          font-size: 22px;
+          font-size: 18px;
         }
         .thumb img {
           width: 100%;
@@ -510,14 +556,23 @@ class BjpKeepCard extends HTMLElement {
         .item-body {
           min-width: 0;
           display: grid;
-          gap: 6px;
+          gap: 2px;
         }
         .item-title {
           overflow: hidden;
           text-overflow: ellipsis;
           white-space: nowrap;
+          font-size: 0.95em;
+          line-height: 1.25;
         }
         .muted { color: var(--secondary-text-color, #777); font-size: 0.9em; }
+        .location {
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+          color: var(--secondary-text-color, #777);
+          font-size: 0.82em;
+        }
         .error { color: var(--error-color, #db4437); }
         .message { color: var(--success-color, #0f9d58); }
         .actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
@@ -567,6 +622,64 @@ class BjpKeepCard extends HTMLElement {
           color: var(--secondary-text-color, #777);
           text-align: center;
         }
+        .toolbar {
+          display: grid;
+          grid-template-columns: 1fr auto;
+          gap: 8px;
+          align-items: center;
+        }
+        .dialog-backdrop {
+          position: fixed;
+          inset: 0;
+          z-index: 10;
+          display: grid;
+          place-items: center;
+          background: rgba(0, 0, 0, 0.45);
+          padding: 16px;
+        }
+        .dialog {
+          box-sizing: border-box;
+          width: min(420px, 100%);
+          border-radius: 12px;
+          border: 1px solid var(--divider-color, #ddd);
+          background: var(--card-background-color, white);
+          color: var(--primary-text-color, #111);
+          box-shadow: 0 16px 40px rgba(0, 0, 0, 0.32);
+          padding: 14px;
+          display: grid;
+          gap: 10px;
+        }
+        .dialog-head {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 8px;
+        }
+        .dialog-title {
+          font-weight: 600;
+        }
+        .dialog-actions {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 8px;
+        }
+        .detail-photo {
+          width: 100%;
+          aspect-ratio: 16 / 10;
+          border-radius: 10px;
+          overflow: hidden;
+          background: var(--secondary-background-color, #f3f3f3);
+          display: grid;
+          place-items: center;
+          color: var(--secondary-text-color, #777);
+          font-size: 32px;
+        }
+        .detail-photo img {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+          display: block;
+        }
       </style>
       <ha-card header="${this.escape(this.config.title)}">
         <div class="stack">
@@ -584,21 +697,15 @@ class BjpKeepCard extends HTMLElement {
               </option>
             `).join("")}
           </select>
-          <div class="row">
-            <input id="search" placeholder="Search items" value="${this.escape(this.state.searchText)}">
-            <button id="applySearch" class="secondary" style="width:auto; white-space:nowrap;">Search</button>
-            <button id="clearSearch" class="secondary icon" title="Clear search">×</button>
-            <button id="refresh" class="secondary icon" title="Refresh">↻</button>
+          <div class="toolbar">
+            <div class="row">
+              <input id="search" placeholder="Search items" value="${this.escape(this.state.searchText)}">
+              <button id="applySearch" class="secondary" style="width:auto; white-space:nowrap;">Search</button>
+              <button id="clearSearch" class="secondary icon" title="Clear search">×</button>
+              <button id="refresh" class="secondary icon" title="Refresh">↻</button>
+            </div>
+            <button id="openAdd" style="width:auto; white-space:nowrap;">Add item</button>
           </div>
-          <div class="row">
-            <input id="itemName" placeholder="New item name" value="${this.escape(this.state.itemName)}">
-            <button id="add" style="width:auto; white-space:nowrap;">Add</button>
-          </div>
-          <label class="file-row">
-            <span>${this.escape(this.state.itemFilesLabel || "Choose photos for new item...")}</span>
-            <strong>Browse</strong>
-            <input type="file" accept="image/*" multiple id="itemFiles" hidden>
-          </label>
           <div class="muted">
             ${selectedCabinet ? `${this.escape(selectedCabinet.name)} (${this.escape(selectedCabinet.code)})` : "All cabinets"}
             · ${totalItems} item${totalItems === 1 ? "" : "s"}
@@ -607,10 +714,9 @@ class BjpKeepCard extends HTMLElement {
           </div>
           ${this.state.items.length ? this.state.items.map((item) => {
             const imageUrl = this.itemImageUrl(item);
-            const image = item.images?.[0];
 
             return `
-            <div class="item">
+            <button class="item" data-open-detail="${item.id}">
               ${this.config.show_images ? `
                 <div class="thumb">
                   ${imageUrl ? `<img src="${this.escape(imageUrl)}" alt="${this.escape(item.name)}" loading="lazy">` : "📦"}
@@ -618,30 +724,9 @@ class BjpKeepCard extends HTMLElement {
               ` : ""}
               <div class="item-body">
                 <div class="item-title"><strong>${this.escape(item.name)}</strong></div>
-                <div class="muted">${this.escape(item.cabinet?.room?.name || "")} > ${this.escape(item.cabinet?.code || "")}</div>
-                <div class="move">
-                  <select data-move-cabinet="${item.id}">
-                    ${this.state.cabinets.map((cabinet) => `
-                      <option value="${cabinet.id}" ${cabinet.id === item.cabinetId ? "selected" : ""}>
-                        ${this.escape(cabinet.room?.name || "")} > ${this.escape(cabinet.name)} (${this.escape(cabinet.code)})
-                      </option>
-                    `).join("")}
-                  </select>
-                  <button class="secondary" data-move="${item.id}" style="width:auto;">Move</button>
-                </div>
-                <div class="actions">
-                  <button class="secondary" data-edit="${item.id}">Edit</button>
-                  <button class="secondary" data-delete="${item.id}">Delete</button>
-                </div>
-                <div class="actions">
-                  <label class="scan" data-photo-label="${item.id}">
-                    Add Photo
-                    <input type="file" accept="image/*" multiple data-photo="${item.id}" hidden>
-                  </label>
-                  <button class="secondary" data-delete-photo="${item.id}" ${image ? "" : "disabled"}>Remove Photo</button>
-                </div>
+                <div class="location">${this.escape(item.cabinet?.room?.name || "")} > ${this.escape(item.cabinet?.name || item.cabinet?.code || "")}</div>
               </div>
-            </div>
+            </button>
           `;
           }).join("") : `<div class="empty">${this.state.loading ? "Loading items..." : "No items found."}</div>`}
           <div class="pagination">
@@ -650,6 +735,67 @@ class BjpKeepCard extends HTMLElement {
             <button id="nextPage" class="secondary" ${page >= totalPages || this.state.loading ? "disabled" : ""}>Next</button>
           </div>
         </div>
+        ${this.state.addDialogOpen ? `
+          <div class="dialog-backdrop" id="addBackdrop">
+            <div class="dialog" role="dialog" aria-modal="true" aria-label="Add item">
+              <div class="dialog-head">
+                <div class="dialog-title">Add item</div>
+                <button id="closeAdd" class="secondary icon" title="Close">×</button>
+              </div>
+              <input id="itemName" placeholder="New item name" value="${this.escape(this.state.itemName)}">
+              <label class="file-row">
+                <span>${this.escape(this.state.itemFilesLabel || "Choose photos...")}</span>
+                <strong>Browse</strong>
+                <input type="file" accept="image/*" multiple id="itemFiles" hidden>
+              </label>
+              <div class="muted">
+                ${selectedCabinet ? `${this.escape(selectedCabinet.room?.name || "")} > ${this.escape(selectedCabinet.name)} (${this.escape(selectedCabinet.code)})` : "Select a cabinet before saving."}
+              </div>
+              <div class="dialog-actions">
+                <button id="cancelAdd" class="secondary">Cancel</button>
+                <button id="add" ${!this.state.selectedCabinetId || this.state.loading ? "disabled" : ""}>Save</button>
+              </div>
+            </div>
+          </div>
+        ` : ""}
+        ${detailItem ? `
+          <div class="dialog-backdrop" id="detailBackdrop">
+            <div class="dialog" role="dialog" aria-modal="true" aria-label="Item detail">
+              <div class="dialog-head">
+                <div class="dialog-title">Item detail</div>
+                <button id="closeDetail" class="secondary icon" title="Close">×</button>
+              </div>
+              <div class="detail-photo">
+                ${detailImageUrl ? `<img src="${this.escape(detailImageUrl)}" alt="${this.escape(detailItem.name)}">` : "📦"}
+              </div>
+              <input id="detailItemName" placeholder="Item name" value="${this.escape(this.state.detailItemName)}">
+              <div class="muted">
+                ${this.escape(detailItem.cabinet?.room?.name || "")} > ${this.escape(detailItem.cabinet?.name || detailItem.cabinet?.code || "")}
+              </div>
+              <div class="move">
+                <select id="detailMoveCabinet">
+                  ${this.state.cabinets.map((cabinet) => `
+                    <option value="${cabinet.id}" ${cabinet.id === detailItem.cabinetId ? "selected" : ""}>
+                      ${this.escape(cabinet.room?.name || "")} > ${this.escape(cabinet.name)} (${this.escape(cabinet.code)})
+                    </option>
+                  `).join("")}
+                </select>
+                <button id="detailMove" class="secondary" style="width:auto;">Move</button>
+              </div>
+              <div class="actions">
+                <label class="scan">
+                  Add Photo
+                  <input type="file" accept="image/*" multiple id="detailPhoto" hidden>
+                </label>
+                <button id="detailDeletePhoto" class="secondary" ${detailImage ? "" : "disabled"}>Remove Photo</button>
+              </div>
+              <div class="dialog-actions">
+                <button id="detailDelete" class="secondary">Delete</button>
+                <button id="detailSave">Save</button>
+              </div>
+            </div>
+          </div>
+        ` : ""}
       </ha-card>
     `;
 
@@ -672,6 +818,20 @@ class BjpKeepCard extends HTMLElement {
       this.clearSearch();
     });
     this.shadowRoot.getElementById("refresh")?.addEventListener("click", () => this.refreshItems());
+    this.shadowRoot.getElementById("openAdd")?.addEventListener("click", () => this.openAddDialog());
+    this.shadowRoot.getElementById("closeAdd")?.addEventListener("click", () => this.closeAddDialog());
+    this.shadowRoot.getElementById("cancelAdd")?.addEventListener("click", () => this.closeAddDialog());
+    this.shadowRoot.getElementById("addBackdrop")?.addEventListener("click", (event) => {
+      if (event.target?.id === "addBackdrop") {
+        this.closeAddDialog();
+      }
+    });
+    this.shadowRoot.getElementById("closeDetail")?.addEventListener("click", () => this.closeDetailDialog());
+    this.shadowRoot.getElementById("detailBackdrop")?.addEventListener("click", (event) => {
+      if (event.target?.id === "detailBackdrop") {
+        this.closeDetailDialog();
+      }
+    });
     this.shadowRoot.getElementById("prevPage")?.addEventListener("click", () => {
       this.changePage(this.state.page - 1);
     });
@@ -694,6 +854,51 @@ class BjpKeepCard extends HTMLElement {
       this.render();
     });
     this.shadowRoot.getElementById("add")?.addEventListener("click", () => this.createItem());
+    this.shadowRoot.getElementById("detailItemName")?.addEventListener("input", (event) => {
+      this.state.detailItemName = event.target.value;
+    });
+    this.shadowRoot.getElementById("detailItemName")?.addEventListener("keydown", (event) => {
+      if (event.key === "Enter") {
+        const item = this.selectedDetailItem();
+        if (item) {
+          this.editItem(item);
+        }
+      }
+    });
+    this.shadowRoot.getElementById("detailSave")?.addEventListener("click", () => {
+      const item = this.selectedDetailItem();
+      if (item) {
+        this.editItem(item);
+      }
+    });
+    this.shadowRoot.getElementById("detailMove")?.addEventListener("click", () => {
+      const item = this.selectedDetailItem();
+      const cabinetSelect = this.shadowRoot.getElementById("detailMoveCabinet");
+      if (item && cabinetSelect) {
+        this.moveItem(item, cabinetSelect.value);
+      }
+    });
+    this.shadowRoot.getElementById("detailPhoto")?.addEventListener("change", (event) => {
+      const item = this.selectedDetailItem();
+      const files = Array.from(event.target.files || []);
+      event.target.value = "";
+      if (item) {
+        this.addItemPhotos(item, files);
+      }
+    });
+    this.shadowRoot.getElementById("detailDeletePhoto")?.addEventListener("click", () => {
+      const item = this.selectedDetailItem();
+      const image = item?.images?.[0];
+      if (item && image) {
+        this.deleteItemPhoto(item, image);
+      }
+    });
+    this.shadowRoot.getElementById("detailDelete")?.addEventListener("click", () => {
+      const item = this.selectedDetailItem();
+      if (item) {
+        this.deleteItem(item);
+      }
+    });
     this.shadowRoot.getElementById("scan")?.addEventListener("change", (event) => {
       const file = event.target.files?.[0];
       event.target.value = "";
@@ -701,47 +906,11 @@ class BjpKeepCard extends HTMLElement {
         this.scanQrImage(file);
       }
     });
-    this.shadowRoot.querySelectorAll("[data-edit]").forEach((button) => {
+    this.shadowRoot.querySelectorAll("[data-open-detail]").forEach((button) => {
       button.addEventListener("click", () => {
-        const item = this.state.items.find((candidate) => candidate.id === button.dataset.edit);
+        const item = this.state.items.find((candidate) => candidate.id === button.dataset.openDetail);
         if (item) {
-          this.editItem(item);
-        }
-      });
-    });
-    this.shadowRoot.querySelectorAll("[data-delete]").forEach((button) => {
-      button.addEventListener("click", () => {
-        const item = this.state.items.find((candidate) => candidate.id === button.dataset.delete);
-        if (item) {
-          this.deleteItem(item);
-        }
-      });
-    });
-    this.shadowRoot.querySelectorAll("[data-move]").forEach((button) => {
-      button.addEventListener("click", () => {
-        const item = this.state.items.find((candidate) => candidate.id === button.dataset.move);
-        const cabinetSelect = this.shadowRoot.querySelector(`[data-move-cabinet="${button.dataset.move}"]`);
-        if (item && cabinetSelect) {
-          this.moveItem(item, cabinetSelect.value);
-        }
-      });
-    });
-    this.shadowRoot.querySelectorAll("[data-photo]").forEach((input) => {
-      input.addEventListener("change", (event) => {
-        const item = this.state.items.find((candidate) => candidate.id === input.dataset.photo);
-        const files = Array.from(event.target.files || []);
-        event.target.value = "";
-        if (item) {
-          this.addItemPhotos(item, files);
-        }
-      });
-    });
-    this.shadowRoot.querySelectorAll("[data-delete-photo]").forEach((button) => {
-      button.addEventListener("click", () => {
-        const item = this.state.items.find((candidate) => candidate.id === button.dataset.deletePhoto);
-        const image = item?.images?.[0];
-        if (item && image) {
-          this.deleteItemPhoto(item, image);
+          this.openDetailDialog(item);
         }
       });
     });
@@ -925,4 +1094,14 @@ if (!customElements.get("bjpkeep-card-editor")) {
 
 if (!customElements.get("bjpkeep-card")) {
   customElements.define("bjpkeep-card", BjpKeepCard);
+}
+
+window.customCards = window.customCards || [];
+if (!window.customCards.some((card) => card.type === "bjpkeep-card")) {
+  window.customCards.push({
+    type: "bjpkeep-card",
+    name: "BJP Keep",
+    description: "Inventory search, QR cabinet selection, compact item list, and item creation.",
+    preview: true,
+  });
 }

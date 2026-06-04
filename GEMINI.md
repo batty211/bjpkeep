@@ -2,6 +2,12 @@
 
 This file is a working memory note for future AI/dev sessions. Read it before making changes.
 
+Whenever the user asks for code/config/product changes, update this file in the same work session:
+
+- Record what changed.
+- Remove or revise any TODO/next-work items that were completed.
+- Keep notes factual and useful for the next AI/dev session.
+
 ## What This Project Is
 
 BJP Keep is a private home inventory app for tracking where household items are stored.
@@ -210,6 +216,14 @@ page_size: 10
 
 The card currently supports all-cabinet or per-cabinet item lists, item thumbnails, cabinet selection, manual search with Search button/Enter (no auto-refresh while typing), clear/refresh controls, pagination, QR photo scan, add item with photos, edit item name, add/remove item photos, move item to another cabinet, and delete item.
 
+Current Lovelace card UX:
+
+- The item list is compact: thumbnail, item name, and room/cabinet location only.
+- Clicking an item row opens an item detail popup.
+- Item rename/edit, move, add photo, remove cover photo, and delete actions live in the item detail popup instead of cluttering the list.
+- Add Item opens as a popup instead of being permanently expanded in the card.
+- The custom card registers `window.customCards` metadata so it can appear in Home Assistant's visual Add Card picker after the JS resource is loaded.
+
 The custom card also provides a Home Assistant visual config editor via `getConfigElement()` / `bjpkeep-card-editor`, so dashboard users can manage `api_url`, `api_token`, `title`, `actor`, `cabinet_id`, `page_size`, and `show_images` from the HA card editor UI after the JS resource has been added.
 
 ## Features Already Implemented
@@ -231,6 +245,9 @@ The custom card also provides a Home Assistant visual config editor via `getConf
 - Lovelace item API supports pagination and lightweight cabinet fetches for large inventories.
 - Lovelace card/API supports photo upload while adding an item, adding photos to an existing item, and deleting an item photo.
 - Lovelace card has a visual Home Assistant config editor and stub config for UI-based card creation/editing.
+- Lovelace card registers custom-card metadata for Home Assistant's visual Add Card picker.
+- Lovelace card uses compact item rows with click-to-open item detail popup.
+- Lovelace Add Item form opens in a popup.
 
 ## Known Caveats
 
@@ -246,7 +263,7 @@ The custom card also provides a Home Assistant visual config editor via `getConf
 
 ## Suggested Next Lovelace Work
 
-- Add a compact/read-only card mode for dashboard summaries.
+- Add an optional read-only dashboard summary mode.
 - Consider optional sorting and page-size controls in the card UI if 100+ item inventories become common.
 - Consider a token health/status endpoint or clearer setup diagnostics for first-time Lovelace configuration.
 - Consider fuller Lovelace image management if dashboard users need to choose/reorder/delete specific photos instead of only the cover photo.
@@ -275,9 +292,7 @@ http://127.0.0.1:3003/lovelace/bjpkeep-card.js
 
 ## Suggested Next Work
 
-- Add Lovelace card image upload support.
-- Add move item between cabinets in Lovelace card.
-- Make Lovelace card UI prettier and more HA-native.
+- Polish Lovelace card styling after testing on real Home Assistant dashboards and mobile devices.
 - Add edit/delete for cabinets/rooms through Lovelace if needed.
 - Consider configurable storage path if the add-on will be shared publicly.
 - Consider a proper backup/restore workflow for SQLite + uploads.
