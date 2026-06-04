@@ -1,10 +1,21 @@
 import { prisma } from "@/lib/prisma";
+import { getThumbnailPath } from "@/lib/item-images";
 import {
   getLovelaceActor,
   lovelaceJson,
   lovelaceOptionsResponse,
   requireLovelaceAuth,
 } from "@/lib/lovelace-api";
+
+function withLovelaceImagePaths<T extends { images?: { path: string }[] }>(item: T): T {
+  return {
+    ...item,
+    images: item.images?.map((image) => ({
+      ...image,
+      thumbnailPath: getThumbnailPath(image.path),
+    })),
+  };
+}
 
 export function OPTIONS() {
   return lovelaceOptionsResponse();
@@ -44,7 +55,15 @@ export async function GET(req: Request) {
       },
     });
 
-    return lovelaceJson({ rooms });
+    return lovelaceJson({
+      rooms: rooms.map((room) => ({
+        ...room,
+        cabinets: room.cabinets.map((cabinet) => ({
+          ...cabinet,
+          items: cabinet.items.map(withLovelaceImagePaths),
+        })),
+      })),
+    });
   }
 
   if (resource === "cabinets") {
@@ -65,7 +84,12 @@ export async function GET(req: Request) {
       },
     });
 
-    return lovelaceJson({ cabinets });
+    return lovelaceJson({
+      cabinets: cabinets.map((cabinet) => ({
+        ...cabinet,
+        items: cabinet.items.map(withLovelaceImagePaths),
+      })),
+    });
   }
 
   if (resource === "cabinet") {
@@ -96,7 +120,12 @@ export async function GET(req: Request) {
       return lovelaceJson({ error: "Cabinet not found" }, { status: 404 });
     }
 
-    return lovelaceJson({ cabinet });
+    return lovelaceJson({
+      cabinet: {
+        ...cabinet,
+        items: cabinet.items.map(withLovelaceImagePaths),
+      },
+    });
   }
 
   if (resource === "items") {
@@ -137,7 +166,7 @@ export async function GET(req: Request) {
       },
     });
 
-    return lovelaceJson({ items });
+    return lovelaceJson({ items: items.map(withLovelaceImagePaths) });
   }
 
   return lovelaceJson({

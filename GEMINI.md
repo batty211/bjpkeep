@@ -202,7 +202,7 @@ api_token: "same-value-as-lovelace_token"
 actor: "Dashboard"
 ```
 
-The card MVP currently supports cabinet selection, search, QR photo scan, add item, edit item name, and delete item.
+The card currently supports all-cabinet or per-cabinet item lists, item thumbnails, cabinet selection, search with clear/refresh controls, QR photo scan, add item, edit item name, move item to another cabinet, and delete item.
 
 ## Features Already Implemented
 

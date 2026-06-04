@@ -7,6 +7,8 @@ class BjpKeepCard extends HTMLElement {
     this.config = {
       api_token: "",
       actor: "Lovelace",
+      title: "BJP Keep",
+      show_images: true,
       ...config,
       api_url: String(config.api_url).replace(/\/+$/, ""),
     };
@@ -30,6 +32,21 @@ class BjpKeepCard extends HTMLElement {
 
   apiPath(path) {
     return `${this.config.api_url}${path}`;
+  }
+
+  itemImageUrl(item) {
+    const image = item.images?.[0];
+    const path = image?.thumbnailPath || image?.path;
+
+    if (!path) {
+      return "";
+    }
+
+    if (/^https?:\/\//i.test(path)) {
+      return path;
+    }
+
+    return this.apiPath(path.startsWith("/") ? path : `/${path}`);
   }
 
   headers() {
@@ -71,7 +88,7 @@ class BjpKeepCard extends HTMLElement {
       this.state.cabinets = cabinetsResult.cabinets || [];
 
       if (!this.state.selectedCabinetId && this.state.cabinets[0]) {
-        this.state.selectedCabinetId = this.state.cabinets[0].id;
+        this.state.selectedCabinetId = this.config.cabinet_id || "";
       }
 
       await this.loadItems();
@@ -169,6 +186,32 @@ class BjpKeepCard extends HTMLElement {
     }
   }
 
+  async moveItem(item, cabinetId) {
+    if (!cabinetId || cabinetId === item.cabinetId) {
+      return;
+    }
+
+    const cabinet = this.state.cabinets.find((candidate) => candidate.id === cabinetId);
+    const label = cabinet ? `${cabinet.room?.name || ""} > ${cabinet.name}` : "selected cabinet";
+
+    try {
+      await this.request("/api/lovelace/", {
+        method: "POST",
+        body: JSON.stringify({
+          action: "update_item",
+          id: item.id,
+          name: item.name,
+          cabinetId,
+        }),
+      });
+      this.state.message = `Moved ${item.name} to ${label}.`;
+      await this.refreshItems();
+    } catch (error) {
+      this.state.error = error.message;
+      this.render();
+    }
+  }
+
   async deleteItem(item) {
     if (!window.confirm(`Delete ${item.name}?`)) {
       return;
@@ -236,7 +279,18 @@ class BjpKeepCard extends HTMLElement {
         return;
       }
 
-      this.state.selectedCabinetId = match[1];
+      const cabinetId = match[1];
+
+      if (!this.state.cabinets.some((cabinet) => cabinet.id === cabinetId)) {
+        const result = await this.request(`/api/lovelace/?resource=cabinet&id=${encodeURIComponent(cabinetId)}`);
+        this.state.cabinets = [...this.state.cabinets, result.cabinet].sort((a, b) => {
+          const roomA = a.room?.name || "";
+          const roomB = b.room?.name || "";
+          return `${roomA} ${a.code}`.localeCompare(`${roomB} ${b.code}`);
+        });
+      }
+
+      this.state.selectedCabinetId = cabinetId;
       this.state.message = "Cabinet selected from QR.";
       await this.refreshItems();
     } finally {
@@ -250,10 +304,11 @@ class BjpKeepCard extends HTMLElement {
     }
 
     const selectedCabinet = this.selectedCabinet();
+    const totalItems = this.state.items.length;
     this.shadowRoot.innerHTML = `
       <style>
         :host { display: block; }
-        ha-card { padding: 16px; }
+        ha-card { padding: 16px; overflow: hidden; }
         .stack { display: grid; gap: 12px; }
         .row { display: flex; gap: 8px; align-items: center; }
         .row > * { min-width: 0; }
@@ -279,19 +334,62 @@ class BjpKeepCard extends HTMLElement {
           color: var(--primary-text-color, #111);
           border-color: var(--divider-color, #ddd);
         }
+        button.icon {
+          width: auto;
+          min-width: 42px;
+          padding-left: 12px;
+          padding-right: 12px;
+        }
         .item {
           border: 1px solid var(--divider-color, #ddd);
           border-radius: 8px;
           padding: 10px;
           display: grid;
+          grid-template-columns: ${this.config.show_images ? "56px 1fr" : "1fr"};
+          gap: 10px;
+          align-items: start;
+        }
+        .thumb {
+          width: 56px;
+          height: 56px;
+          border-radius: 8px;
+          overflow: hidden;
+          background: var(--secondary-background-color, #f3f3f3);
+          display: grid;
+          place-items: center;
+          color: var(--secondary-text-color, #777);
+          font-size: 22px;
+        }
+        .thumb img {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+          display: block;
+        }
+        .item-body {
+          min-width: 0;
+          display: grid;
           gap: 6px;
+        }
+        .item-title {
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
         }
         .muted { color: var(--secondary-text-color, #777); font-size: 0.9em; }
         .error { color: var(--error-color, #db4437); }
         .message { color: var(--success-color, #0f9d58); }
         .actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+        .move { display: grid; grid-template-columns: 1fr auto; gap: 8px; }
+        .empty {
+          border: 1px dashed var(--divider-color, #ddd);
+          border-radius: 8px;
+          padding: 14px;
+          color: var(--secondary-text-color, #777);
+          text-align: center;
+        }
       </style>
-      <ha-card header="BJP Keep">
+      <ha-card header="${this.escape(this.config.title)}">
         <div class="stack">
           ${this.state.error ? `<div class="error">${this.state.error}</div>` : ""}
           ${this.state.message ? `<div class="message">${this.state.message}</div>` : ""}
@@ -300,31 +398,58 @@ class BjpKeepCard extends HTMLElement {
             <input type="file" accept="image/*" capture="environment" id="scan" hidden>
           </label>
           <select id="cabinet">
+            <option value="" ${!this.state.selectedCabinetId ? "selected" : ""}>All cabinets</option>
             ${this.state.cabinets.map((cabinet) => `
               <option value="${cabinet.id}" ${cabinet.id === this.state.selectedCabinetId ? "selected" : ""}>
-                ${cabinet.room?.name || ""} > ${cabinet.name} (${cabinet.code})
+                ${this.escape(cabinet.room?.name || "")} > ${this.escape(cabinet.name)} (${this.escape(cabinet.code)})
               </option>
             `).join("")}
           </select>
-          <input id="search" placeholder="Search items" value="${this.escape(this.state.query)}">
+          <div class="row">
+            <input id="search" placeholder="Search items" value="${this.escape(this.state.query)}">
+            <button id="clearSearch" class="secondary icon" title="Clear search">×</button>
+            <button id="refresh" class="secondary icon" title="Refresh">↻</button>
+          </div>
           <div class="row">
             <input id="itemName" placeholder="New item name" value="${this.escape(this.state.itemName)}">
             <button id="add" style="width:auto; white-space:nowrap;">Add</button>
           </div>
           <div class="muted">
-            ${selectedCabinet ? `${selectedCabinet.name} (${selectedCabinet.code})` : "No cabinet selected"}
+            ${selectedCabinet ? `${this.escape(selectedCabinet.name)} (${this.escape(selectedCabinet.code)})` : "All cabinets"}
+            · ${totalItems} item${totalItems === 1 ? "" : "s"}
             ${this.state.loading ? " · Loading..." : ""}
           </div>
-          ${this.state.items.map((item) => `
+          ${this.state.items.length ? this.state.items.map((item) => {
+            const imageUrl = this.itemImageUrl(item);
+
+            return `
             <div class="item">
-              <div><strong>${this.escape(item.name)}</strong></div>
-              <div class="muted">${this.escape(item.cabinet?.room?.name || "")} > ${this.escape(item.cabinet?.code || "")}</div>
-              <div class="actions">
-                <button class="secondary" data-edit="${item.id}">Edit</button>
-                <button class="secondary" data-delete="${item.id}">Delete</button>
+              ${this.config.show_images ? `
+                <div class="thumb">
+                  ${imageUrl ? `<img src="${this.escape(imageUrl)}" alt="${this.escape(item.name)}" loading="lazy">` : "📦"}
+                </div>
+              ` : ""}
+              <div class="item-body">
+                <div class="item-title"><strong>${this.escape(item.name)}</strong></div>
+                <div class="muted">${this.escape(item.cabinet?.room?.name || "")} > ${this.escape(item.cabinet?.code || "")}</div>
+                <div class="move">
+                  <select data-move-cabinet="${item.id}">
+                    ${this.state.cabinets.map((cabinet) => `
+                      <option value="${cabinet.id}" ${cabinet.id === item.cabinetId ? "selected" : ""}>
+                        ${this.escape(cabinet.room?.name || "")} > ${this.escape(cabinet.name)} (${this.escape(cabinet.code)})
+                      </option>
+                    `).join("")}
+                  </select>
+                  <button class="secondary" data-move="${item.id}" style="width:auto;">Move</button>
+                </div>
+                <div class="actions">
+                  <button class="secondary" data-edit="${item.id}">Edit</button>
+                  <button class="secondary" data-delete="${item.id}">Delete</button>
+                </div>
               </div>
             </div>
-          `).join("")}
+          `;
+          }).join("") : `<div class="empty">${this.state.loading ? "Loading items..." : "No items found."}</div>`}
         </div>
       </ha-card>
     `;
@@ -338,8 +463,18 @@ class BjpKeepCard extends HTMLElement {
       window.clearTimeout(this.searchTimer);
       this.searchTimer = window.setTimeout(() => this.refreshItems(), 250);
     });
+    this.shadowRoot.getElementById("clearSearch")?.addEventListener("click", () => {
+      this.state.query = "";
+      this.refreshItems();
+    });
+    this.shadowRoot.getElementById("refresh")?.addEventListener("click", () => this.refreshItems());
     this.shadowRoot.getElementById("itemName")?.addEventListener("input", (event) => {
       this.state.itemName = event.target.value;
+    });
+    this.shadowRoot.getElementById("itemName")?.addEventListener("keydown", (event) => {
+      if (event.key === "Enter") {
+        this.createItem();
+      }
     });
     this.shadowRoot.getElementById("add")?.addEventListener("click", () => this.createItem());
     this.shadowRoot.getElementById("scan")?.addEventListener("change", (event) => {
@@ -362,6 +497,15 @@ class BjpKeepCard extends HTMLElement {
         const item = this.state.items.find((candidate) => candidate.id === button.dataset.delete);
         if (item) {
           this.deleteItem(item);
+        }
+      });
+    });
+    this.shadowRoot.querySelectorAll("[data-move]").forEach((button) => {
+      button.addEventListener("click", () => {
+        const item = this.state.items.find((candidate) => candidate.id === button.dataset.move);
+        const cabinetSelect = this.shadowRoot.querySelector(`[data-move-cabinet="${button.dataset.move}"]`);
+        if (item && cabinetSelect) {
+          this.moveItem(item, cabinetSelect.value);
         }
       });
     });
