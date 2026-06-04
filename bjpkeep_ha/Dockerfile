@@ -14,9 +14,16 @@ RUN apt-get update && apt-get install -y \
 
 WORKDIR /app
 
+# Make npm a bit more tolerant of slow links during Home Assistant builds.
+ENV NPM_CONFIG_FETCH_RETRIES=5 \
+    NPM_CONFIG_FETCH_RETRY_MINTIMEOUT=10000 \
+    NPM_CONFIG_FETCH_RETRY_MAXTIMEOUT=120000 \
+    NPM_CONFIG_AUDIT=false \
+    NPM_CONFIG_FUND=false
+
 # 1. Install dependencies
 COPY package*.json ./
-RUN npm install
+RUN npm ci
 
 # 2. Generate Prisma Client
 COPY prisma/schema.prisma ./prisma/

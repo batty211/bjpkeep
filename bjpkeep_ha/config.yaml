@@ -1,6 +1,6 @@
 name: BJP Keep
 slug: bjpkeep
-version: "0.4.6"
+version: "0.4.6a"
 description: "BJP Home where are my stuff!!"
 startup: application
 boot: auto
