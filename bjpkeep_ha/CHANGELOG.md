@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.7.0b
+
+- Added metadata and translations for the optional BJP Keep Home Assistant integration.
+
 ## 0.7.0a
 
 - Fixed the optional BJP Keep Home Assistant integration config flow handler.

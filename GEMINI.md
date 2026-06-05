@@ -341,6 +341,7 @@ Recent Docker/build fix:
 
 Recent version note:
 
+- Version `0.7.0b` adds `integration_type` metadata and `translations/en.json` for the custom integration so Home Assistant/HACS can discover and display the setup flow more reliably.
 - Version `0.7.0a` fixes the custom integration config flow class name (`ConfigFlow`) so Home Assistant can load the integration setup handler.
 - Version `0.7.0` adds the HACS-ready Home Assistant custom integration bridge, same-origin Lovelace asset/image proxying, and integration-mode Lovelace cards while preserving direct `api_url` mode as fallback.
 - Version `0.6.0b` adds the required `homeassistant_api: true` add-on permission for direct Niimbot service calls and adds `bjpkeep_ha/CHANGELOG.md` so Home Assistant can show update notes. `0.6.0a` contained the Niimbot service payload/target fixes.

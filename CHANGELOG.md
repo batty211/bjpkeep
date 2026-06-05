@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.7.0b
+
+- Added Home Assistant integration manifest metadata and translation files to improve custom integration discovery in the Add Integration UI.
+
 ## 0.7.0a
 
 - Fixed the BJP Keep Home Assistant integration config flow handler class name so Home Assistant can load the setup flow.
