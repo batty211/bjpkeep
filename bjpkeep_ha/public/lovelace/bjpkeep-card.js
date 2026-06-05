@@ -49,6 +49,9 @@ class BjpKeepCard extends HTMLElement {
       message: "",
     };
     this.newItemFiles = [];
+    this.imageObjectUrls = this.imageObjectUrls || new Map();
+    this.imageFetches = this.imageFetches || new Set();
+    this.imageLoadErrors = this.imageLoadErrors || new Set();
 
     if (!this.shadowRoot) {
       this.attachShadow({ mode: "open" });
@@ -68,6 +71,7 @@ class BjpKeepCard extends HTMLElement {
     if (this._cabinetFilterHandler) {
       window.removeEventListener(BJPKEEP_CABINET_FILTER_EVENT, this._cabinetFilterHandler);
     }
+    this.clearImageObjectUrls();
   }
 
   getCardSize() {
@@ -100,7 +104,7 @@ class BjpKeepCard extends HTMLElement {
     this.loadData();
   }
 
-  imageUrl(image, options = {}) {
+  rawImageUrl(image, options = {}) {
     const path = this.usesHaBridge()
       ? (options.original ? image?.haPath : image?.haThumbnailPath || image?.haPath)
       : (options.original ? image?.path : image?.thumbnailPath || image?.path);
@@ -114,6 +118,67 @@ class BjpKeepCard extends HTMLElement {
     }
 
     return this.apiPath(path.startsWith("/") ? path : `/${path}`);
+  }
+
+  imageUrl(image, options = {}) {
+    const url = this.rawImageUrl(image, options);
+
+    if (!this.usesHaBridge() || !url.startsWith("/api/bjpkeep/image?")) {
+      return url;
+    }
+
+    const cached = this.imageObjectUrls?.get(url);
+    if (cached) {
+      return cached;
+    }
+
+    this.loadHaImage(url);
+    return "";
+  }
+
+  haAuthToken() {
+    return this._hass?.auth?.data?.access_token
+      || this._hass?.auth?.accessToken
+      || this._hass?.connection?.options?.auth?.data?.access_token
+      || this._hass?.connection?.options?.auth?.accessToken
+      || this._hass?.connection?.options?.auth?.access_token
+      || "";
+  }
+
+  async loadHaImage(url) {
+    if (this.imageFetches?.has(url) || this.imageLoadErrors?.has(url)) {
+      return;
+    }
+
+    this.imageFetches.add(url);
+
+    try {
+      const token = this.haAuthToken();
+      const response = await fetch(new URL(url, window.location.origin).toString(), {
+        credentials: "same-origin",
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
+      });
+
+      if (!response.ok) {
+        throw new Error(`Image request failed with ${response.status}`);
+      }
+
+      const objectUrl = URL.createObjectURL(await response.blob());
+      this.imageObjectUrls.set(url, objectUrl);
+      this.render();
+    } catch (error) {
+      console.warn("BJP Keep image load failed", error);
+      this.imageLoadErrors.add(url);
+    } finally {
+      this.imageFetches.delete(url);
+    }
+  }
+
+  clearImageObjectUrls() {
+    this.imageObjectUrls?.forEach((objectUrl) => URL.revokeObjectURL(objectUrl));
+    this.imageObjectUrls?.clear();
+    this.imageFetches?.clear();
+    this.imageLoadErrors?.clear();
   }
 
   itemImageUrl(item) {

@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.7.0d
+
+- Fixed Lovelace images in Home Assistant integration mode by loading authenticated image proxy responses as browser blob URLs instead of assigning authenticated API URLs directly to `<img>` tags.
+
 ## 0.7.0c
 
 - Current add-on release used with the optional HACS Home Assistant integration bridge.

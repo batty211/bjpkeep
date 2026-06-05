@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.7.0d
+
+- Fixed Lovelace images in Home Assistant integration mode by loading authenticated image proxy responses as browser blob URLs instead of assigning authenticated API URLs directly to `<img>` tags.
+
 ## HACS integration 0.1.3
 
 - Restored Home Assistant integration loading by reverting the signed image proxy change that could prevent BJP Keep from appearing in Add Integration.

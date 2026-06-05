@@ -128,7 +128,7 @@ cat /config/custom_components/bjpkeep/manifest.json
 ha core logs | grep -i bjpkeep
 ```
 
-In integration mode, item images are served through Home Assistant's authenticated `/api/bjpkeep/image` proxy. If image requests return `401 Unauthorized`, use direct fallback mode temporarily while checking Home Assistant logs for the integration load state.
+In integration mode, item images are served through Home Assistant's authenticated `/api/bjpkeep/image` proxy. The Lovelace card loads those images with authenticated fetch calls and displays them as browser blob URLs, because plain `<img>` tags cannot attach Home Assistant bearer headers.
 
 ## Add The Lovelace Card Resource
 
@@ -141,6 +141,12 @@ Recommended integration mode resource:
 ```
 
 Set resource type to `JavaScript Module`.
+
+After updating the add-on, append a cache-busting query such as `&v=0.7.0d` if Home Assistant keeps loading an older card script:
+
+```text
+/api/bjpkeep/asset?asset=bjpkeep-card.js&v=0.7.0d
+```
 
 Direct fallback mode resource:
 

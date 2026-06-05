@@ -335,6 +335,8 @@ Recent Lovelace card UX fixes:
 - The Lovelace card default actor is `{{ user }}`. The custom card resolves that token itself from Home Assistant `hass.user.name`/`hass.user.id` before sending `X-BJPKeep-Actor`, because arbitrary custom card config is not Markdown-rendered by Home Assistant.
 - The Lovelace visual config editor no longer exposes `actor` or `cabinet_id`; new stub configs also omit `actor` so activity logs use the current HA dashboard user by default.
 - Added a second Lovelace custom card, `custom:bjpkeep-cabinet-card`, for room/cabinet navigation and filtering the main inventory card without typing cabinet IDs.
+- Integration-mode Lovelace images are loaded by `public/lovelace/bjpkeep-card.js` with authenticated `fetch` calls and converted to browser blob URLs. Do not put `/api/bjpkeep/image?...` directly in `<img src>` in integration mode, because `<img>` cannot attach HA bearer headers and will return `401`.
+- If Home Assistant keeps an old Lovelace card script cached after an add-on update, append a resource cache buster such as `/api/bjpkeep/asset?asset=bjpkeep-card.js&v=0.7.0d`.
 
 Recent Docker/build fix:
 
@@ -344,7 +346,7 @@ Recent Docker/build fix:
 
 Recent version note:
 
-- Add-on/app version `0.7.0c` is the currently installed add-on release used with the optional HACS integration bridge; keep `bjpkeep_ha/config.yaml`, `bjpkeep_ha/package.json`, and `bjpkeep_ha/package-lock.json` aligned to this unless the add-on itself changes again.
+- Add-on/app version `0.7.0d` is the current add-on release used with the optional HACS integration bridge; keep `bjpkeep_ha/config.yaml`, `bjpkeep_ha/package.json`, and `bjpkeep_ha/package-lock.json` aligned to this unless the add-on itself changes again.
 - Integration compatibility fix: `custom_components/bjpkeep/config_flow.py` defines `CONF_NAME = "name"` locally instead of importing it from `homeassistant.const`, avoiding HA-version-specific import failures.
 - HACS integration version is independent and currently uses `custom_components/bjpkeep/manifest.json` version `0.1.3`.
 - Integration compatibility fix: Home Assistant 2026 expects `@websocket_api.websocket_command(...)` to receive a schema dict, not `vol.Schema(...)`; using `vol.Schema(...)` caused `AttributeError: 'Schema' object has no attribute 'validators'` and prevented the config flow from loading.
