@@ -11,6 +11,14 @@ Whenever the user asks for code/config/product changes, update this file in the 
 - Keep notes factual and useful for the next AI/dev session.
 - Include enough detail that a new AI/dev session can understand the current project state without seeing older chat logs.
 
+Also maintain release notes and versions in the same work session:
+
+- Update `CHANGELOG.md` for every code/config/product change.
+- Update the add-on/app version whenever behavior changes.
+- Keep `bjpkeep_ha/config.yaml` and `bjpkeep_ha/package.json` versions in sync.
+- Version rule: bug-fix-only changes append letters to the current version, e.g. `0.5.0a`, `0.5.0b`, etc.
+- Version rule: feature additions bump the minor version, e.g. `0.5.0` -> `0.6.0`, unless the user explicitly asks for a different version.
+
 ## What This Project Is
 
 BJP Keep is a private home inventory app for tracking where household items are stored.
@@ -95,6 +103,8 @@ Current approach: cabinet QR encodes a permanent payload:
 bjpkeep:cabinet:<cabinetId>
 ```
 
+Manual fallback in the scanner now accepts Cabinet `code` instead of requiring the long cabinet id. It still accepts legacy/pasted QR payloads or cabinet URLs too. Code lookup uses `GET /api/cabinets?code=<code>`; if the same cabinet code exists in multiple rooms, the API returns `409` so the UI can ask for a less ambiguous code or a QR scan.
+
 Helpers:
 
 - `src/lib/cabinet-qr.ts`
@@ -102,12 +112,33 @@ Helpers:
 QR page:
 
 - `src/app/cabinets/[id]/qr/page.tsx`
+- `src/components/cabinet-print-buttons.tsx`
 
 Scanner:
 
 - `src/components/qr/qr-scanner.tsx`
 
 On iOS Home Assistant app, live `getUserMedia` did not work. The scanner now uses a single file/camera picker button and decodes the chosen photo with `jsQR`.
+
+### Niimbot Printing
+
+The add-on can print cabinet labels directly through Home Assistant's `eigger/hass-niimbot` integration.
+
+Config options:
+
+```yaml
+niimbot_label_device_id: ""
+niimbot_qr_device_id: ""
+```
+
+`run.sh` exports these as `NIIMBOT_LABEL_DEVICE_ID` and `NIIMBOT_QR_DEVICE_ID`.
+
+API:
+
+- `POST /api/niimbot` with `{ "cabinetId": "...", "kind": "label" }` prints a small D110-style 40x12 label using `width: 240`, `height: 96`, and `rotate: 90`.
+- `POST /api/niimbot` with `{ "cabinetId": "...", "kind": "qr" }` prints a B1-style 50x50 QR label using `width: 400`, `height: 400`.
+
+The API calls Home Assistant via `http://supervisor/core/api/services/niimbot/print` with `SUPERVISOR_TOKEN`, so direct printing works only inside the Home Assistant add-on runtime.
 
 ### Images And Thumbnails
 

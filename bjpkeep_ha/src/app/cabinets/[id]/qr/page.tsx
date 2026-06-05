@@ -5,6 +5,7 @@ import Image from "next/image";
 import { BaseLink } from "@/lib/ingress-utils";
 import { createCanvas, loadImage } from "canvas";
 import { createCabinetQrPayload } from "@/lib/cabinet-qr";
+import CabinetPrintButtons from "@/components/cabinet-print-buttons";
 
 export default async function CabinetQrPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -72,6 +73,8 @@ export default async function CabinetQrPage({ params }: { params: Promise<{ id: 
         >
           ➕ Add Item in this Cabinet
         </BaseLink>
+
+        <CabinetPrintButtons cabinetId={cabinet.id} />
 
         <a
           href={qrDataUrl}

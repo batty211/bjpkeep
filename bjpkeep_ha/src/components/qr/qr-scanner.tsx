@@ -2,7 +2,7 @@
 
 import jsQR from "jsqr";
 import { useRef, useState } from "react";
-import { getPrefixedPath, useIngressPath } from "@/lib/ingress-utils";
+import { getPrefixedPath, prefixedFetch, useIngressPath } from "@/lib/ingress-utils";
 import { parseCabinetQrPayload } from "@/lib/cabinet-qr";
 
 export default function QrScanner() {
@@ -74,19 +74,32 @@ export default function QrScanner() {
     void decodeQrImage(file);
   }
 
-  function openManualValue(event: React.FormEvent<HTMLFormElement>) {
+  async function openManualValue(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
     const formData = new FormData(event.currentTarget);
-    const value = String(formData.get("qrValue") || "");
+    const value = String(formData.get("cabinetCode") || "").trim();
     const cabinetId = parseCabinetQrPayload(value);
 
-    if (!cabinetId) {
-      setStatus("That QR text does not look like a BJP Keep cabinet QR code.");
+    if (!value) {
+      setStatus("Enter a cabinet code first.");
       return;
     }
 
-    openCabinet(cabinetId);
+    if (cabinetId) {
+      openCabinet(cabinetId);
+      return;
+    }
+
+    const response = await prefixedFetch(`/api/cabinets?code=${encodeURIComponent(value)}`);
+    const result = await response.json().catch(() => ({}));
+
+    if (!response.ok) {
+      setStatus(result.error ?? "Cabinet code not found.");
+      return;
+    }
+
+    openCabinet(result.id);
   }
 
   return (
@@ -108,8 +121,8 @@ export default function QrScanner() {
 
       <form onSubmit={openManualValue} className="space-y-2">
         <input
-          name="qrValue"
-          placeholder="Paste QR text"
+          name="cabinetCode"
+          placeholder="Enter Cabinet Code"
           className="w-full rounded border border-[var(--border-color)] bg-[var(--bg-card)] px-3 py-2 text-[var(--foreground)]"
         />
         <button

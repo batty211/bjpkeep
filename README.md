@@ -50,6 +50,8 @@ Recommended starting config:
 log_level: info
 app_url: ""
 lovelace_token: "choose-a-long-private-token"
+niimbot_label_device_id: ""
+niimbot_qr_device_id: ""
 dev_mode: false
 ```
 
@@ -58,7 +60,9 @@ Notes:
 - `lovelace_token` is required for the Lovelace API/card. Use the same value later as `api_token` in the dashboard card.
 - Leave `app_url` empty unless a specific external app URL is needed.
 - The add-on exposes port `3000/tcp` for Lovelace usage.
-- Restart the add-on after changing `lovelace_token`.
+- `niimbot_label_device_id` is optional. Set it to the Home Assistant device id for a small label printer such as Niimbot D110.
+- `niimbot_qr_device_id` is optional. Set it to the Home Assistant device id for a larger QR label printer such as Niimbot B1.
+- Restart the add-on after changing `lovelace_token` or Niimbot printer settings.
 
 ## Start BJP Keep
 
@@ -74,6 +78,8 @@ Inside the app:
 2. Create cabinets inside rooms.
 3. Print or save cabinet QR codes from each cabinet QR page.
 4. Add items to cabinets.
+
+If the Home Assistant `eigger/hass-niimbot` integration is installed and the device ids above are configured, each cabinet QR page can send a small 40x12 label or a 50x50 QR label directly to `niimbot.print`.
 
 Cabinet QR codes use permanent payloads like:
 

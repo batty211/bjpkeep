@@ -15,7 +15,66 @@ function isUniqueConstraintError(error: unknown) {
   return error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002";
 }
 
-export async function GET() {
+async function getNextCabinetCode(roomId: string, roomCode: string) {
+  const cabinets = await prisma.cabinet.findMany({
+    where: {
+      roomId,
+    },
+    select: {
+      code: true,
+    },
+  });
+  const usedCodes = new Set(cabinets.map((cabinet) => cabinet.code));
+
+  for (let index = 1; index < 1000; index++) {
+    const code = `${roomCode}-C${String(index).padStart(2, "0")}`;
+
+    if (!usedCodes.has(code)) {
+      return code;
+    }
+  }
+
+  return `${roomCode}-C${Date.now()}`;
+}
+
+export async function GET(req: Request) {
+  const code = new URL(req.url).searchParams.get("code")?.trim();
+
+  if (code) {
+    const cabinets = await prisma.cabinet.findMany({
+      where: {
+        code,
+      },
+      include: {
+        room: true,
+      },
+      orderBy: {
+        createdAt: "asc",
+      },
+    });
+
+    if (cabinets.length === 0) {
+      return NextResponse.json({ error: "Cabinet code not found" }, { status: 404 });
+    }
+
+    if (cabinets.length > 1) {
+      return NextResponse.json(
+        {
+          error: "Cabinet code นี้มีมากกว่า 1 ห้อง กรุณา scan QR หรือระบุ code ที่ไม่ซ้ำ",
+          cabinets: cabinets.map((cabinet) => ({
+            id: cabinet.id,
+            name: cabinet.name,
+            code: cabinet.code,
+            room: cabinet.room.name,
+          })),
+        },
+        { status: 409 }
+      );
+    }
+
+    return NextResponse.json(cabinets[0]);
+  }
+
   const cabinets = await prisma.cabinet.findMany({
     include: {
       room: true,
@@ -42,13 +101,7 @@ export async function POST(req: Request) {
     );
   }
 
-  const cabinetCount = await prisma.cabinet.count({
-    where: {
-      roomId: body.roomId,
-    },
-  });
-
-  const generatedCode = `${room.code}-C${String(cabinetCount + 1).padStart(2, "0")}`;
+  const generatedCode = await getNextCabinetCode(body.roomId, room.code);
 
   try {
     const cabinet = await prisma.cabinet.create({

@@ -1,6 +1,6 @@
 name: BJP Keep
 slug: bjpkeep
-version: "0.5.0"
+version: "0.6.0"
 description: "BJP Home where are my stuff!!"
 startup: application
 boot: auto
@@ -20,9 +20,13 @@ options:
   log_level: info
   app_url: ""
   lovelace_token: ""
+  niimbot_label_device_id: ""
+  niimbot_qr_device_id: ""
   dev_mode: false
 schema:
   log_level: "list(debug|info|warning|error|fatal)"
   app_url: "str?"
   lovelace_token: "str?"
+  niimbot_label_device_id: "str?"
+  niimbot_qr_device_id: "str?"
   dev_mode: bool

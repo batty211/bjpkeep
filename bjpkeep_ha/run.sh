@@ -18,6 +18,16 @@ else
     bashio::log.info "Lovelace API is disabled until lovelace_token is set"
 fi
 
+if bashio::config.has_value 'niimbot_label_device_id'; then
+    export NIIMBOT_LABEL_DEVICE_ID=$(bashio::config 'niimbot_label_device_id')
+    bashio::log.info "Niimbot small label printer is configured"
+fi
+
+if bashio::config.has_value 'niimbot_qr_device_id'; then
+    export NIIMBOT_QR_DEVICE_ID=$(bashio::config 'niimbot_qr_device_id')
+    bashio::log.info "Niimbot QR printer is configured"
+fi
+
 # Check if HAShare is available
 if [ ! -d "/share/HAShare" ]; then
     bashio::log.error "---------------------------------------------------------"
