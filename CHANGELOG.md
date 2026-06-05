@@ -1,5 +1,11 @@
 # Changelog
 
+## HACS integration 0.1.6
+
+- Automatically registers the BJP Keep Lovelace card module with Home Assistant's frontend when the integration is configured, so integration-mode users no longer need to add a Dashboard Resource manually.
+- Removes the auto-registered frontend module URL when the last BJP Keep config entry is unloaded.
+- Updated Lovelace setup docs to treat manual dashboard resources as direct fallback mode only.
+
 ## HACS integration 0.1.5
 
 - Removed the personal LAN IP from the integration's default API URL so new config flows require an explicit local add-on URL.

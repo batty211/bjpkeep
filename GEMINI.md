@@ -262,6 +262,7 @@ Recommended Home Assistant integration bridge:
   - `/api/bjpkeep/asset?asset=bjpkeep-card.js`
   - `/api/bjpkeep/asset?asset=jsQR.js`
   - `/api/bjpkeep/image?path=<encoded upload path>`
+- It registers the Lovelace card module automatically with Home Assistant frontend using `frontend.add_extra_js_url(hass, "/api/bjpkeep/asset?asset=bjpkeep-card.js&v=<integration-version>")`. Integration-mode users should not need to add a Dashboard Resource manually.
 - The asset proxy is intentionally unauthenticated because browser module scripts cannot attach HA bearer headers. It only serves static Lovelace helper files. The image proxy remains authenticated, and the card loads images with authenticated fetch-to-blob logic.
 - The Lovelace cards now support two modes:
   - Integration mode: omit `api_url`; the card uses `hass.callWS(...)` and same-origin HA proxy URLs.
@@ -275,12 +276,7 @@ Tested locally:
 - `/api/lovelace/` without token: `401`
 - `/api/lovelace/` with token: `200`
 
-Example HA Lovelace resource:
-
-```yaml
-url: /api/bjpkeep/asset?asset=bjpkeep-card.js
-type: module
-```
+Integration-mode Lovelace card module is registered automatically by the Home Assistant integration. If a manual BJP Keep dashboard resource exists from older setup instructions, remove it so Home Assistant does not keep loading a stale direct fallback URL.
 
 Direct fallback Lovelace resource:
 
@@ -337,7 +333,7 @@ Recent Lovelace card UX fixes:
 - The Lovelace visual config editor no longer exposes `actor` or `cabinet_id`; new stub configs also omit `actor` so activity logs use the current HA dashboard user by default.
 - Added a second Lovelace custom card, `custom:bjpkeep-cabinet-card`, for room/cabinet navigation and filtering the main inventory card without typing cabinet IDs.
 - Integration-mode Lovelace images are loaded by `public/lovelace/bjpkeep-card.js` with authenticated `fetch` calls and converted to browser blob URLs. Do not put `/api/bjpkeep/image?...` directly in `<img src>` in integration mode, because `<img>` cannot attach HA bearer headers and will return `401`.
-- If Home Assistant keeps an old Lovelace card script cached after an add-on update, append a resource cache buster such as `/api/bjpkeep/asset?asset=bjpkeep-card.js&v=0.7.0d`.
+- The auto-registered Lovelace card module URL includes the HACS integration version as a cache buster. Bump `custom_components/bjpkeep/const.py` `VERSION` and `custom_components/bjpkeep/manifest.json` together for integration/card delivery changes.
 
 Recent Docker/build fix:
 
@@ -349,9 +345,10 @@ Recent version note:
 
 - Add-on/app version `0.7.0d` is the current add-on release used with the optional HACS integration bridge; keep `bjpkeep_ha/config.yaml`, `bjpkeep_ha/package.json`, and `bjpkeep_ha/package-lock.json` aligned to this unless the add-on itself changes again.
 - Integration compatibility fix: `custom_components/bjpkeep/config_flow.py` defines `CONF_NAME = "name"` locally instead of importing it from `homeassistant.const`, avoiding HA-version-specific import failures.
-- HACS integration version is independent and currently uses `custom_components/bjpkeep/manifest.json` version `0.1.5`.
+- HACS integration version is independent and currently uses `custom_components/bjpkeep/manifest.json` version `0.1.6`.
+- Integration frontend auto-load fix: `custom_components/bjpkeep/__init__.py` now imports `homeassistant.components.frontend`, declares the manifest dependency on `frontend`, and calls `frontend.add_extra_js_url` / `remove_extra_js_url` for `/api/bjpkeep/asset?asset=bjpkeep-card.js&v=0.1.6`. Users no longer need to add the same-origin Lovelace resource manually in integration mode.
 - Integration config-flow fix: the default API URL is now blank instead of the user's personal LAN IP, and the form validates that the value is a full `http://` or `https://` URL before testing the connection.
-- Lovelace troubleshooting note: if the browser Network tab shows `http://<private-ip>:3000/lovelace/bjpkeep-card.js`, Home Assistant is still using the direct fallback resource. Replace/delete that dashboard resource and use `/api/bjpkeep/asset?asset=bjpkeep-card.js` for same-origin integration mode.
+- Lovelace troubleshooting note: if the browser Network tab shows `http://<private-ip>:3000/lovelace/bjpkeep-card.js`, Home Assistant is still using a manual direct fallback resource. Delete that dashboard resource, then refresh the browser or restart the Home Assistant app.
 - Integration asset proxy fix: `BjpKeepAssetView.requires_auth` is `False` so `/api/bjpkeep/asset?asset=bjpkeep-card.js` can load as a Lovelace JavaScript module. If both custom elements disappear with "Custom element doesn't exist", first verify this endpoint returns JavaScript instead of 401.
 - Integration compatibility fix: Home Assistant 2026 expects `@websocket_api.websocket_command(...)` to receive a schema dict, not `vol.Schema(...)`; using `vol.Schema(...)` caused `AttributeError: 'Schema' object has no attribute 'validators'` and prevented the config flow from loading.
 - Integration load fix: signed image proxy changes from `0.1.2` were reverted in `0.1.3` because the integration stopped appearing in Add Integration. Image requests may still need a separate fix after checking real Home Assistant logs.
@@ -394,7 +391,7 @@ Recent version note:
 - If HA is served over HTTPS and direct fallback card API is HTTP, browser mixed-content policies may matter.
 - `LOVELACE_API_TOKEN` must be set or `/api/lovelace/` returns 401.
 - If the Lovelace card shows repeated `/api/lovelace/?resource=cabinets` 401 errors, the dashboard card config is missing `api_token`, the token does not match `lovelace_token`, or the add-on was not restarted after changing the token.
-- The Lovelace JS resource still has to be added to HA resources before the visual card editor can appear.
+- The Lovelace JS resource is auto-registered by the BJP Keep integration in integration mode. Direct fallback mode still requires a manual HA dashboard resource.
 - Integration mode depends on installing/configuring `custom_components/bjpkeep`; without that, omit `api_url` mode will show a BJP Keep integration readiness error.
 - Integration mode photo upload is not implemented yet; use direct fallback mode for photo upload until multipart proxy support is added.
 - Runtime paths are currently personal/setup-specific (`/share/HAShare/...`).

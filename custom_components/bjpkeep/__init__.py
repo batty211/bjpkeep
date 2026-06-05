@@ -8,6 +8,7 @@ from urllib.parse import quote
 import voluptuous as vol
 from aiohttp import web
 
+from homeassistant.components import frontend
 from homeassistant.components import websocket_api
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.config_entries import ConfigEntry
@@ -20,6 +21,7 @@ from .const import (
     DOMAIN,
     HTTP_ASSET_PATH,
     HTTP_IMAGE_PATH,
+    LOVELACE_CARD_URL,
     WS_ACTION,
     WS_GET,
 )
@@ -32,6 +34,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         CONF_API_TOKEN: entry.data[CONF_API_TOKEN],
     }
     _register_bridge(hass)
+    frontend.add_extra_js_url(hass, LOVELACE_CARD_URL)
 
     return True
 
@@ -40,6 +43,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a BJP Keep config entry."""
 
     hass.data.get(DOMAIN, {}).pop(entry.entry_id, None)
+    if not _has_config_entries(hass):
+        frontend.remove_extra_js_url(hass, LOVELACE_CARD_URL)
     return True
 
 
@@ -55,6 +60,15 @@ def _register_bridge(hass: HomeAssistant) -> None:
     hass.http.register_view(BjpKeepImageView)
     hass.http.register_view(BjpKeepAssetView)
     hass.data[DOMAIN]["registered"] = True
+
+
+def _has_config_entries(hass: HomeAssistant) -> bool:
+    """Return whether BJP Keep still has active config entries."""
+
+    return any(
+        key != "registered"
+        for key in hass.data.get(DOMAIN, {})
+    )
 
 
 def _get_config(hass: HomeAssistant) -> dict[str, str]:
