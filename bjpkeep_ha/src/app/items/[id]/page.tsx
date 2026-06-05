@@ -1,4 +1,3 @@
-import Image from "next/image";
 import AppLayout from "@/components/layout/app-layout";
 import UploadImageForm from "@/components/items/upload-image-form";
 import MoveItemForm from "@/components/items/move-item-form";
@@ -7,6 +6,9 @@ import { prisma } from "@/lib/prisma";
 import { redirect } from "next/navigation";
 import { BaseLink } from "@/lib/ingress-utils";
 import { getServerPrefixedPath } from "@/lib/ingress-utils-server";
+import { deleteItemImages } from "@/lib/item-delete";
+import { getCurrentUser } from "@/lib/auth";
+import ConfirmSubmitButton from "@/components/confirm-submit-button";
 
 type Props = {
   params: Promise<{
@@ -56,23 +58,27 @@ export default async function ItemDetailPage({ params }: Props) {
   async function deleteItem() {
     "use server";
 
-    await prisma.itemImage.deleteMany({
+    const user = await getCurrentUser();
+    const actorName = user.name;
+    const itemToDelete = await prisma.item.findUnique({
       where: {
-        itemId: id,
+        id,
       },
     });
 
-    await prisma.activityLog.deleteMany({
-      where: {
-        details: {
-          contains: item?.name ?? "",
-        },
-      },
-    });
+    await deleteItemImages(id);
 
     await prisma.item.delete({
       where: {
         id,
+      },
+    });
+
+    await prisma.activityLog.create({
+      data: {
+        action: "DELETE_ITEM",
+        actorName,
+        details: `Deleted item: ${itemToDelete?.name ?? id}`,
       },
     });
     
@@ -95,8 +101,8 @@ export default async function ItemDetailPage({ params }: Props) {
 
   return (
     <AppLayout>
-      <div className="mx-auto max-w-4xl space-y-6">
-        <div className="flex flex-wrap items-center gap-4">
+      <div className="mx-auto max-w-4xl space-y-6 overflow-hidden px-1">
+        <div className="flex flex-wrap items-center gap-3">
           <BaseLink href="/inventory" className="text-sm text-blue-600 hover:underline">
             ← Back to Inventory
           </BaseLink>
@@ -106,14 +112,17 @@ export default async function ItemDetailPage({ params }: Props) {
           </BaseLink>
 
           <form action={deleteItem}>
-            <button type="submit" className="text-sm text-red-600 hover:underline">
+            <ConfirmSubmitButton
+              message={`Delete "${item.name}"? This cannot be undone.`}
+              className="text-sm text-red-600 hover:underline"
+            >
               🗑️ Delete Item
-            </button>
+            </ConfirmSubmitButton>
           </form>
         </div>
-        <h1 className="text-3xl font-bold">{item.name}</h1>
+        <h1 className="break-words text-3xl font-bold">{item.name}</h1>
 
-        <div className="rounded-xl border border-[var(--border-color)] bg-[var(--bg-card)] p-6">
+        <div className="overflow-hidden rounded-xl border border-[var(--border-color)] bg-[var(--bg-card)] p-4 sm:p-6">
           {item.images.length > 0 && (
             <ImageGallery
               itemName={item.name}
@@ -121,20 +130,20 @@ export default async function ItemDetailPage({ params }: Props) {
             />
           )}
 
-          <div className="grid gap-4 md:grid-cols-2">
-            <div>
+          <div className="grid min-w-0 gap-4 md:grid-cols-2">
+            <div className="min-w-0">
               <div className="text-sm text-[var(--text-secondary)]">Name</div>
-              <div className="font-medium">{item.name}</div>
+              <div className="break-words font-medium">{item.name}</div>
             </div>
 
-            <div>
+            <div className="min-w-0">
               <div className="text-sm text-[var(--text-secondary)]">Cabinet</div>
-              <div className="font-medium">{item.cabinet.name}</div>
+              <div className="break-words font-medium">{item.cabinet.name}</div>
             </div>
 
-            <div>
+            <div className="min-w-0">
               <div className="text-sm text-[var(--text-secondary)]">Room</div>
-              <div className="font-medium">{item.cabinet.room.name}</div>
+              <div className="break-words font-medium">{item.cabinet.room.name}</div>
             </div>
 
             <div>
@@ -143,12 +152,12 @@ export default async function ItemDetailPage({ params }: Props) {
             </div>
           </div>
         </div>
-        <div className="rounded-xl border border-[var(--border-color)] bg-[var(--bg-card)] p-6">
+        <div className="overflow-hidden rounded-xl border border-[var(--border-color)] bg-[var(--bg-card)] p-4 sm:p-6">
           <h2 className="mb-4 text-xl font-semibold">Move Item</h2>
 
           <MoveItemForm itemId={item.id} cabinets={cabinets} />
         </div>
-        <div className="rounded-xl border border-[var(--border-color)] bg-[var(--bg-card)] p-6">
+        <div className="overflow-hidden rounded-xl border border-[var(--border-color)] bg-[var(--bg-card)] p-4 sm:p-6">
           <h2 className="mb-4 text-xl font-semibold">Media</h2>
 
           <div className="mb-4 text-sm text-[var(--text-secondary)]">
@@ -157,7 +166,7 @@ export default async function ItemDetailPage({ params }: Props) {
 
           <UploadImageForm itemId={item.id} />
         </div>
-        <div className="rounded-xl border border-[var(--border-color)] bg-[var(--bg-card)] p-6">
+        <div className="overflow-hidden rounded-xl border border-[var(--border-color)] bg-[var(--bg-card)] p-4 sm:p-6">
           <h2 className="mb-4 text-xl font-semibold">Recent Activity</h2>
 
           {activityLogs.length === 0 ? (
@@ -166,11 +175,11 @@ export default async function ItemDetailPage({ params }: Props) {
             <div className="space-y-3">
               {activityLogs.map((log) => (
                 <div key={log.id} className="rounded border border-[var(--border-color)] p-3">
-                  <div className="font-medium">{log.action}</div>
+                  <div className="break-words font-medium">{log.action}</div>
 
                   <div className="text-xs text-blue-600">By: {log.actorName ?? "Unknown"}</div>
 
-                  <div className="text-sm text-[var(--text-secondary)]">{log.details}</div>
+                  <div className="break-words text-sm text-[var(--text-secondary)]">{log.details}</div>
 
                   <div className="text-xs text-[var(--text-secondary)]">
                     {new Date(log.createdAt).toLocaleString()}

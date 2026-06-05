@@ -1,6 +1,7 @@
 import AppLayout from "@/components/layout/app-layout";
 import RoomForm from "@/components/room-form";
 import CabinetForm from "@/components/cabinet-form";
+import LocationDeleteButton from "@/components/location-delete-button";
 import { prisma } from "@/lib/prisma";
 import { BaseLink } from "@/lib/ingress-utils";
 
@@ -52,38 +53,46 @@ export default async function LocationsPage() {
               </summary>
 
               <div className="mt-3 ml-4">
-                <details className="mb-3 rounded border border-[var(--border-color)] p-3">
-                  <summary className="cursor-pointer list-none text-sm font-medium">
-                    ✏️ Edit Room
-                  </summary>
+                <div className="mb-3 flex flex-wrap items-center gap-2">
+                  <details className="min-w-0 flex-1 rounded border border-[var(--border-color)] p-3">
+                    <summary className="cursor-pointer list-none text-sm font-medium">
+                      ✏️ Edit Room
+                    </summary>
 
-                  <div className="mt-3">
-                    <RoomForm
-                      initialData={{
-                        id: room.id,
-                        name: room.name,
-                        code: room.code,
-                      }}
-                    />
-                  </div>
-                </details>
+                    <div className="mt-3">
+                      <RoomForm
+                        initialData={{
+                          id: room.id,
+                          name: room.name,
+                          code: room.code,
+                        }}
+                      />
+                    </div>
+                  </details>
+
+                  <LocationDeleteButton id={room.id} type="room" name={room.name} label="🗑️ Delete Room" />
+                </div>
 
                 {room.cabinets.map((cabinet) => (
                   <details
                     key={cabinet.id}
                     className="mb-2 rounded border border-[var(--border-color)] p-2"
                   >
-                    <summary className="flex cursor-pointer items-center justify-between list-none">
-                      <BaseLink href={`/cabinets/${cabinet.id}`} className="hover:underline">
+                    <summary className="flex cursor-pointer items-center justify-between gap-2 list-none">
+                      <BaseLink href={`/cabinets/${cabinet.id}`} className="min-w-0 break-words hover:underline">
                         🗄️ {cabinet.name} ({cabinet.code}) ({cabinet.items.length})
                       </BaseLink>
 
-                      <BaseLink
-                        href={`/cabinets/${cabinet.id}/qr`}
-                        className="rounded border border-[var(--border-color)] px-2 py-1 text-xs hover:bg-[var(--bg-hover)]"
-                      >
-                        🏷️ QR
-                      </BaseLink>
+                      <div className="flex shrink-0 gap-2">
+                        <BaseLink
+                          href={`/cabinets/${cabinet.id}/qr`}
+                          className="rounded border border-[var(--border-color)] px-2 py-1 text-xs hover:bg-[var(--bg-hover)]"
+                        >
+                          🏷️ QR
+                        </BaseLink>
+
+                        <LocationDeleteButton id={cabinet.id} type="cabinet" name={cabinet.name} label="🗑️ Delete" />
+                      </div>
                     </summary>
 
                     <div className="mt-2 ml-4">

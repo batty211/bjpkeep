@@ -9,6 +9,7 @@ import { revalidatePath } from "next/cache";
 import { getCurrentUser } from "@/lib/auth";
 import InventoryFilter from "@/components/inventory/inventory-filter";
 import { getThumbnailPath } from "@/lib/item-images";
+import { deleteItemImages } from "@/lib/item-delete";
 
 export default async function InventoryPage({
   searchParams,
@@ -31,9 +32,7 @@ export default async function InventoryPage({
       where: { id: itemId },
     });
 
-    await prisma.itemImage.deleteMany({
-      where: { itemId },
-    });
+    await deleteItemImages(itemId);
 
     await prisma.activityLog.create({
       data: {

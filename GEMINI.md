@@ -132,6 +132,19 @@ Important files:
 
 Item detail pages still use original images for quality.
 
+### Location And Item Deletion UX
+
+Current deletion behavior:
+
+- Cabinet create/update catches duplicate `code` within the same room and returns a clear `409` message instead of a generic failed-save alert.
+- Room create/update catches duplicate room `code` and returns a clear `409` message.
+- Cabinets can be deleted from the Locations page. Empty cabinets delete immediately after confirmation. Cabinets with items return a warning first; if the user confirms, the cabinet and all items in it are deleted.
+- Rooms can be deleted from the Locations page. If the room contains cabinets or items, the UI warns with counts and requires confirmation before deleting the room, cabinets, and items.
+- Item deletion now removes original images and thumbnails from disk through `src/lib/item-delete.ts`.
+- Item detail deletion asks for confirmation and records a `DELETE_ITEM` activity log instead of deleting prior activity history.
+- Inventory search no longer navigates while typing; it submits only on Enter/Search.
+- Move Item controls use responsive sizing so long cabinet labels do not push inventory cards/page width off-screen.
+
 ### Activity User Names
 
 Home Assistant Ingress sends user info with:

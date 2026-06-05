@@ -23,7 +23,7 @@ export default function ImageGallery({ itemName, images }: Props) {
         width={800}
         height={800}
         loading="eager"
-        className="mb-4 max-h-[500px] w-full cursor-zoom-in rounded-lg object-contain"
+        className="mb-4 max-h-[500px] w-full max-w-full cursor-zoom-in rounded-lg object-contain"
         unoptimized
         onClick={() => setSelected(0)}
       />
@@ -53,7 +53,7 @@ export default function ImageGallery({ itemName, images }: Props) {
 
       {selected !== null && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/90"
+          className="fixed inset-0 z-50 flex items-center justify-center overflow-hidden bg-black/90 p-4"
           onClick={() => setSelected(null)}
         >
           <button
@@ -92,7 +92,7 @@ export default function ImageGallery({ itemName, images }: Props) {
             alt={itemName}
             width={1600}
             height={1600}
-            className="max-h-[90vh] w-auto object-contain"
+            className="max-h-[90vh] max-w-full object-contain"
             unoptimized
             onClick={(e) => e.stopPropagation()}
           />
