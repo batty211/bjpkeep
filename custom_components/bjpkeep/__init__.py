@@ -2,9 +2,6 @@
 
 from __future__ import annotations
 
-import hashlib
-import hmac
-import time
 from typing import Any
 from urllib.parse import quote
 
@@ -26,9 +23,6 @@ from .const import (
     WS_ACTION,
     WS_GET,
 )
-
-IMAGE_URL_TTL_SECONDS = 24 * 60 * 60
-
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up BJP Keep from a config entry."""
@@ -87,56 +81,27 @@ def _headers(config: dict[str, str], actor: str | None = None) -> dict[str, str]
     return headers
 
 
-def _image_signature(config: dict[str, str], path: str, expires: int) -> str:
-    """Sign an image proxy URL for browser image loading."""
+def _image_proxy_url(path: str | None) -> str | None:
+    """Convert a BJP Keep upload path to a Home Assistant authenticated URL."""
 
-    payload = f"{path}:{expires}".encode()
-    return hmac.new(config[CONF_API_TOKEN].encode(), payload, hashlib.sha256).hexdigest()
-
-
-def _image_proxy_url(config: dict[str, str], path: Any) -> Any:
-    """Convert a BJP Keep upload path to a signed Home Assistant proxy URL."""
-
-    if not isinstance(path, str) or not path.startswith("/uploads/"):
+    if not path or not path.startswith("/uploads/"):
         return path
-    expires = int(time.time()) + IMAGE_URL_TTL_SECONDS
-    signature = _image_signature(config, path, expires)
-    return (
-        f"{HTTP_IMAGE_PATH}?path={quote(path, safe='')}"
-        f"&expires={expires}&signature={signature}"
-    )
+    return f"{HTTP_IMAGE_PATH}?path={quote(path, safe='')}"
 
 
-def _rewrite_image_urls(config: dict[str, str], value: Any) -> Any:
+def _rewrite_image_urls(value: Any) -> Any:
     """Rewrite nested item image paths so Lovelace loads images via Home Assistant."""
 
     if isinstance(value, list):
-        return [_rewrite_image_urls(config, item) for item in value]
+        return [_rewrite_image_urls(item) for item in value]
     if isinstance(value, dict):
-        rewritten = {key: _rewrite_image_urls(config, item) for key, item in value.items()}
+        rewritten = {key: _rewrite_image_urls(item) for key, item in value.items()}
         if "path" in rewritten:
-            rewritten["haPath"] = _image_proxy_url(config, rewritten.get("path"))
+            rewritten["haPath"] = _image_proxy_url(rewritten.get("path"))
         if "thumbnailPath" in rewritten:
-            rewritten["haThumbnailPath"] = _image_proxy_url(config, rewritten.get("thumbnailPath"))
+            rewritten["haThumbnailPath"] = _image_proxy_url(rewritten.get("thumbnailPath"))
         return rewritten
     return value
-
-
-def _validate_image_request(config: dict[str, str], request: web.Request, path: str) -> None:
-    """Verify a signed image proxy request."""
-
-    try:
-        expires = int(request.query.get("expires", "0"))
-    except ValueError:
-        raise web.HTTPUnauthorized(text="Invalid image signature") from None
-
-    if expires < int(time.time()):
-        raise web.HTTPUnauthorized(text="Image URL expired")
-
-    expected = _image_signature(config, path, expires)
-    provided = request.query.get("signature", "")
-    if not hmac.compare_digest(provided, expected):
-        raise web.HTTPUnauthorized(text="Invalid image signature")
 
 
 async def _request_json(
@@ -169,7 +134,7 @@ async def _request_json(
                 if isinstance(data, dict)
                 else "BJP Keep request failed"
             )
-        return _rewrite_image_urls(config, data)
+        return _rewrite_image_urls(data)
 
 
 @websocket_api.websocket_command(
@@ -235,21 +200,19 @@ def _ws_action(hass: HomeAssistant, connection: websocket_api.ActiveConnection, 
 
 
 class BjpKeepImageView(HomeAssistantView):
-    """Proxy BJP Keep upload files through signed image URLs."""
+    """Proxy BJP Keep upload files through Home Assistant auth."""
 
     url = HTTP_IMAGE_PATH
     name = "api:bjpkeep:image"
-    requires_auth = False
+    requires_auth = True
 
     async def get(self, request: web.Request) -> web.StreamResponse:
         """Return an upload file from BJP Keep."""
 
         hass = request.app["hass"]
-        config = _get_config(hass)
         path = request.query.get("path", "")
         if not path.startswith("/uploads/"):
             raise web.HTTPBadRequest(text="Invalid image path")
-        _validate_image_request(config, request, path)
         return await _proxy_bytes(hass, path)
 
 

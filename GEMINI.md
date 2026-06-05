@@ -19,7 +19,8 @@ Also maintain release notes and versions in the same work session:
 - Keep `bjpkeep_ha/config.yaml`, `bjpkeep_ha/package.json`, and `bjpkeep_ha/package-lock.json` versions in sync only for add-on/app releases.
 - Keep the HACS custom integration version independent in `custom_components/bjpkeep/manifest.json`. Do not bump `bjpkeep_ha/config.yaml` for integration-only changes.
 - HACS displays GitHub release/tag versions. If there is no release/tag, HACS may show commit hashes as installed/latest versions even when `manifest.json` has a numeric version.
-- Version rule: bug-fix-only changes append letters to the current version, e.g. `0.5.0a`, `0.5.0b`, etc.
+- Version rule: bug-fix-only add-on/app changes append letters to the current version, e.g. `0.5.0a`, `0.5.0b`, etc.
+- Version rule: HACS custom integration `manifest.json` versions should use plain numeric semver such as `0.1.2`; avoid letter suffixes like `0.1.1a` because Home Assistant/HACS can fail to load the integration cleanly.
 - Version rule: feature additions bump the minor version, e.g. `0.5.0` -> `0.6.0`, unless the user explicitly asks for a different version.
 
 At the end of each code/config/product change, include a short git-ready summary that the user can reuse for commit/push notes.
@@ -257,12 +258,10 @@ Recommended Home Assistant integration bridge:
 - `custom_components/bjpkeep/` is a HACS-installable custom integration.
 - It stores the local BJP Keep API URL and Lovelace token in a HA config entry.
 - It registers WebSocket commands `bjpkeep/get` and `bjpkeep/action`.
-- It registers HA HTTP proxy views:
+- It registers authenticated HA HTTP proxy views:
   - `/api/bjpkeep/asset?asset=bjpkeep-card.js`
   - `/api/bjpkeep/asset?asset=jsQR.js`
-- It registers a signed HA HTTP image proxy view:
-  - `/api/bjpkeep/image?path=<encoded upload path>&expires=<unix seconds>&signature=<hmac>`
-  - Image URLs are signed with the integration's stored Lovelace token and expire after 24 hours. This lets browser `<img>` tags load item photos without HA auth headers while avoiding an open upload proxy.
+  - `/api/bjpkeep/image?path=<encoded upload path>`
 - The Lovelace cards now support two modes:
   - Integration mode: omit `api_url`; the card uses `hass.callWS(...)` and same-origin HA proxy URLs.
   - Direct fallback mode: keep `api_url` and `api_token`; the card fetches the exposed add-on port exactly as before.
@@ -347,9 +346,9 @@ Recent version note:
 
 - Add-on/app version `0.7.0c` is the currently installed add-on release used with the optional HACS integration bridge; keep `bjpkeep_ha/config.yaml`, `bjpkeep_ha/package.json`, and `bjpkeep_ha/package-lock.json` aligned to this unless the add-on itself changes again.
 - Integration compatibility fix: `custom_components/bjpkeep/config_flow.py` defines `CONF_NAME = "name"` locally instead of importing it from `homeassistant.const`, avoiding HA-version-specific import failures.
-- HACS integration version is independent and currently uses `custom_components/bjpkeep/manifest.json` version `0.1.1a`.
+- HACS integration version is independent and currently uses `custom_components/bjpkeep/manifest.json` version `0.1.3`.
 - Integration compatibility fix: Home Assistant 2026 expects `@websocket_api.websocket_command(...)` to receive a schema dict, not `vol.Schema(...)`; using `vol.Schema(...)` caused `AttributeError: 'Schema' object has no attribute 'validators'` and prevented the config flow from loading.
-- Integration image proxy fix: Lovelace item photos now use signed `/api/bjpkeep/image` URLs because browser `<img>` requests do not carry the WebSocket/fetch auth used by other integration calls.
+- Integration load fix: signed image proxy changes from `0.1.2` were reverted in `0.1.3` because the integration stopped appearing in Add Integration. Image requests may still need a separate fix after checking real Home Assistant logs.
 - For HACS to show numeric versions instead of commit hashes, publish a GitHub release/tag for the integration. Without releases/tags, HACS can show short commit SHAs as installed/latest versions.
 - Version `0.6.0b` adds the required `homeassistant_api: true` add-on permission for direct Niimbot service calls and adds `bjpkeep_ha/CHANGELOG.md` so Home Assistant can show update notes. `0.6.0a` contained the Niimbot service payload/target fixes.
 

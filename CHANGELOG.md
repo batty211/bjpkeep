@@ -1,8 +1,12 @@
 # Changelog
 
-## HACS integration 0.1.1a
+## HACS integration 0.1.3
 
-- Fixed Lovelace item images returning `401 Unauthorized` in integration mode by using signed Home Assistant image proxy URLs that can load from browser `<img>` tags.
+- Restored Home Assistant integration loading by reverting the signed image proxy change that could prevent BJP Keep from appearing in Add Integration.
+
+## HACS integration 0.1.2
+
+- Attempted to fix Lovelace item image `401 Unauthorized` responses with signed image proxy URLs. This was reverted in `0.1.3` because it could prevent the custom integration from loading.
 
 ## HACS integration 0.1.1
 
