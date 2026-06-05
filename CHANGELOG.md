@@ -1,5 +1,11 @@
 # Changelog
 
+## HACS integration 0.1.7
+
+- Creates or updates the actual Home Assistant Dashboard Resource entry for the BJP Keep Lovelace card when the integration is configured.
+- Replaces old BJP Keep card resource URLs, including direct fallback `/lovelace/bjpkeep-card.js` resources, with the same-origin `/api/bjpkeep/asset?asset=bjpkeep-card.js&v=0.1.7` module URL in Lovelace storage mode.
+- Keeps the frontend global module registration as a fallback, while making the resource visible under Dashboard Resources like HACS frontend cards.
+
 ## HACS integration 0.1.6
 
 - Automatically registers the BJP Keep Lovelace card module with Home Assistant's frontend when the integration is configured, so integration-mode users no longer need to add a Dashboard Resource manually.

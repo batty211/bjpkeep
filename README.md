@@ -134,15 +134,15 @@ In integration mode, item images are served through Home Assistant's authenticat
 
 The add-on UI opened through Ingress is admin-only in Home Assistant. To let dashboard users interact with BJP Keep, use the Lovelace custom card.
 
-When the BJP Keep Home Assistant integration is installed and configured, it automatically registers the Lovelace card JavaScript with Home Assistant's frontend:
+When the BJP Keep Home Assistant integration is installed and configured, it automatically creates or updates the Lovelace Dashboard Resource in Home Assistant storage mode:
 
 ```text
-/api/bjpkeep/asset?asset=bjpkeep-card.js&v=<integration-version>
+/api/bjpkeep/asset?asset=bjpkeep-card.js&v=0.1.7
 ```
 
-You do not need to add this resource manually in integration mode. The integration exposes this card asset endpoint without Home Assistant bearer-header auth because browser module scripts cannot attach those headers; it only serves the static `bjpkeep-card.js` and `jsQR.js` helper files.
+You do not need to add this resource manually in integration mode. The integration also registers the module with Home Assistant's frontend as a fallback. The asset endpoint is unauthenticated because browser module scripts cannot attach Home Assistant bearer headers; it only serves the static `bjpkeep-card.js` and `jsQR.js` helper files.
 
-If you previously added a manual BJP Keep resource, remove it from `Settings` > `Dashboards` > `Resources` so Home Assistant does not keep loading an old direct fallback URL.
+If you previously added a manual BJP Keep resource, the integration will replace old BJP Keep card resource URLs in storage mode. If your Lovelace resources are managed in YAML, remove the old direct fallback URL manually.
 
 Direct fallback mode still requires a manual resource. Use the Home Assistant host/IP and exposed add-on port:
 
@@ -244,7 +244,7 @@ http://<home-assistant-ip>:3000/api/lovelace/?token=same-value-as-lovelace_token
 After installing the Home Assistant integration, the card resource should load through Home Assistant automatically:
 
 ```text
-https://<home-assistant-host>/api/bjpkeep/asset?asset=bjpkeep-card.js&v=<integration-version>
+https://<home-assistant-host>/api/bjpkeep/asset?asset=bjpkeep-card.js&v=0.1.7
 ```
 
 ## Troubleshooting
@@ -264,7 +264,7 @@ If the Lovelace card shows `401`:
 If the card resource does not load:
 
 - In integration mode, confirm the BJP Keep integration is configured under `Settings` > `Devices & services`.
-- If the browser Network tab shows `http://<private-ip>:3000/lovelace/bjpkeep-card.js`, Home Assistant is still using a manual direct fallback resource. Delete that resource, then refresh the browser or restart the Home Assistant app.
+- If the browser Network tab shows `http://<private-ip>:3000/lovelace/bjpkeep-card.js`, Home Assistant is still using a manual direct fallback resource. Redownload/restart the `0.1.7` integration so it can replace stored resources, or delete the old resource manually if your resources are YAML-managed.
 - In direct fallback mode, confirm the resource URL uses port `3000`.
 - In direct fallback mode, confirm the URL is reachable from the same device/browser running Home Assistant.
 - Hard refresh the browser or restart the Home Assistant mobile app.

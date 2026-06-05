@@ -8,10 +8,11 @@ from urllib.parse import quote
 import voluptuous as vol
 from aiohttp import web
 
-from homeassistant.components import frontend
-from homeassistant.components import websocket_api
+from homeassistant.components import frontend, websocket_api
+from homeassistant.components.lovelace.const import CONF_RESOURCE_TYPE_WS, LOVELACE_DATA
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_ID, CONF_URL
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
@@ -21,6 +22,8 @@ from .const import (
     DOMAIN,
     HTTP_ASSET_PATH,
     HTTP_IMAGE_PATH,
+    LOVELACE_CARD_ASSET,
+    LOVELACE_CARD_RESOURCE_PREFIX,
     LOVELACE_CARD_URL,
     WS_ACTION,
     WS_GET,
@@ -35,6 +38,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     }
     _register_bridge(hass)
     frontend.add_extra_js_url(hass, LOVELACE_CARD_URL)
+    await _upsert_lovelace_resource(hass)
 
     return True
 
@@ -45,6 +49,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data.get(DOMAIN, {}).pop(entry.entry_id, None)
     if not _has_config_entries(hass):
         frontend.remove_extra_js_url(hass, LOVELACE_CARD_URL)
+        await _remove_lovelace_resource(hass)
     return True
 
 
@@ -69,6 +74,60 @@ def _has_config_entries(hass: HomeAssistant) -> bool:
         key != "registered"
         for key in hass.data.get(DOMAIN, {})
     )
+
+
+def _is_bjpkeep_card_resource(url: str | None) -> bool:
+    """Return whether a Lovelace resource points to the BJP Keep card."""
+
+    if not url:
+        return False
+    return (
+        url.startswith(LOVELACE_CARD_RESOURCE_PREFIX)
+        or url.endswith(f"/lovelace/{LOVELACE_CARD_ASSET}")
+        or f"/lovelace/{LOVELACE_CARD_ASSET}?" in url
+    )
+
+
+async def _upsert_lovelace_resource(hass: HomeAssistant) -> None:
+    """Create or update the Dashboard Resource entry for the BJP Keep card."""
+
+    resource_collection = hass.data[LOVELACE_DATA].resources
+    if not hasattr(resource_collection, "async_create_item"):
+        return
+
+    await resource_collection.async_get_info()
+    resources = [
+        item
+        for item in resource_collection.async_items()
+        if _is_bjpkeep_card_resource(item.get(CONF_URL))
+    ]
+    if resources:
+        first, *duplicates = resources
+        if first.get(CONF_URL) != LOVELACE_CARD_URL or first.get("type") != "module":
+            await resource_collection.async_update_item(
+                first[CONF_ID],
+                {CONF_RESOURCE_TYPE_WS: "module", CONF_URL: LOVELACE_CARD_URL},
+            )
+        for duplicate in duplicates:
+            await resource_collection.async_delete_item(duplicate[CONF_ID])
+        return
+
+    await resource_collection.async_create_item(
+        {CONF_RESOURCE_TYPE_WS: "module", CONF_URL: LOVELACE_CARD_URL}
+    )
+
+
+async def _remove_lovelace_resource(hass: HomeAssistant) -> None:
+    """Remove the auto-managed BJP Keep Dashboard Resource entry."""
+
+    resource_collection = hass.data[LOVELACE_DATA].resources
+    if not hasattr(resource_collection, "async_delete_item"):
+        return
+
+    await resource_collection.async_get_info()
+    for item in list(resource_collection.async_items()):
+        if item.get(CONF_URL) == LOVELACE_CARD_URL:
+            await resource_collection.async_delete_item(item[CONF_ID])
 
 
 def _get_config(hass: HomeAssistant) -> dict[str, str]:
