@@ -119,15 +119,12 @@ http://192.168.1.222:3000
 
 This URL is used by Home Assistant itself, not by the browser. It can stay as your local LAN URL even when you open Home Assistant through Cloudflare Tunnel, Nabu Casa, or a changed public domain.
 
-If `BJP Keep` does not appear in the Add Integration search, configure the same bridge in `configuration.yaml` instead:
+Useful SSH checks:
 
-```yaml
-bjpkeep:
-  api_url: "http://192.168.1.222:3000"
-  api_token: "same-value-as-lovelace_token"
+```bash
+cat /config/custom_components/bjpkeep/manifest.json
+ha core logs | grep -i bjpkeep
 ```
-
-Restart Home Assistant after saving `configuration.yaml`. The Lovelace cards and same-origin resource URL work the same way with either UI setup or YAML setup.
 
 ## Add The Lovelace Card Resource
 

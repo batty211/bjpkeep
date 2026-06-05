@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.7.0d
+
+- Reverted the optional Home Assistant integration bridge to config-flow-only setup.
+
 ## 0.7.0c
 
 - Added YAML fallback support for the optional BJP Keep Home Assistant integration bridge.

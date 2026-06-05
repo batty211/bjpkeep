@@ -24,33 +24,6 @@ from .const import (
     WS_GET,
 )
 
-CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN: vol.Schema(
-            {
-                vol.Required(CONF_API_URL): str,
-                vol.Required(CONF_API_TOKEN): str,
-            }
-        )
-    },
-    extra=vol.ALLOW_EXTRA,
-)
-
-
-async def async_setup(hass: HomeAssistant, config: dict[str, Any]) -> bool:
-    """Set up BJP Keep from YAML configuration."""
-
-    if DOMAIN in config:
-        yaml_config = config[DOMAIN]
-        hass.data.setdefault(DOMAIN, {})["yaml"] = {
-            CONF_API_URL: yaml_config[CONF_API_URL].rstrip("/"),
-            CONF_API_TOKEN: yaml_config[CONF_API_TOKEN],
-        }
-        _register_bridge(hass)
-
-    return True
-
-
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up BJP Keep from a config entry."""
 

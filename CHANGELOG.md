@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.7.0d
+
+- Reverted the Home Assistant integration bridge to config-flow-only setup to restore Add Integration discovery behavior while keeping the fixed `ConfigFlow` handler name.
+
 ## 0.7.0c
 
 - Added a `configuration.yaml` fallback for the BJP Keep Home Assistant bridge so users can configure it even if the custom integration does not appear in the Add Integration search.

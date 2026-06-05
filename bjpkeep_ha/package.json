@@ -1,6 +1,6 @@
 {
   "name": "bjpkeep",
-  "version": "0.7.0c",
+  "version": "0.7.0d",
   "private": true,
   "scripts": {
     "dev": "next dev",
