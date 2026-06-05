@@ -238,11 +238,31 @@ class BjpKeepCard extends HTMLElement {
       throw new Error("BJP Keep integration is not ready in Home Assistant.");
     }
 
-    if (options.body instanceof FormData) {
-      throw new Error("Photo upload currently requires direct API URL mode.");
-    }
-
     const method = String(options.method || "GET").toUpperCase();
+
+    if (options.body instanceof FormData) {
+      if (method !== "POST") {
+        throw new Error(`Unsupported BJP Keep multipart method: ${method}`);
+      }
+
+      const token = this.haAuthToken();
+      const response = await fetch(new URL("/api/bjpkeep/action", window.location.origin).toString(), {
+        method: "POST",
+        credentials: "same-origin",
+        headers: {
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          "X-BJPKeep-Actor": this.actorName(),
+        },
+        body: options.body,
+      });
+      const data = await response.json().catch(() => ({}));
+
+      if (!response.ok) {
+        throw new Error(data.error || data.message || "BJP Keep photo upload failed");
+      }
+
+      return data;
+    }
 
     if (method === "GET") {
       const queryString = path.split("?")[1] || "";

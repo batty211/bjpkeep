@@ -6,7 +6,7 @@ from typing import Any
 from urllib.parse import quote
 
 import voluptuous as vol
-from aiohttp import web
+from aiohttp import FormData, web
 
 from homeassistant.components import frontend, websocket_api
 from homeassistant.components.lovelace.const import CONF_RESOURCE_TYPE_WS, LOVELACE_DATA
@@ -20,6 +20,7 @@ from .const import (
     CONF_API_TOKEN,
     CONF_API_URL,
     DOMAIN,
+    HTTP_ACTION_PATH,
     HTTP_ASSET_PATH,
     HTTP_IMAGE_PATH,
     LOVELACE_CARD_ASSET,
@@ -64,6 +65,7 @@ def _register_bridge(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(hass, _ws_action)
     hass.http.register_view(BjpKeepImageView)
     hass.http.register_view(BjpKeepAssetView)
+    hass.http.register_view(BjpKeepActionView)
     hass.data[DOMAIN]["registered"] = True
 
 
@@ -306,6 +308,69 @@ class BjpKeepAssetView(HomeAssistantView):
         if asset not in {"bjpkeep-card.js", "jsQR.js"}:
             raise web.HTTPBadRequest(text="Invalid asset")
         return await _proxy_bytes(hass, f"/lovelace/{asset}")
+
+
+class BjpKeepActionView(HomeAssistantView):
+    """Proxy multipart BJP Keep actions through Home Assistant auth."""
+
+    url = HTTP_ACTION_PATH
+    name = "api:bjpkeep:action"
+    requires_auth = True
+
+    async def post(self, request: web.Request) -> web.Response:
+        """Forward multipart Lovelace actions to BJP Keep."""
+
+        hass = request.app["hass"]
+        if not request.content_type.startswith("multipart/"):
+            raise web.HTTPBadRequest(text="Expected multipart form data")
+        return await _proxy_multipart_action(
+            hass,
+            request,
+            actor=request.headers.get("X-BJPKeep-Actor"),
+        )
+
+
+async def _proxy_multipart_action(
+    hass: HomeAssistant,
+    request: web.Request,
+    *,
+    actor: str | None = None,
+) -> web.Response:
+    """Proxy a multipart action request to the BJP Keep add-on."""
+
+    config = _get_config(hass)
+    session = async_get_clientsession(hass)
+    post_data = await request.post()
+    form_data = FormData()
+
+    seen_keys: set[str] = set()
+    for key in post_data.keys():
+        if key in seen_keys:
+            continue
+        seen_keys.add(key)
+        for value in post_data.getall(key):
+            if hasattr(value, "file") and hasattr(value, "filename"):
+                value.file.seek(0)
+                form_data.add_field(
+                    key,
+                    value.file,
+                    filename=value.filename,
+                    content_type=value.content_type,
+                )
+            else:
+                form_data.add_field(key, str(value))
+
+    async with session.post(
+        f"{config[CONF_API_URL]}/api/lovelace/",
+        data=form_data,
+        headers=_headers(config, actor),
+        timeout=60,
+    ) as response:
+        data = await response.json(content_type=None)
+        status = response.status
+        if isinstance(data, dict):
+            data = _rewrite_image_urls(data)
+        return web.json_response(data, status=status)
 
 
 async def _proxy_bytes(hass: HomeAssistant, path: str) -> web.Response:

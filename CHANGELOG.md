@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.8.0 / HACS integration 0.2.0
+
+- Added an authenticated Home Assistant multipart action proxy at `/api/bjpkeep/action` so integration-mode Lovelace users can create items with photos and add photos to existing items.
+- Updated the Lovelace card to send photo upload `FormData` through the Home Assistant integration bridge when `api_url` is omitted.
+- Rewrites uploaded item image URLs returned from multipart actions to Home Assistant image proxy URLs so newly uploaded photos appear immediately in the card.
+
 ## 0.7.0e / HACS integration 0.1.8
 
 - Fixed Home Assistant integration-mode Lovelace actions failing before they reached the BJP Keep API because the integration reused the WebSocket command `id` field for item IDs.

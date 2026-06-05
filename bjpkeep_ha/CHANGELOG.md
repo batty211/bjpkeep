@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.8.0
+
+- Added integration-mode Lovelace photo upload support through the authenticated Home Assistant multipart action proxy.
+
 ## 0.7.0e
 
 - Fixed the Lovelace card bridge payload so item IDs no longer conflict with Home Assistant WebSocket command IDs in integration mode.
