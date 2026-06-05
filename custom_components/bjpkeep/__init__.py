@@ -244,7 +244,7 @@ def _ws_get(hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg
     {
         vol.Required("type"): WS_ACTION,
         vol.Required("action"): str,
-        vol.Optional("id"): str,
+        vol.Optional("item_id"): str,
         vol.Optional("name"): str,
         vol.Optional("cabinetId"): str,
         vol.Optional("imageId"): str,
@@ -257,7 +257,9 @@ def _ws_action(hass: HomeAssistant, connection: websocket_api.ActiveConnection, 
 
     async def _handle() -> None:
         try:
-            payload = {key: value for key, value in msg.items() if key not in {"id", "type", "actor"}}
+            payload = {key: value for key, value in msg.items() if key not in {"id", "type", "actor", "item_id"}}
+            if "item_id" in msg:
+                payload["id"] = msg["item_id"]
             result = await _request_json(
                 hass,
                 "POST",

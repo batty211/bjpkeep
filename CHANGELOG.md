@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.7.0e / HACS integration 0.1.8
+
+- Fixed Home Assistant integration-mode Lovelace actions failing before they reached the BJP Keep API because the integration reused the WebSocket command `id` field for item IDs.
+- Updated the Lovelace card bridge payload to send item IDs as `item_id` in integration mode, keeping create/edit/move/delete actions separate from Home Assistant's internal WebSocket command IDs.
+
 ## HACS integration 0.1.7
 
 - Creates or updates the actual Home Assistant Dashboard Resource entry for the BJP Keep Lovelace card when the integration is configured.

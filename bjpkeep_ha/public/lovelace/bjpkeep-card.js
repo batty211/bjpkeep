@@ -265,9 +265,14 @@ class BjpKeepCard extends HTMLElement {
 
     if (method === "POST") {
       const payload = typeof options.body === "string" ? JSON.parse(options.body || "{}") : options.body || {};
+      const messagePayload = { ...payload };
+      if (messagePayload.id) {
+        messagePayload.item_id = messagePayload.id;
+        delete messagePayload.id;
+      }
       return this._hass.callWS({
         type: "bjpkeep/action",
-        ...payload,
+        ...messagePayload,
         actor: this.actorName(),
       });
     }

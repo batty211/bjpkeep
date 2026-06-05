@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.7.0e
+
+- Fixed the Lovelace card bridge payload so item IDs no longer conflict with Home Assistant WebSocket command IDs in integration mode.
+
 ## 0.7.0d
 
 - Fixed Lovelace images in Home Assistant integration mode by loading authenticated image proxy responses as browser blob URLs instead of assigning authenticated API URLs directly to `<img>` tags.

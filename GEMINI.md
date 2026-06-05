@@ -268,7 +268,7 @@ Recommended Home Assistant integration bridge:
 - The Lovelace cards now support two modes:
   - Integration mode: omit `api_url`; the card uses `hass.callWS(...)` and same-origin HA proxy URLs.
   - Direct fallback mode: keep `api_url` and `api_token`; the card fetches the exposed add-on port exactly as before.
-- Integration mode currently supports list/search/edit/move/delete and QR scan helper loading. Photo upload still requires direct `api_url` mode until multipart proxy support is added.
+- Integration mode currently supports list/search/add without photos/edit/move/delete and QR scan helper loading. Photo upload still requires direct `api_url` mode until multipart proxy support is added.
 
 Tested locally:
 
@@ -344,10 +344,11 @@ Recent Docker/build fix:
 
 Recent version note:
 
-- Add-on/app version `0.7.0d` is the current add-on release used with the optional HACS integration bridge; keep `bjpkeep_ha/config.yaml`, `bjpkeep_ha/package.json`, and `bjpkeep_ha/package-lock.json` aligned to this unless the add-on itself changes again.
+- Add-on/app version `0.7.0e` is the current add-on release used with the optional HACS integration bridge; keep `bjpkeep_ha/config.yaml`, `bjpkeep_ha/package.json`, and `bjpkeep_ha/package-lock.json` aligned to this unless the add-on itself changes again.
+- HACS integration version is independent and currently uses `custom_components/bjpkeep/manifest.json` version `0.1.8`.
+- Integration-mode action fix: Home Assistant WebSocket commands use their own numeric `id`, so BJP Keep item IDs must travel as `item_id` through `bjpkeep/action`; the integration maps `item_id` back to `id` before calling `/api/lovelace/`. This fixes Lovelace Add Item failing with `expected str for dictionary value @ data['id']. Got 100` before any GET/POST reached the add-on.
 - Integration compatibility fix: `custom_components/bjpkeep/config_flow.py` defines `CONF_NAME = "name"` locally instead of importing it from `homeassistant.const`, avoiding HA-version-specific import failures.
-- HACS integration version is independent and currently uses `custom_components/bjpkeep/manifest.json` version `0.1.7`.
-- Integration Lovelace resource auto-add fix: `custom_components/bjpkeep/__init__.py` now depends on `lovelace`, uses `hass.data[LOVELACE_DATA].resources` to create/update the actual Dashboard Resource in storage mode, replaces older BJP Keep card URLs including direct fallback `/lovelace/bjpkeep-card.js`, and keeps `frontend.add_extra_js_url` / `remove_extra_js_url` as a fallback for `/api/bjpkeep/asset?asset=bjpkeep-card.js&v=0.1.7`.
+- Integration Lovelace resource auto-add fix: `custom_components/bjpkeep/__init__.py` now depends on `lovelace`, uses `hass.data[LOVELACE_DATA].resources` to create/update the actual Dashboard Resource in storage mode, replaces older BJP Keep card URLs including direct fallback `/lovelace/bjpkeep-card.js`, and keeps `frontend.add_extra_js_url` / `remove_extra_js_url` as a fallback for `/api/bjpkeep/asset?asset=bjpkeep-card.js&v=0.1.8`.
 - Integration config-flow fix: the default API URL is now blank instead of the user's personal LAN IP, and the form validates that the value is a full `http://` or `https://` URL before testing the connection.
 - Lovelace troubleshooting note: if the browser Network tab shows `http://<private-ip>:3000/lovelace/bjpkeep-card.js`, Home Assistant is still using a manual direct fallback resource. Delete that dashboard resource, then refresh the browser or restart the Home Assistant app.
 - Integration asset proxy fix: `BjpKeepAssetView.requires_auth` is `False` so `/api/bjpkeep/asset?asset=bjpkeep-card.js` can load as a Lovelace JavaScript module. If both custom elements disappear with "Custom element doesn't exist", first verify this endpoint returns JavaScript instead of 401.
