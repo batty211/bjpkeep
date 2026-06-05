@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.7.0c
+
+- Added YAML fallback support for the optional BJP Keep Home Assistant integration bridge.
+
 ## 0.7.0b
 
 - Added metadata and translations for the optional BJP Keep Home Assistant integration.

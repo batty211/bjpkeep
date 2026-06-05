@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.7.0c
+
+- Added a `configuration.yaml` fallback for the BJP Keep Home Assistant bridge so users can configure it even if the custom integration does not appear in the Add Integration search.
+
 ## 0.7.0b
 
 - Added Home Assistant integration manifest metadata and translation files to improve custom integration discovery in the Add Integration UI.

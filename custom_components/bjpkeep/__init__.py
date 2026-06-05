@@ -24,6 +24,32 @@ from .const import (
     WS_GET,
 )
 
+CONFIG_SCHEMA = vol.Schema(
+    {
+        DOMAIN: vol.Schema(
+            {
+                vol.Required(CONF_API_URL): str,
+                vol.Required(CONF_API_TOKEN): str,
+            }
+        )
+    },
+    extra=vol.ALLOW_EXTRA,
+)
+
+
+async def async_setup(hass: HomeAssistant, config: dict[str, Any]) -> bool:
+    """Set up BJP Keep from YAML configuration."""
+
+    if DOMAIN in config:
+        yaml_config = config[DOMAIN]
+        hass.data.setdefault(DOMAIN, {})["yaml"] = {
+            CONF_API_URL: yaml_config[CONF_API_URL].rstrip("/"),
+            CONF_API_TOKEN: yaml_config[CONF_API_TOKEN],
+        }
+        _register_bridge(hass)
+
+    return True
+
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up BJP Keep from a config entry."""
@@ -32,13 +58,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         CONF_API_URL: entry.data[CONF_API_URL].rstrip("/"),
         CONF_API_TOKEN: entry.data[CONF_API_TOKEN],
     }
-
-    if not hass.data[DOMAIN].get("registered"):
-        websocket_api.async_register_command(hass, _ws_get)
-        websocket_api.async_register_command(hass, _ws_action)
-        hass.http.register_view(BjpKeepImageView)
-        hass.http.register_view(BjpKeepAssetView)
-        hass.data[DOMAIN]["registered"] = True
+    _register_bridge(hass)
 
     return True
 
@@ -48,6 +68,20 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     hass.data.get(DOMAIN, {}).pop(entry.entry_id, None)
     return True
+
+
+def _register_bridge(hass: HomeAssistant) -> None:
+    """Register BJP Keep Home Assistant proxy endpoints once."""
+
+    hass.data.setdefault(DOMAIN, {})
+    if hass.data[DOMAIN].get("registered"):
+        return
+
+    websocket_api.async_register_command(hass, _ws_get)
+    websocket_api.async_register_command(hass, _ws_action)
+    hass.http.register_view(BjpKeepImageView)
+    hass.http.register_view(BjpKeepAssetView)
+    hass.data[DOMAIN]["registered"] = True
 
 
 def _get_config(hass: HomeAssistant) -> dict[str, str]:

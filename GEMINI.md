@@ -254,6 +254,12 @@ Recommended Home Assistant integration bridge:
 
 - `custom_components/bjpkeep/` is a HACS-installable custom integration.
 - It stores the local BJP Keep API URL and Lovelace token in a HA config entry.
+- If the Add Integration UI does not show the custom integration, YAML fallback is supported:
+  ```yaml
+  bjpkeep:
+    api_url: "http://192.168.1.222:3000"
+    api_token: "same-value-as-lovelace_token"
+  ```
 - It registers WebSocket commands `bjpkeep/get` and `bjpkeep/action`.
 - It registers authenticated HA HTTP proxy views:
   - `/api/bjpkeep/asset?asset=bjpkeep-card.js`
@@ -341,6 +347,7 @@ Recent Docker/build fix:
 
 Recent version note:
 
+- Version `0.7.0c` adds YAML fallback setup for the custom integration bridge so users can configure the HA proxy even if the custom integration does not appear in the Add Integration search UI.
 - Version `0.7.0b` adds `integration_type` metadata and `translations/en.json` for the custom integration so Home Assistant/HACS can discover and display the setup flow more reliably.
 - Version `0.7.0a` fixes the custom integration config flow class name (`ConfigFlow`) so Home Assistant can load the integration setup handler.
 - Version `0.7.0` adds the HACS-ready Home Assistant custom integration bridge, same-origin Lovelace asset/image proxying, and integration-mode Lovelace cards while preserving direct `api_url` mode as fallback.
