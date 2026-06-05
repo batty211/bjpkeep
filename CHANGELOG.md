@@ -1,5 +1,11 @@
 # Changelog
 
+## HACS integration 0.2.1
+
+- Added Home Assistant/HACS brand assets so BJP Keep can show its icon/logo instead of "icon not available" on supported Home Assistant versions.
+- Added HACS-required metadata to the integration manifest, including issue tracker and code owner.
+- Added an integration-local changelog and release notes guidance so HACS update dialogs can show useful changelogs when GitHub Releases are published.
+
 ## 0.8.0 / HACS integration 0.2.0
 
 - Added an authenticated Home Assistant multipart action proxy at `/api/bjpkeep/action` so integration-mode Lovelace users can create items with photos and add photos to existing items.

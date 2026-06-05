@@ -1,7 +1,7 @@
 """Constants for the BJP Keep integration."""
 
 DOMAIN = "bjpkeep"
-VERSION = "0.2.0"
+VERSION = "0.2.1"
 
 CONF_API_URL = "api_url"
 CONF_API_TOKEN = "api_token"

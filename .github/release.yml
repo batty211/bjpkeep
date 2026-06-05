@@ -1,0 +1,22 @@
+changelog:
+  exclude:
+    labels:
+      - ignore-for-release
+    authors:
+      - dependabot
+  categories:
+    - title: BJP Keep Integration
+      labels:
+        - integration
+        - hacs
+    - title: BJP Keep Add-on
+      labels:
+        - addon
+        - app
+    - title: Fixes
+      labels:
+        - bug
+        - fix
+    - title: Other Changes
+      labels:
+        - "*"

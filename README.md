@@ -104,7 +104,7 @@ The recommended Lovelace setup is to install the BJP Keep Home Assistant integra
 7. Install `BJP Keep`.
 8. Restart Home Assistant.
 
-HACS uses GitHub releases/tags for the installed/latest version labels. If this repository has no release/tag yet, HACS may show short commit hashes instead of numeric versions. Create a GitHub release such as `v0.1.0` after publishing integration changes if you want HACS to show a normal version number.
+HACS uses GitHub releases/tags for installed/latest version labels and update changelogs. Tags belong to this main repository, not to a subfolder. For HACS integration releases, create a GitHub Release on this repo with a tag such as `bjpkeep-integration-v0.2.1` and paste the matching `custom_components/bjpkeep/CHANGELOG.md` entry into the release notes. Without a GitHub Release, HACS may show a commit hash and no update changelog even when `manifest.json` has a numeric version.
 
 After restart:
 
@@ -137,7 +137,7 @@ The add-on UI opened through Ingress is admin-only in Home Assistant. To let das
 When the BJP Keep Home Assistant integration is installed and configured, it automatically creates or updates the Lovelace Dashboard Resource in Home Assistant storage mode:
 
 ```text
-/api/bjpkeep/asset?asset=bjpkeep-card.js&v=0.2.0
+/api/bjpkeep/asset?asset=bjpkeep-card.js&v=0.2.1
 ```
 
 You do not need to add this resource manually in integration mode. The integration also registers the module with Home Assistant's frontend as a fallback. The asset endpoint is unauthenticated because browser module scripts cannot attach Home Assistant bearer headers; it only serves the static `bjpkeep-card.js` and `jsQR.js` helper files.
@@ -244,7 +244,7 @@ http://<home-assistant-ip>:3000/api/lovelace/?token=same-value-as-lovelace_token
 After installing the Home Assistant integration, the card resource should load through Home Assistant automatically:
 
 ```text
-https://<home-assistant-host>/api/bjpkeep/asset?asset=bjpkeep-card.js&v=0.2.0
+https://<home-assistant-host>/api/bjpkeep/asset?asset=bjpkeep-card.js&v=0.2.1
 ```
 
 ## Troubleshooting
@@ -266,7 +266,7 @@ If the card resource does not load:
 - In integration mode, confirm the BJP Keep integration is configured under `Settings` > `Devices & services`.
 - In integration mode, an error like `expected str for dictionary value @ data['id']. Got 100` means Home Assistant is still running an older BJP Keep integration/card bridge. Update to integration `0.2.0` and add-on `0.8.0`, then restart Home Assistant/add-on and refresh the dashboard.
 - If photo upload fails in integration mode, confirm the BJP Keep integration is at `0.2.0` or newer; older versions did not include the authenticated multipart proxy at `/api/bjpkeep/action`.
-- If the browser Network tab shows `http://<private-ip>:3000/lovelace/bjpkeep-card.js`, Home Assistant is still using a manual direct fallback resource. Redownload/restart the `0.2.0` integration so it can replace stored resources, or delete the old resource manually if your resources are YAML-managed.
+- If the browser Network tab shows `http://<private-ip>:3000/lovelace/bjpkeep-card.js`, Home Assistant is still using a manual direct fallback resource. Redownload/restart the `0.2.1` integration so it can replace stored resources, or delete the old resource manually if your resources are YAML-managed.
 - In direct fallback mode, confirm the resource URL uses port `3000`.
 - In direct fallback mode, confirm the URL is reachable from the same device/browser running Home Assistant.
 - Hard refresh the browser or restart the Home Assistant mobile app.
@@ -277,6 +277,19 @@ If item photos are slow or missing:
 - New uploads create thumbnails automatically.
 - Old uploads may generate thumbnails lazily on first request.
 - Original images are still used on item detail pages for quality.
+
+## Release Notes For HACS
+
+HACS shows clean version numbers and update changelogs from GitHub Releases. Use this flow after integration changes:
+
+```bash
+git tag bjpkeep-integration-v0.2.1
+git push origin bjpkeep-integration-v0.2.1
+```
+
+Then create a GitHub Release for that tag. Use the relevant section from `custom_components/bjpkeep/CHANGELOG.md` as the release body. The integration `manifest.json` version, release tag, and release title should describe the same version.
+
+For add-on-only changes, keep using the add-on version in `bjpkeep_ha/config.yaml` and `bjpkeep_ha/CHANGELOG.md`. For changes touching both add-on and integration, mention both versions in the release notes.
 
 ## Development Notes
 
