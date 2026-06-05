@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.7.0a
+
+- Fixed the BJP Keep Home Assistant integration config flow handler class name so Home Assistant can load the setup flow.
+
 ## 0.7.0
 
 - Added a BJP Keep Home Assistant custom integration for HACS installs.

@@ -13,7 +13,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from .const import CONF_API_TOKEN, CONF_API_URL, DEFAULT_API_URL, DOMAIN
 
 
-class BjpKeepConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a BJP Keep config flow."""
 
     VERSION = 1
