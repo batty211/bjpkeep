@@ -2,9 +2,24 @@
 
 BJP Keep is a private home inventory app for tracking where household items are stored. It runs as a Home Assistant add-on and can also expose a Lovelace dashboard card for non-admin dashboard users.
 
-This guide is written as a future reminder from the first Home Assistant setup step onward.
+## Overview
 
-## What You Need
+BJP Keep helps you:
+
+- Create rooms and storage cabinets.
+- Print or save cabinet QR codes.
+- Add items with photos to a cabinet.
+- Search and manage inventory from the add-on UI or a Home Assistant dashboard card.
+- Let non-admin Home Assistant users use the dashboard card without opening the add-on Ingress UI.
+
+Recommended setup:
+
+1. Install the BJP Keep add-on.
+2. Set a `lovelace_token`.
+3. Install the BJP Keep Home Assistant integration through HACS.
+4. Add the BJP Keep Lovelace card to a dashboard.
+
+## Requirements
 
 - Home Assistant with the Supervisor/Add-on Store.
 - A `/share/HAShare` folder mounted and writable by Home Assistant.
@@ -14,7 +29,7 @@ This guide is written as a future reminder from the first Home Assistant setup s
 https://github.com/batty211/bjpkeep
 ```
 
-Current storage paths are personal/setup-specific:
+BJP Keep stores its database and item photos here:
 
 ```text
 /share/HAShare/bjpkeep/bjpkeep.db
@@ -23,7 +38,7 @@ Current storage paths are personal/setup-specific:
 
 If `/share/HAShare` does not exist, the add-on will stop at startup. Create or mount that share first.
 
-## Install The Add-on Repository
+## Install The Add-on
 
 1. Open Home Assistant.
 2. Go to `Settings` > `Add-ons`.
@@ -41,8 +56,6 @@ https://github.com/batty211/bjpkeep
 9. Open it and click `Install`.
 
 ## Configure The Add-on
-
-Open the `Configuration` tab for the BJP Keep add-on.
 
 Recommended starting config:
 
@@ -64,7 +77,7 @@ Notes:
 - `niimbot_qr_device_id` is optional. Set it to the Home Assistant device id for a larger QR label printer such as Niimbot B1.
 - Restart the add-on after changing `lovelace_token` or Niimbot printer settings.
 
-## Start BJP Keep
+## Open The App
 
 1. Open the `Info` tab.
 2. Enable `Start on boot` if desired.
@@ -89,9 +102,11 @@ bjpkeep:cabinet:<cabinetId>
 
 They do not depend on Home Assistant Ingress URLs or temporary tokens.
 
-## Add The Home Assistant Integration
+## Dashboard Access
 
-The recommended Lovelace setup is to install the BJP Keep Home Assistant integration. The integration lets dashboard cards talk to Home Assistant first, then Home Assistant proxies requests to the BJP Keep add-on over your local network. This avoids public domains, Cloudflare Tunnel hostnames, mixed-content problems, and `api_url` changes when your external domain changes.
+The add-on Web UI opened through Ingress is normally for Home Assistant administrators. For dashboard users, install the BJP Keep Home Assistant integration and use the Lovelace card.
+
+The integration lets the dashboard card talk to Home Assistant first. Home Assistant then proxies requests to the BJP Keep add-on over your local network. This avoids public URLs, Cloudflare Tunnel changes, mixed-content problems, and exposing the add-on API directly to browsers.
 
 ### Install With HACS
 
@@ -104,9 +119,7 @@ The recommended Lovelace setup is to install the BJP Keep Home Assistant integra
 7. Install `BJP Keep`.
 8. Restart Home Assistant.
 
-HACS uses GitHub releases/tags for installed/latest version labels and update changelogs. Tags belong to this main repository, not to a subfolder. For HACS integration releases, create a GitHub Release on this repo with a tag such as `bjpkeep-integration-v0.2.1` and paste the matching `custom_components/bjpkeep/CHANGELOG.md` entry into the release notes. Without a GitHub Release, HACS may show a commit hash and no update changelog even when `manifest.json` has a numeric version.
-
-After restart:
+### Add The Integration
 
 1. Go to `Settings` > `Devices & services`.
 2. Click `Add Integration`.
@@ -121,18 +134,9 @@ http://<home-assistant-ip>:3000
 
 This URL is used by Home Assistant itself, not by the browser. It can stay as your local LAN URL even when you open Home Assistant through Cloudflare Tunnel, Nabu Casa, or a changed public domain.
 
-Useful SSH checks:
-
-```bash
-cat /config/custom_components/bjpkeep/manifest.json
-ha core logs | grep -i bjpkeep
-```
-
 In integration mode, item images are served through Home Assistant's authenticated `/api/bjpkeep/image` proxy. The Lovelace card loads those images with authenticated fetch calls and displays them as browser blob URLs, because plain `<img>` tags cannot attach Home Assistant bearer headers.
 
-## Lovelace Card Loading
-
-The add-on UI opened through Ingress is admin-only in Home Assistant. To let dashboard users interact with BJP Keep, use the Lovelace custom card.
+### Lovelace Card Resource
 
 When the BJP Keep Home Assistant integration is installed and configured, it automatically creates or updates the Lovelace Dashboard Resource in Home Assistant storage mode:
 
@@ -144,13 +148,15 @@ You do not need to add this resource manually in integration mode. The integrati
 
 If you previously added a manual BJP Keep resource, the integration will replace old BJP Keep card resource URLs in storage mode. If your Lovelace resources are managed in YAML, remove the old direct fallback URL manually.
 
-Direct fallback mode still requires a manual resource. Use the Home Assistant host/IP and exposed add-on port:
+### Direct Fallback Mode
+
+Use direct fallback mode only if you are not using the BJP Keep Home Assistant integration. In this mode, the browser talks to the add-on on port `3000` and the card config must include `api_url` and `api_token`.
+
+Direct fallback mode requires a manual Lovelace resource:
 
 ```text
 http://<home-assistant-ip>:3000/lovelace/bjpkeep-card.js
 ```
-
-Direct fallback mode is useful only if you are not using the Home Assistant integration bridge.
 
 To add a direct fallback resource manually:
 
@@ -168,7 +174,7 @@ http://<home-assistant-ip>:3000/lovelace/bjpkeep-card.js
 7. Save.
 8. Refresh the browser or reload the Home Assistant app.
 
-## Add The Card To A Dashboard
+## Add A Dashboard Card
 
 After the integration is loaded, BJP Keep should appear in Home Assistant's visual Add Card picker as a custom card.
 
@@ -207,7 +213,7 @@ Direct fallback mode for the room/cabinet card also supports `api_url` and `api_
 
 Place it on the same dashboard view as the main BJP Keep card. Click a room to expand its cabinets, then click a cabinet to filter the main card.
 
-Card behavior:
+The card supports:
 
 - Select all cabinets or a specific cabinet.
 - Search items manually with Search or Enter.
@@ -220,9 +226,9 @@ Card behavior:
 
 Photo upload, item edits, item moves, photo deletion, and item deletion all work through the Home Assistant integration. Direct fallback mode remains available for setups that do not use the integration bridge.
 
-## Test URLs
+## Quick Checks
 
-Use these from a browser on the same network:
+Use these URLs from a browser on the same network as Home Assistant:
 
 ```text
 http://<home-assistant-ip>:3000/lovelace/bjpkeep-card.js
@@ -272,15 +278,24 @@ If the card resource does not load:
 - Hard refresh the browser or restart the Home Assistant mobile app.
 - If Home Assistant is served over HTTPS but the card API is HTTP, browser mixed-content rules may block requests.
 
+Useful SSH checks:
+
+```bash
+cat /config/custom_components/bjpkeep/manifest.json
+ha core logs | grep -i bjpkeep
+```
+
 If item photos are slow or missing:
 
 - New uploads create thumbnails automatically.
 - Old uploads may generate thumbnails lazily on first request.
 - Original images are still used on item detail pages for quality.
 
-## Release Notes For HACS
+## Maintainer Notes
 
-HACS shows clean version numbers and update changelogs from GitHub Releases. Use this flow after integration changes:
+HACS shows clean version numbers and update changelogs from GitHub Releases. Tags belong to this main repository, not to a subfolder.
+
+For integration releases, create a GitHub Release on this repo with a tag such as:
 
 ```bash
 git tag bjpkeep-integration-v0.2.1
@@ -290,8 +305,6 @@ git push origin bjpkeep-integration-v0.2.1
 Then create a GitHub Release for that tag. Use the relevant section from `custom_components/bjpkeep/CHANGELOG.md` as the release body. The integration `manifest.json` version, release tag, and release title should describe the same version.
 
 For add-on-only changes, keep using the add-on version in `bjpkeep_ha/config.yaml` and `bjpkeep_ha/CHANGELOG.md`. For changes touching both add-on and integration, mention both versions in the release notes.
-
-## Development Notes
 
 The app source is in `bjpkeep_ha/`.
 

@@ -1,5 +1,9 @@
 # Changelog
 
+## Documentation
+
+- Reworked the root README into a more user-facing setup guide, with internal maintainer/release notes separated from normal installation and dashboard setup steps.
+
 ## HACS integration 0.2.1
 
 - Added Home Assistant/HACS brand assets so BJP Keep can show its icon/logo instead of "icon not available" on supported Home Assistant versions.
