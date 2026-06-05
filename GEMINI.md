@@ -257,10 +257,12 @@ Recommended Home Assistant integration bridge:
 - `custom_components/bjpkeep/` is a HACS-installable custom integration.
 - It stores the local BJP Keep API URL and Lovelace token in a HA config entry.
 - It registers WebSocket commands `bjpkeep/get` and `bjpkeep/action`.
-- It registers authenticated HA HTTP proxy views:
+- It registers HA HTTP proxy views:
   - `/api/bjpkeep/asset?asset=bjpkeep-card.js`
   - `/api/bjpkeep/asset?asset=jsQR.js`
-  - `/api/bjpkeep/image?path=<encoded upload path>`
+- It registers a signed HA HTTP image proxy view:
+  - `/api/bjpkeep/image?path=<encoded upload path>&expires=<unix seconds>&signature=<hmac>`
+  - Image URLs are signed with the integration's stored Lovelace token and expire after 24 hours. This lets browser `<img>` tags load item photos without HA auth headers while avoiding an open upload proxy.
 - The Lovelace cards now support two modes:
   - Integration mode: omit `api_url`; the card uses `hass.callWS(...)` and same-origin HA proxy URLs.
   - Direct fallback mode: keep `api_url` and `api_token`; the card fetches the exposed add-on port exactly as before.
@@ -345,8 +347,9 @@ Recent version note:
 
 - Add-on/app version `0.7.0c` is the currently installed add-on release used with the optional HACS integration bridge; keep `bjpkeep_ha/config.yaml`, `bjpkeep_ha/package.json`, and `bjpkeep_ha/package-lock.json` aligned to this unless the add-on itself changes again.
 - Integration compatibility fix: `custom_components/bjpkeep/config_flow.py` defines `CONF_NAME = "name"` locally instead of importing it from `homeassistant.const`, avoiding HA-version-specific import failures.
-- HACS integration version is independent and currently uses `custom_components/bjpkeep/manifest.json` version `0.1.1`.
+- HACS integration version is independent and currently uses `custom_components/bjpkeep/manifest.json` version `0.1.1a`.
 - Integration compatibility fix: Home Assistant 2026 expects `@websocket_api.websocket_command(...)` to receive a schema dict, not `vol.Schema(...)`; using `vol.Schema(...)` caused `AttributeError: 'Schema' object has no attribute 'validators'` and prevented the config flow from loading.
+- Integration image proxy fix: Lovelace item photos now use signed `/api/bjpkeep/image` URLs because browser `<img>` requests do not carry the WebSocket/fetch auth used by other integration calls.
 - For HACS to show numeric versions instead of commit hashes, publish a GitHub release/tag for the integration. Without releases/tags, HACS can show short commit SHAs as installed/latest versions.
 - Version `0.6.0b` adds the required `homeassistant_api: true` add-on permission for direct Niimbot service calls and adds `bjpkeep_ha/CHANGELOG.md` so Home Assistant can show update notes. `0.6.0a` contained the Niimbot service payload/target fixes.
 

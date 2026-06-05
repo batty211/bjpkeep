@@ -1,5 +1,9 @@
 # Changelog
 
+## HACS integration 0.1.1a
+
+- Fixed Lovelace item images returning `401 Unauthorized` in integration mode by using signed Home Assistant image proxy URLs that can load from browser `<img>` tags.
+
 ## HACS integration 0.1.1
 
 - Fixed Home Assistant 2026 WebSocket command schema registration so the custom integration can import and the config flow can load.
