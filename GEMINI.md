@@ -14,6 +14,7 @@ Whenever the user asks for code/config/product changes, update this file in the 
 Also maintain release notes and versions in the same work session:
 
 - Update `CHANGELOG.md` for every code/config/product change.
+- Update `bjpkeep_ha/CHANGELOG.md` for Home Assistant add-on release notes; HA reads the add-on changelog from the add-on folder, not the repository root changelog.
 - Update the add-on/app version whenever behavior changes.
 - Keep `bjpkeep_ha/config.yaml` and `bjpkeep_ha/package.json` versions in sync.
 - Version rule: bug-fix-only changes append letters to the current version, e.g. `0.5.0a`, `0.5.0b`, etc.
@@ -51,6 +52,7 @@ Important files:
 
 - `bjpkeep_ha/config.yaml`: Home Assistant add-on config.
 - `bjpkeep_ha/Dockerfile`: HA local build image.
+- `bjpkeep_ha/CHANGELOG.md`: Home Assistant-visible add-on changelog.
 - `bjpkeep_ha/run.sh`: runtime setup and app start.
 - `bjpkeep_ha/server.mjs`: custom Next server for HA Ingress path rewriting.
 
@@ -141,6 +143,7 @@ API:
 
 - `POST /api/niimbot` with `{ "cabinetId": "...", "kind": "label" }` prints a small D110-style 40x12 label using `width: 240`, `height: 96`, and `rotate: 90`.
 - `POST /api/niimbot` with `{ "cabinetId": "...", "kind": "qr" }` prints a B1-style 50x50 QR label using `width: 400`, `height: 400`.
+- Niimbot label text is rendered by BJP Keep as PNG images in `src/lib/niimbot-labels.ts` and sent to `hass-niimbot` as full-label `dlimg` data URIs. This avoids Thai text rendering as square boxes from `ppb.ttf` and gives BJP Keep direct control over centered label layout.
 
 The API calls Home Assistant via `http://supervisor/core/api/services/niimbot/print` with `SUPERVISOR_TOKEN`, so direct printing works only from BJP Keep while it is running as a Home Assistant add-on. `hass-niimbot` itself is a HACS custom integration, not an add-on. The request body must include `target: { device_id: ... }`; do not put `device_id` directly in the service data. `hass-niimbot` QR elements use `data`, not `value`.
 
@@ -308,7 +311,7 @@ Recent Docker/build fix:
 
 Recent version note:
 
-- Version `0.6.0b` adds the required `homeassistant_api: true` add-on permission for direct Niimbot service calls. `0.6.0a` contained the Niimbot service payload/target fixes.
+- Version `0.6.0b` adds the required `homeassistant_api: true` add-on permission for direct Niimbot service calls and adds `bjpkeep_ha/CHANGELOG.md` so Home Assistant can show update notes. `0.6.0a` contained the Niimbot service payload/target fixes.
 
 ## Features Already Implemented
 

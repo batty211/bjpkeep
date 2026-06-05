@@ -7,7 +7,7 @@
 ## 0.6.0b
 
 - Added Home Assistant API permission for direct Niimbot service calls from the add-on.
-- Added an add-on-local changelog so Home Assistant can show update notes.
+- Added this add-on-local changelog so Home Assistant can show update notes.
 
 ## 0.6.0a
 

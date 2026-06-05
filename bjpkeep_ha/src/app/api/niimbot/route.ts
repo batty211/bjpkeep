@@ -1,4 +1,4 @@
-import { createCabinetQrPayload } from "@/lib/cabinet-qr";
+import { createQrLabelImage, createSmallLabelImage } from "@/lib/niimbot-labels";
 import { prisma } from "@/lib/prisma";
 import { NextResponse } from "next/server";
 
@@ -8,7 +8,9 @@ function getDeviceId(kind: PrintKind) {
   return kind === "label" ? process.env.NIIMBOT_LABEL_DEVICE_ID : process.env.NIIMBOT_QR_DEVICE_ID;
 }
 
-function buildLabelPayload(cabinet: { name: string; code: string; room: { name: string } }) {
+async function buildLabelPayload(cabinet: { id: string; name: string; code: string; room: { name: string } }) {
+  const imageUrl = await createSmallLabelImage(cabinet);
+
   return {
     width: 240,
     height: 96,
@@ -16,71 +18,34 @@ function buildLabelPayload(cabinet: { name: string; code: string; room: { name: 
     density: 3,
     payload: [
       {
-        type: "text",
-        x: 8,
-        y: 6,
-        width: 224,
-        height: 42,
-        value: cabinet.code,
-        font: "ppb.ttf",
-        size: 34,
-        fit: true,
-        align: "center",
-      },
-      {
-        type: "text",
-        x: 8,
-        y: 52,
-        width: 224,
-        height: 34,
-        value: `${cabinet.room.name} / ${cabinet.name}`,
-        font: "ppb.ttf",
-        size: 22,
-        fit: true,
-        align: "center",
+        type: "dlimg",
+        url: imageUrl,
+        x: 0,
+        y: 0,
+        xsize: 240,
+        ysize: 96,
+        rotate: 0,
       },
     ],
   };
 }
 
-function buildQrPayload(cabinet: { id: string; name: string; code: string; room: { name: string } }) {
+async function buildQrPayload(cabinet: { id: string; name: string; code: string; room: { name: string } }) {
+  const imageUrl = await createQrLabelImage(cabinet);
+
   return {
     width: 400,
     height: 400,
     density: 5,
     payload: [
       {
-        type: "qrcode",
-        x: 64,
-        y: 18,
-        data: createCabinetQrPayload(cabinet.id),
-        boxsize: 8,
-        border: 2,
-        eclevel: "H",
-      },
-      {
-        type: "text",
-        x: 24,
-        y: 300,
-        width: 352,
-        height: 44,
-        value: cabinet.code,
-        font: "ppb.ttf",
-        size: 38,
-        fit: true,
-        align: "center",
-      },
-      {
-        type: "text",
-        x: 24,
-        y: 344,
-        width: 352,
-        height: 34,
-        value: `${cabinet.room.name} / ${cabinet.name}`,
-        font: "ppb.ttf",
-        size: 24,
-        fit: true,
-        align: "center",
+        type: "dlimg",
+        url: imageUrl,
+        x: 0,
+        y: 0,
+        xsize: 400,
+        ysize: 400,
+        rotate: 0,
       },
     ],
   };
@@ -153,5 +118,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Cabinet not found" }, { status: 404 });
   }
 
-  return callNiimbotPrint(deviceId, kind === "qr" ? buildQrPayload(cabinet) : buildLabelPayload(cabinet));
+  const printPayload = kind === "qr" ? await buildQrPayload(cabinet) : await buildLabelPayload(cabinet);
+
+  return callNiimbotPrint(deviceId, printPayload);
 }
