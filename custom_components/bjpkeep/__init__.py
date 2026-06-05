@@ -138,19 +138,17 @@ async def _request_json(
 
 
 @websocket_api.websocket_command(
-    vol.Schema(
-        {
-            vol.Required("type"): WS_GET,
-            vol.Optional("resource", default="summary"): str,
-            vol.Optional("resource_id"): str,
-            vol.Optional("q"): str,
-            vol.Optional("cabinetId"): str,
-            vol.Optional("page"): int,
-            vol.Optional("pageSize"): int,
-            vol.Optional("includeItems"): vol.Any(str, int),
-            vol.Optional("includeItemCounts"): vol.Any(str, int),
-        }
-    )
+    {
+        vol.Required("type"): WS_GET,
+        vol.Optional("resource", default="summary"): str,
+        vol.Optional("resource_id"): str,
+        vol.Optional("q"): str,
+        vol.Optional("cabinetId"): str,
+        vol.Optional("page"): int,
+        vol.Optional("pageSize"): int,
+        vol.Optional("includeItems"): vol.Any(str, int),
+        vol.Optional("includeItemCounts"): vol.Any(str, int),
+    }
 )
 @callback
 def _ws_get(hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]) -> None:
@@ -170,13 +168,15 @@ def _ws_get(hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg
 
 
 @websocket_api.websocket_command(
-    vol.Schema(
-        {
-            vol.Required("type"): WS_ACTION,
-            vol.Required("action"): str,
-        },
-        extra=vol.ALLOW_EXTRA,
-    )
+    {
+        vol.Required("type"): WS_ACTION,
+        vol.Required("action"): str,
+        vol.Optional("id"): str,
+        vol.Optional("name"): str,
+        vol.Optional("cabinetId"): str,
+        vol.Optional("imageId"): str,
+        vol.Optional("actor"): str,
+    }
 )
 @callback
 def _ws_action(hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]) -> None:

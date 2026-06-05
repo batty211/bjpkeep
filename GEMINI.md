@@ -345,7 +345,8 @@ Recent version note:
 
 - Add-on/app version `0.7.0c` is the currently installed add-on release used with the optional HACS integration bridge; keep `bjpkeep_ha/config.yaml`, `bjpkeep_ha/package.json`, and `bjpkeep_ha/package-lock.json` aligned to this unless the add-on itself changes again.
 - Integration compatibility fix: `custom_components/bjpkeep/config_flow.py` defines `CONF_NAME = "name"` locally instead of importing it from `homeassistant.const`, avoiding HA-version-specific import failures.
-- HACS integration version is independent and currently starts at `custom_components/bjpkeep/manifest.json` version `0.1.0`.
+- HACS integration version is independent and currently uses `custom_components/bjpkeep/manifest.json` version `0.1.1`.
+- Integration compatibility fix: Home Assistant 2026 expects `@websocket_api.websocket_command(...)` to receive a schema dict, not `vol.Schema(...)`; using `vol.Schema(...)` caused `AttributeError: 'Schema' object has no attribute 'validators'` and prevented the config flow from loading.
 - For HACS to show numeric versions instead of commit hashes, publish a GitHub release/tag for the integration. Without releases/tags, HACS can show short commit SHAs as installed/latest versions.
 - Version `0.6.0b` adds the required `homeassistant_api: true` add-on permission for direct Niimbot service calls and adds `bjpkeep_ha/CHANGELOG.md` so Home Assistant can show update notes. `0.6.0a` contained the Niimbot service payload/target fixes.
 

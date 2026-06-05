@@ -1,5 +1,9 @@
 # Changelog
 
+## HACS integration 0.1.1
+
+- Fixed Home Assistant 2026 WebSocket command schema registration so the custom integration can import and the config flow can load.
+
 ## 0.7.0c
 
 - Kept the Home Assistant add-on release version aligned with the currently installed `0.7.0c` add-on while leaving the HACS integration version independent.
