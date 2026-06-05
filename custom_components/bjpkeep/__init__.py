@@ -217,11 +217,11 @@ class BjpKeepImageView(HomeAssistantView):
 
 
 class BjpKeepAssetView(HomeAssistantView):
-    """Proxy BJP Keep Lovelace helper assets through Home Assistant auth."""
+    """Proxy BJP Keep Lovelace helper assets."""
 
     url = HTTP_ASSET_PATH
     name = "api:bjpkeep:asset"
-    requires_auth = True
+    requires_auth = False
 
     async def get(self, request: web.Request) -> web.StreamResponse:
         """Return a Lovelace helper asset from BJP Keep."""

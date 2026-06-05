@@ -1,5 +1,9 @@
 # Changelog
 
+## HACS integration 0.1.4
+
+- Fixed Lovelace custom elements not registering through the Home Assistant integration by allowing the static card assets endpoint to load without Home Assistant bearer headers. The asset proxy only serves `bjpkeep-card.js` and `jsQR.js`; data APIs and image proxy routes remain authenticated.
+
 ## 0.7.0d
 
 - Fixed Lovelace images in Home Assistant integration mode by loading authenticated image proxy responses as browser blob URLs instead of assigning authenticated API URLs directly to `<img>` tags.

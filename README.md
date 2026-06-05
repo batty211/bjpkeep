@@ -140,7 +140,7 @@ Recommended integration mode resource:
 /api/bjpkeep/asset?asset=bjpkeep-card.js
 ```
 
-Set resource type to `JavaScript Module`.
+Set resource type to `JavaScript Module`. The integration exposes this card asset endpoint without Home Assistant bearer-header auth because browser module scripts cannot attach those headers; it only serves the static `bjpkeep-card.js` and `jsQR.js` helper files.
 
 After updating the add-on, append a cache-busting query such as `&v=0.7.0d` if Home Assistant keeps loading an older card script:
 

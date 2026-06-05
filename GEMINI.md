@@ -258,10 +258,11 @@ Recommended Home Assistant integration bridge:
 - `custom_components/bjpkeep/` is a HACS-installable custom integration.
 - It stores the local BJP Keep API URL and Lovelace token in a HA config entry.
 - It registers WebSocket commands `bjpkeep/get` and `bjpkeep/action`.
-- It registers authenticated HA HTTP proxy views:
+- It registers HA HTTP proxy views:
   - `/api/bjpkeep/asset?asset=bjpkeep-card.js`
   - `/api/bjpkeep/asset?asset=jsQR.js`
   - `/api/bjpkeep/image?path=<encoded upload path>`
+- The asset proxy is intentionally unauthenticated because browser module scripts cannot attach HA bearer headers. It only serves static Lovelace helper files. The image proxy remains authenticated, and the card loads images with authenticated fetch-to-blob logic.
 - The Lovelace cards now support two modes:
   - Integration mode: omit `api_url`; the card uses `hass.callWS(...)` and same-origin HA proxy URLs.
   - Direct fallback mode: keep `api_url` and `api_token`; the card fetches the exposed add-on port exactly as before.
@@ -348,7 +349,8 @@ Recent version note:
 
 - Add-on/app version `0.7.0d` is the current add-on release used with the optional HACS integration bridge; keep `bjpkeep_ha/config.yaml`, `bjpkeep_ha/package.json`, and `bjpkeep_ha/package-lock.json` aligned to this unless the add-on itself changes again.
 - Integration compatibility fix: `custom_components/bjpkeep/config_flow.py` defines `CONF_NAME = "name"` locally instead of importing it from `homeassistant.const`, avoiding HA-version-specific import failures.
-- HACS integration version is independent and currently uses `custom_components/bjpkeep/manifest.json` version `0.1.3`.
+- HACS integration version is independent and currently uses `custom_components/bjpkeep/manifest.json` version `0.1.4`.
+- Integration asset proxy fix: `BjpKeepAssetView.requires_auth` is `False` so `/api/bjpkeep/asset?asset=bjpkeep-card.js` can load as a Lovelace JavaScript module. If both custom elements disappear with "Custom element doesn't exist", first verify this endpoint returns JavaScript instead of 401.
 - Integration compatibility fix: Home Assistant 2026 expects `@websocket_api.websocket_command(...)` to receive a schema dict, not `vol.Schema(...)`; using `vol.Schema(...)` caused `AttributeError: 'Schema' object has no attribute 'validators'` and prevented the config flow from loading.
 - Integration load fix: signed image proxy changes from `0.1.2` were reverted in `0.1.3` because the integration stopped appearing in Add Integration. Image requests may still need a separate fix after checking real Home Assistant logs.
 - For HACS to show numeric versions instead of commit hashes, publish a GitHub release/tag for the integration. Without releases/tags, HACS can show short commit SHAs as installed/latest versions.
