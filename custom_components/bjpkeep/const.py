@@ -5,7 +5,7 @@ DOMAIN = "bjpkeep"
 CONF_API_URL = "api_url"
 CONF_API_TOKEN = "api_token"
 
-DEFAULT_API_URL = "http://192.168.1.222:3000"
+DEFAULT_API_URL = ""
 
 WS_GET = f"{DOMAIN}/get"
 WS_ACTION = f"{DOMAIN}/action"

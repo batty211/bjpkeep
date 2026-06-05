@@ -13,6 +13,7 @@
     },
     "error": {
       "cannot_connect": "Could not connect to BJP Keep. Check the local API URL and that the add-on is running.",
+      "invalid_url": "Enter a full local URL such as http://home-assistant.local:3000.",
       "invalid_auth": "The token was rejected by BJP Keep.",
       "unknown": "Unexpected error"
     },

@@ -114,7 +114,7 @@ After restart:
 4. Set `BJP Keep local API URL` to the add-on URL that Home Assistant can reach, for example:
 
 ```text
-http://192.168.1.222:3000
+http://<home-assistant-ip>:3000
 ```
 
 5. Set `Lovelace token` to the same value as the add-on `lovelace_token`.
@@ -159,7 +159,7 @@ http://<home-assistant-ip>:3000/lovelace/bjpkeep-card.js
 Example:
 
 ```text
-http://192.168.1.222:3000/lovelace/bjpkeep-card.js
+http://<home-assistant-ip>:3000/lovelace/bjpkeep-card.js
 ```
 
 Steps:
@@ -197,7 +197,7 @@ Direct fallback mode:
 
 ```yaml
 type: custom:bjpkeep-card
-api_url: http://192.168.1.222:3000
+api_url: http://<home-assistant-ip>:3000
 api_token: "same-value-as-lovelace_token"
 title: "BJP Keep"
 page_size: 10
@@ -235,20 +235,20 @@ Photo upload currently requires direct fallback mode because multipart upload pr
 Use these from a browser on the same network:
 
 ```text
-http://192.168.1.222:3000/lovelace/bjpkeep-card.js
-http://192.168.1.222:3000/lovelace/jsQR.js
+http://<home-assistant-ip>:3000/lovelace/bjpkeep-card.js
+http://<home-assistant-ip>:3000/lovelace/jsQR.js
 ```
 
 The API should return `401` without a token:
 
 ```text
-http://192.168.1.222:3000/api/lovelace/
+http://<home-assistant-ip>:3000/api/lovelace/
 ```
 
 With token:
 
 ```text
-http://192.168.1.222:3000/api/lovelace/?token=same-value-as-lovelace_token
+http://<home-assistant-ip>:3000/api/lovelace/?token=same-value-as-lovelace_token
 ```
 
 After installing the Home Assistant integration, the same card resource should load through Home Assistant:
@@ -274,6 +274,7 @@ If the Lovelace card shows `401`:
 If the card resource does not load:
 
 - In integration mode, confirm the resource URL is `/api/bjpkeep/asset?asset=bjpkeep-card.js`.
+- If the browser Network tab shows `http://<private-ip>:3000/lovelace/bjpkeep-card.js`, Home Assistant is still using the direct fallback resource. Delete that resource or replace it with `/api/bjpkeep/asset?asset=bjpkeep-card.js`, then refresh the browser or restart the Home Assistant app.
 - Confirm the BJP Keep integration is configured under `Settings` > `Devices & services`.
 - In direct fallback mode, confirm the resource URL uses port `3000`.
 - In direct fallback mode, confirm the URL is reachable from the same device/browser running Home Assistant.

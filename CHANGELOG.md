@@ -1,5 +1,11 @@
 # Changelog
 
+## HACS integration 0.1.5
+
+- Removed the personal LAN IP from the integration's default API URL so new config flows require an explicit local add-on URL.
+- Added config-flow validation for empty or non-HTTP(S) API URLs.
+- Documented that a browser request to `http://<private-ip>:3000/lovelace/bjpkeep-card.js` means Home Assistant is still using the direct fallback Lovelace resource instead of the same-origin integration resource.
+
 ## HACS integration 0.1.4
 
 - Fixed Lovelace custom elements not registering through the Home Assistant integration by allowing the static card assets endpoint to load without Home Assistant bearer headers. The asset proxy only serves `bjpkeep-card.js` and `jsQR.js`; data APIs and image proxy routes remain authenticated.

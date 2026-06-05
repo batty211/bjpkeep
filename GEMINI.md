@@ -285,7 +285,7 @@ type: module
 Direct fallback Lovelace resource:
 
 ```yaml
-url: http://192.168.1.222:3000/lovelace/bjpkeep-card.js
+url: http://<home-assistant-ip>:3000/lovelace/bjpkeep-card.js
 type: module
 ```
 
@@ -300,7 +300,7 @@ Direct fallback card:
 
 ```yaml
 type: custom:bjpkeep-card
-api_url: http://192.168.1.222:3000
+api_url: http://<home-assistant-ip>:3000
 api_token: "same-value-as-lovelace_token"
 page_size: 10
 ```
@@ -309,7 +309,7 @@ Optional room/cabinet filter card:
 
 ```yaml
 type: custom:bjpkeep-cabinet-card
-api_url: http://192.168.1.222:3000
+api_url: http://<home-assistant-ip>:3000
 api_token: "same-value-as-lovelace_token"
 title: "Rooms & Cabinets"
 ```
@@ -349,7 +349,9 @@ Recent version note:
 
 - Add-on/app version `0.7.0d` is the current add-on release used with the optional HACS integration bridge; keep `bjpkeep_ha/config.yaml`, `bjpkeep_ha/package.json`, and `bjpkeep_ha/package-lock.json` aligned to this unless the add-on itself changes again.
 - Integration compatibility fix: `custom_components/bjpkeep/config_flow.py` defines `CONF_NAME = "name"` locally instead of importing it from `homeassistant.const`, avoiding HA-version-specific import failures.
-- HACS integration version is independent and currently uses `custom_components/bjpkeep/manifest.json` version `0.1.4`.
+- HACS integration version is independent and currently uses `custom_components/bjpkeep/manifest.json` version `0.1.5`.
+- Integration config-flow fix: the default API URL is now blank instead of the user's personal LAN IP, and the form validates that the value is a full `http://` or `https://` URL before testing the connection.
+- Lovelace troubleshooting note: if the browser Network tab shows `http://<private-ip>:3000/lovelace/bjpkeep-card.js`, Home Assistant is still using the direct fallback resource. Replace/delete that dashboard resource and use `/api/bjpkeep/asset?asset=bjpkeep-card.js` for same-origin integration mode.
 - Integration asset proxy fix: `BjpKeepAssetView.requires_auth` is `False` so `/api/bjpkeep/asset?asset=bjpkeep-card.js` can load as a Lovelace JavaScript module. If both custom elements disappear with "Custom element doesn't exist", first verify this endpoint returns JavaScript instead of 401.
 - Integration compatibility fix: Home Assistant 2026 expects `@websocket_api.websocket_command(...)` to receive a schema dict, not `vol.Schema(...)`; using `vol.Schema(...)` caused `AttributeError: 'Schema' object has no attribute 'validators'` and prevented the config flow from loading.
 - Integration load fix: signed image proxy changes from `0.1.2` were reverted in `0.1.3` because the integration stopped appearing in Add Integration. Image requests may still need a separate fix after checking real Home Assistant logs.

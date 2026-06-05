@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from typing import Any
+from urllib.parse import urlparse
 
 import voluptuous as vol
 
@@ -30,29 +31,32 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             api_url = str(user_input[CONF_API_URL]).rstrip("/")
             api_token = str(user_input[CONF_API_TOKEN])
 
-            try:
-                await self._test_connection(api_url, api_token)
-            except CannotConnect:
-                errors["base"] = "cannot_connect"
-            except InvalidAuth:
-                errors["base"] = "invalid_auth"
-            except Exception:
-                errors["base"] = "unknown"
+            if not _is_valid_url(api_url):
+                errors["base"] = "invalid_url"
             else:
-                await self.async_set_unique_id(DOMAIN)
-                self._abort_if_unique_id_configured(
-                    updates={
-                        CONF_API_URL: api_url,
-                        CONF_API_TOKEN: api_token,
-                    }
-                )
-                return self.async_create_entry(
-                    title=user_input.get(CONF_NAME, "BJP Keep"),
-                    data={
-                        CONF_API_URL: api_url,
-                        CONF_API_TOKEN: api_token,
-                    },
-                )
+                try:
+                    await self._test_connection(api_url, api_token)
+                except CannotConnect:
+                    errors["base"] = "cannot_connect"
+                except InvalidAuth:
+                    errors["base"] = "invalid_auth"
+                except Exception:
+                    errors["base"] = "unknown"
+                else:
+                    await self.async_set_unique_id(DOMAIN)
+                    self._abort_if_unique_id_configured(
+                        updates={
+                            CONF_API_URL: api_url,
+                            CONF_API_TOKEN: api_token,
+                        }
+                    )
+                    return self.async_create_entry(
+                        title=user_input.get(CONF_NAME, "BJP Keep"),
+                        data={
+                            CONF_API_URL: api_url,
+                            CONF_API_TOKEN: api_token,
+                        },
+                    )
 
         return self.async_show_form(
             step_id="user",
@@ -79,6 +83,13 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             if response.status >= 400:
                 raise CannotConnect
             await response.json()
+
+
+def _is_valid_url(url: str) -> bool:
+    """Return whether the URL is an absolute HTTP(S) URL."""
+
+    parsed = urlparse(url)
+    return parsed.scheme in {"http", "https"} and bool(parsed.netloc)
 
 
 class CannotConnect(Exception):
