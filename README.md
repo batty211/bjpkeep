@@ -302,7 +302,3 @@ Then open:
 http://127.0.0.1:3003/
 http://127.0.0.1:3003/lovelace/bjpkeep-card.js
 ```
-
-## Project Memory
-
-Future AI/dev sessions should read `GEMINI.md` before changing the project. When code, config, or product behavior changes, update `GEMINI.md` in the same session so completed work and remaining TODOs stay accurate.
