@@ -22,6 +22,8 @@ Also maintain release notes and versions in the same work session:
 
 At the end of each code/config/product change, include a short git-ready summary that the user can reuse for commit/push notes.
 
+Always include a suggested git commit message at the end of completed work. The user prefers getting this every time so they can commit quickly without asking again.
+
 ## What This Project Is
 
 BJP Keep is a private home inventory app for tracking where household items are stored.
@@ -195,7 +197,7 @@ Home Assistant Ingress sends user info with:
 
 `src/lib/auth.ts` uses display name first, then username, then id, then cookie fallback, then `System`.
 
-### Lovelace API And Card
+### Lovelace API, Integration, And Card
 
 The add-on now exposes port `3000/tcp` for Lovelace usage while preserving Ingress.
 
@@ -248,6 +250,20 @@ Static Lovelace card assets:
 - `public/lovelace/bjpkeep-card.js`
 - `public/lovelace/jsQR.js`
 
+Recommended Home Assistant integration bridge:
+
+- `custom_components/bjpkeep/` is a HACS-installable custom integration.
+- It stores the local BJP Keep API URL and Lovelace token in a HA config entry.
+- It registers WebSocket commands `bjpkeep/get` and `bjpkeep/action`.
+- It registers authenticated HA HTTP proxy views:
+  - `/api/bjpkeep/asset?asset=bjpkeep-card.js`
+  - `/api/bjpkeep/asset?asset=jsQR.js`
+  - `/api/bjpkeep/image?path=<encoded upload path>`
+- The Lovelace cards now support two modes:
+  - Integration mode: omit `api_url`; the card uses `hass.callWS(...)` and same-origin HA proxy URLs.
+  - Direct fallback mode: keep `api_url` and `api_token`; the card fetches the exposed add-on port exactly as before.
+- Integration mode currently supports list/search/edit/move/delete and QR scan helper loading. Photo upload still requires direct `api_url` mode until multipart proxy support is added.
+
 Tested locally:
 
 - `/lovelace/bjpkeep-card.js`: `200 application/javascript`, CORS `*`
@@ -258,11 +274,25 @@ Tested locally:
 Example HA Lovelace resource:
 
 ```yaml
+url: /api/bjpkeep/asset?asset=bjpkeep-card.js
+type: module
+```
+
+Direct fallback Lovelace resource:
+
+```yaml
 url: http://192.168.1.222:3000/lovelace/bjpkeep-card.js
 type: module
 ```
 
 Example card:
+
+```yaml
+type: custom:bjpkeep-card
+page_size: 10
+```
+
+Direct fallback card:
 
 ```yaml
 type: custom:bjpkeep-card
@@ -311,6 +341,7 @@ Recent Docker/build fix:
 
 Recent version note:
 
+- Version `0.7.0` adds the HACS-ready Home Assistant custom integration bridge, same-origin Lovelace asset/image proxying, and integration-mode Lovelace cards while preserving direct `api_url` mode as fallback.
 - Version `0.6.0b` adds the required `homeassistant_api: true` add-on permission for direct Niimbot service calls and adds `bjpkeep_ha/CHANGELOG.md` so Home Assistant can show update notes. `0.6.0a` contained the Niimbot service payload/target fixes.
 
 ## Features Already Implemented
@@ -328,6 +359,7 @@ Recent version note:
 - Dashboard scanner simplified for iOS photo picker.
 - Image thumbnails for fast Inventory.
 - Lovelace public API + custom card MVP.
+- HACS-ready Home Assistant custom integration bridge for Lovelace same-origin proxying.
 - Add-on icon/logo files exist at add-on root.
 - Lovelace item API supports pagination and lightweight cabinet fetches for large inventories.
 - Lovelace card/API supports photo upload while adding an item, adding photos to an existing item, and deleting an item photo.
@@ -344,17 +376,20 @@ Recent version note:
 ## Known Caveats
 
 - HA Ingress add-on UI is admin-only in Home Assistant. Lovelace card is the workaround for non-admin dashboard users.
-- Lovelace card talks to exposed port `3000`, not HA Ingress.
-- If HA is served over HTTPS and card API is HTTP, browser mixed-content policies may matter. For local HA app usage this needs real-device testing.
+- Recommended Lovelace setup uses the BJP Keep HA integration bridge; direct fallback mode still talks to exposed port `3000`, not HA Ingress.
+- If HA is served over HTTPS and direct fallback card API is HTTP, browser mixed-content policies may matter.
 - `LOVELACE_API_TOKEN` must be set or `/api/lovelace/` returns 401.
 - If the Lovelace card shows repeated `/api/lovelace/?resource=cabinets` 401 errors, the dashboard card config is missing `api_token`, the token does not match `lovelace_token`, or the add-on was not restarted after changing the token.
 - The Lovelace JS resource still has to be added to HA resources before the visual card editor can appear.
+- Integration mode depends on installing/configuring `custom_components/bjpkeep`; without that, omit `api_url` mode will show a BJP Keep integration readiness error.
+- Integration mode photo upload is not implemented yet; use direct fallback mode for photo upload until multipart proxy support is added.
 - Runtime paths are currently personal/setup-specific (`/share/HAShare/...`).
 - Build emits a recurring Turbopack warning about upload/thumb route tracing. Builds still pass.
 
 ## Suggested Next Lovelace Work
 
 - Add an optional read-only dashboard summary mode.
+- Add multipart upload proxy support to the BJP Keep HA integration so photo upload works in integration mode.
 - Consider optional sorting and page-size controls in the card UI if 100+ item inventories become common.
 - Consider a token health/status endpoint or clearer setup diagnostics for first-time Lovelace configuration.
 

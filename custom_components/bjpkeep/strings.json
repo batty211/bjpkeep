@@ -1,0 +1,23 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "BJP Keep",
+        "description": "Connect Home Assistant to the BJP Keep add-on over your local network. This URL is used by Home Assistant itself, not by browsers or remote dashboards.",
+        "data": {
+          "name": "Name",
+          "api_url": "BJP Keep local API URL",
+          "api_token": "Lovelace token"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Could not connect to BJP Keep. Check the local API URL and that the add-on is running.",
+      "invalid_auth": "The token was rejected by BJP Keep.",
+      "unknown": "Unexpected error"
+    },
+    "abort": {
+      "already_configured": "BJP Keep is already configured"
+    }
+  }
+}

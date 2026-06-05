@@ -7,12 +7,8 @@ class BjpKeepCard extends HTMLElement {
   }
 
   static getStubConfig() {
-    const apiUrl = typeof window === "undefined"
-      ? ""
-      : `${window.location.protocol}//${window.location.hostname}:3000`;
-
     return {
-      api_url: apiUrl,
+      api_url: "",
       api_token: "",
       title: "BJP Keep",
       page_size: 10,
@@ -21,10 +17,6 @@ class BjpKeepCard extends HTMLElement {
   }
 
   setConfig(config) {
-    if (!config.api_url) {
-      throw new Error("api_url is required");
-    }
-
     this.config = {
       api_token: "",
       actor: BJPKEEP_DEFAULT_ACTOR,
@@ -32,7 +24,7 @@ class BjpKeepCard extends HTMLElement {
       show_images: true,
       page_size: 10,
       ...config,
-      api_url: String(config.api_url).replace(/\/+$/, ""),
+      api_url: String(config.api_url || "").replace(/\/+$/, ""),
     };
     this.state = {
       cabinets: [],
@@ -62,7 +54,7 @@ class BjpKeepCard extends HTMLElement {
       this.attachShadow({ mode: "open" });
     }
 
-    this.loadData();
+    this.loadWhenReady();
   }
 
   connectedCallback() {
@@ -84,14 +76,34 @@ class BjpKeepCard extends HTMLElement {
 
   set hass(hass) {
     this._hass = hass;
+    if (this._pendingLoad) {
+      this._pendingLoad = false;
+      this.loadData();
+    }
+  }
+
+  usesHaBridge() {
+    return !String(this.config?.api_url || "").trim();
   }
 
   apiPath(path) {
     return `${this.config.api_url}${path}`;
   }
 
+  loadWhenReady() {
+    if (this.usesHaBridge() && !this._hass) {
+      this._pendingLoad = true;
+      this.render();
+      return;
+    }
+
+    this.loadData();
+  }
+
   imageUrl(image, options = {}) {
-    const path = options.original ? image?.path : image?.thumbnailPath || image?.path;
+    const path = this.usesHaBridge()
+      ? (options.original ? image?.haPath : image?.haThumbnailPath || image?.haPath)
+      : (options.original ? image?.path : image?.thumbnailPath || image?.path);
 
     if (!path) {
       return "";
@@ -128,6 +140,10 @@ class BjpKeepCard extends HTMLElement {
   }
 
   async request(path, options = {}) {
+    if (this.usesHaBridge()) {
+      return this.haRequest(path, options);
+    }
+
     const isFormData = options.body instanceof FormData;
     const headers = {
       ...this.headers(),
@@ -150,6 +166,48 @@ class BjpKeepCard extends HTMLElement {
     }
 
     return data;
+  }
+
+  async haRequest(path, options = {}) {
+    if (!this._hass?.callWS) {
+      throw new Error("BJP Keep integration is not ready in Home Assistant.");
+    }
+
+    if (options.body instanceof FormData) {
+      throw new Error("Photo upload currently requires direct API URL mode.");
+    }
+
+    const method = String(options.method || "GET").toUpperCase();
+
+    if (method === "GET") {
+      const queryString = path.split("?")[1] || "";
+      const params = new URLSearchParams(queryString);
+      const message = {
+        type: "bjpkeep/get",
+        resource: params.get("resource") || "summary",
+      };
+
+      params.forEach((value, key) => {
+        if (key === "id") {
+          message.resource_id = value;
+        } else if (key !== "resource") {
+          message[key] = ["page", "pageSize"].includes(key) ? Number(value) : value;
+        }
+      });
+
+      return this._hass.callWS(message);
+    }
+
+    if (method === "POST") {
+      const payload = typeof options.body === "string" ? JSON.parse(options.body || "{}") : options.body || {};
+      return this._hass.callWS({
+        type: "bjpkeep/action",
+        ...payload,
+        actor: this.actorName(),
+      });
+    }
+
+    throw new Error(`Unsupported BJP Keep request method: ${method}`);
   }
 
   async loadData() {
@@ -527,7 +585,7 @@ class BjpKeepCard extends HTMLElement {
 
     await new Promise((resolve, reject) => {
       const script = document.createElement("script");
-      script.src = this.apiPath("/lovelace/jsQR.js");
+      script.src = this.usesHaBridge() ? "/api/bjpkeep/asset?asset=jsQR.js" : this.apiPath("/lovelace/jsQR.js");
       script.onload = resolve;
       script.onerror = reject;
       document.head.appendChild(script);
@@ -1251,12 +1309,12 @@ class BjpKeepCardEditor extends HTMLElement {
       </style>
       <div class="editor">
         <label>
-          <span class="label">API URL</span>
-          <input id="api_url" value="${this.escape(this.config.api_url)}" placeholder="http://192.168.1.222:3000">
-          <span class="hint">Use the exposed add-on port, not the Home Assistant Ingress URL.</span>
+          <span class="label">API URL (optional)</span>
+          <input id="api_url" value="${this.escape(this.config.api_url)}" placeholder="Leave empty to use the BJP Keep integration">
+          <span class="hint">Leave empty when the BJP Keep Home Assistant integration is installed. Use the exposed add-on port only for direct fallback mode.</span>
         </label>
         <label>
-          <span class="label">API Token</span>
+          <span class="label">API Token (direct mode)</span>
           <input id="api_token" type="password" value="${this.escape(this.config.api_token)}" placeholder="same value as lovelace_token">
         </label>
         <label>
@@ -1307,27 +1365,19 @@ class BjpKeepCabinetCard extends HTMLElement {
   }
 
   static getStubConfig() {
-    const apiUrl = typeof window === "undefined"
-      ? ""
-      : `${window.location.protocol}//${window.location.hostname}:3000`;
-
     return {
-      api_url: apiUrl,
+      api_url: "",
       api_token: "",
       title: "Rooms & Cabinets",
     };
   }
 
   setConfig(config) {
-    if (!config.api_url) {
-      throw new Error("api_url is required");
-    }
-
     this.config = {
       api_token: "",
       title: "Rooms & Cabinets",
       ...config,
-      api_url: String(config.api_url).replace(/\/+$/, ""),
+      api_url: String(config.api_url || "").replace(/\/+$/, ""),
     };
     this.state = {
       rooms: [],
@@ -1341,15 +1391,37 @@ class BjpKeepCabinetCard extends HTMLElement {
       this.attachShadow({ mode: "open" });
     }
 
-    this.loadData();
+    this.loadWhenReady();
   }
 
   getCardSize() {
     return 3;
   }
 
+  set hass(hass) {
+    this._hass = hass;
+    if (this._pendingLoad) {
+      this._pendingLoad = false;
+      this.loadData();
+    }
+  }
+
+  usesHaBridge() {
+    return !String(this.config?.api_url || "").trim();
+  }
+
   apiPath(path) {
     return `${this.config.api_url}${path}`;
+  }
+
+  loadWhenReady() {
+    if (this.usesHaBridge() && !this._hass) {
+      this._pendingLoad = true;
+      this.render();
+      return;
+    }
+
+    this.loadData();
   }
 
   headers() {
@@ -1360,6 +1432,10 @@ class BjpKeepCabinetCard extends HTMLElement {
   }
 
   async request(path, options = {}) {
+    if (this.usesHaBridge()) {
+      return this.haRequest(path, options);
+    }
+
     const response = await fetch(this.apiPath(path), {
       ...options,
       headers: {
@@ -1375,6 +1451,35 @@ class BjpKeepCabinetCard extends HTMLElement {
     }
 
     return data;
+  }
+
+  async haRequest(path, options = {}) {
+    if (!this._hass?.callWS) {
+      throw new Error("BJP Keep integration is not ready in Home Assistant.");
+    }
+
+    const method = String(options.method || "GET").toUpperCase();
+
+    if (method !== "GET") {
+      throw new Error(`Unsupported BJP Keep request method: ${method}`);
+    }
+
+    const queryString = path.split("?")[1] || "";
+    const params = new URLSearchParams(queryString);
+    const message = {
+      type: "bjpkeep/get",
+      resource: params.get("resource") || "summary",
+    };
+
+    params.forEach((value, key) => {
+      if (key === "id") {
+        message.resource_id = value;
+      } else if (key !== "resource") {
+        message[key] = ["page", "pageSize"].includes(key) ? Number(value) : value;
+      }
+    });
+
+    return this._hass.callWS(message);
   }
 
   async loadData() {
@@ -1683,12 +1788,12 @@ class BjpKeepCabinetCardEditor extends HTMLElement {
       </style>
       <div class="editor">
         <label>
-          <span class="label">API URL</span>
-          <input id="api_url" value="${this.escape(this.config.api_url)}" placeholder="http://192.168.1.222:3000">
-          <span class="hint">Use the same API URL as the BJP Keep inventory card.</span>
+          <span class="label">API URL (optional)</span>
+          <input id="api_url" value="${this.escape(this.config.api_url)}" placeholder="Leave empty to use the BJP Keep integration">
+          <span class="hint">Leave empty when the BJP Keep Home Assistant integration is installed. Use the same fallback URL as the inventory card only for direct mode.</span>
         </label>
         <label>
-          <span class="label">API Token</span>
+          <span class="label">API Token (direct mode)</span>
           <input id="api_token" type="password" value="${this.escape(this.config.api_token)}" placeholder="same value as lovelace_token">
         </label>
         <label>

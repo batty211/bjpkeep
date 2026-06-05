@@ -1,0 +1,6 @@
+{
+  "name": "BJP Keep",
+  "render_readme": true,
+  "domains": ["bjpkeep"],
+  "homeassistant": "2024.6.0"
+}

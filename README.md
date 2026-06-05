@@ -89,9 +89,49 @@ bjpkeep:cabinet:<cabinetId>
 
 They do not depend on Home Assistant Ingress URLs or temporary tokens.
 
+## Add The Home Assistant Integration
+
+The recommended Lovelace setup is to install the BJP Keep Home Assistant integration. The integration lets dashboard cards talk to Home Assistant first, then Home Assistant proxies requests to the BJP Keep add-on over your local network. This avoids public domains, Cloudflare Tunnel hostnames, mixed-content problems, and `api_url` changes when your external domain changes.
+
+### Install With HACS
+
+1. Open HACS.
+2. Open the three-dot menu.
+3. Choose `Custom repositories`.
+4. Add this repository URL.
+5. Set category to `Integration`.
+6. Click `Add`.
+7. Install `BJP Keep`.
+8. Restart Home Assistant.
+
+After restart:
+
+1. Go to `Settings` > `Devices & services`.
+2. Click `Add Integration`.
+3. Search for `BJP Keep`.
+4. Set `BJP Keep local API URL` to the add-on URL that Home Assistant can reach, for example:
+
+```text
+http://192.168.1.222:3000
+```
+
+5. Set `Lovelace token` to the same value as the add-on `lovelace_token`.
+
+This URL is used by Home Assistant itself, not by the browser. It can stay as your local LAN URL even when you open Home Assistant through Cloudflare Tunnel, Nabu Casa, or a changed public domain.
+
 ## Add The Lovelace Card Resource
 
 The add-on UI opened through Ingress is admin-only in Home Assistant. To let dashboard users interact with BJP Keep, add the Lovelace custom card resource.
+
+Recommended integration mode resource:
+
+```text
+/api/bjpkeep/asset?asset=bjpkeep-card.js
+```
+
+Set resource type to `JavaScript Module`.
+
+Direct fallback mode resource:
 
 Use the Home Assistant host/IP and exposed add-on port:
 
@@ -114,7 +154,7 @@ Steps:
 5. Set URL to:
 
 ```text
-http://192.168.1.222:3000/lovelace/bjpkeep-card.js
+/api/bjpkeep/asset?asset=bjpkeep-card.js
 ```
 
 6. Set resource type to `JavaScript Module`.
@@ -126,6 +166,17 @@ http://192.168.1.222:3000/lovelace/bjpkeep-card.js
 After the resource is loaded, BJP Keep should appear in Home Assistant's visual Add Card picker as a custom card.
 
 If it does not appear, add it manually:
+
+```yaml
+type: custom:bjpkeep-card
+title: "BJP Keep"
+page_size: 10
+show_images: true
+```
+
+Leave `api_url` and `api_token` out when using the BJP Keep Home Assistant integration.
+
+Direct fallback mode:
 
 ```yaml
 type: custom:bjpkeep-card
@@ -142,10 +193,10 @@ Optional room/cabinet filter card:
 
 ```yaml
 type: custom:bjpkeep-cabinet-card
-api_url: http://192.168.1.222:3000
-api_token: "same-value-as-lovelace_token"
 title: "Rooms & Cabinets"
 ```
+
+Direct fallback mode for the room/cabinet card also supports `api_url` and `api_token`.
 
 Place it on the same dashboard view as the main BJP Keep card. Click a room to expand its cabinets, then click a cabinet to filter the main card.
 
@@ -159,6 +210,8 @@ Card behavior:
 - Click an item row to open a detail popup.
 - The detail popup supports rename, move, add photo, remove selected photo, and delete.
 - The optional room/cabinet card shows `room name (cabinet count)` and `cabinet name (item count)` and filters the main card when a cabinet is selected.
+
+Photo upload currently requires direct fallback mode because multipart upload proxying through Home Assistant is not implemented yet. List/search/edit/move/delete work through the integration.
 
 ## Test URLs
 
@@ -181,6 +234,12 @@ With token:
 http://192.168.1.222:3000/api/lovelace/?token=same-value-as-lovelace_token
 ```
 
+After installing the Home Assistant integration, the same card resource should load through Home Assistant:
+
+```text
+https://<home-assistant-host>/api/bjpkeep/asset?asset=bjpkeep-card.js
+```
+
 ## Troubleshooting
 
 If the add-on will not start:
@@ -197,8 +256,10 @@ If the Lovelace card shows `401`:
 
 If the card resource does not load:
 
-- Confirm the resource URL uses port `3000`.
-- Confirm the URL is reachable from the same device/browser running Home Assistant.
+- In integration mode, confirm the resource URL is `/api/bjpkeep/asset?asset=bjpkeep-card.js`.
+- Confirm the BJP Keep integration is configured under `Settings` > `Devices & services`.
+- In direct fallback mode, confirm the resource URL uses port `3000`.
+- In direct fallback mode, confirm the URL is reachable from the same device/browser running Home Assistant.
 - Hard refresh the browser or restart the Home Assistant mobile app.
 - If Home Assistant is served over HTTPS but the card API is HTTP, browser mixed-content rules may block requests.
 

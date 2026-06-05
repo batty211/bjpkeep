@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.7.0
+
+- Added a BJP Keep Home Assistant custom integration for HACS installs.
+- Added Home Assistant WebSocket/API proxy support so Lovelace cards can work without public `api_url` configuration.
+- Updated Lovelace cards to keep direct `api_url` mode as a fallback while supporting integration mode when `api_url` is omitted.
+- Documented the recommended HACS integration flow and same-origin Lovelace resource URL.
+
 ## 0.6.0c
 
 - Fixed Niimbot cabinet label rendering by sending app-generated PNG label images, improving centering and Thai text support.

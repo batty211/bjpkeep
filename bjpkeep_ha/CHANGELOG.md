@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.7.0
+
+- Added support for the optional BJP Keep Home Assistant integration bridge.
+- Updated Lovelace cards to work without direct `api_url` when the integration is installed.
+- Kept direct exposed-port Lovelace mode available as a fallback.
+
 ## 0.6.0c
 
 - Fixed Niimbot cabinet label rendering by sending app-generated PNG label images, improving centering and Thai text support.
