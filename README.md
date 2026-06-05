@@ -104,6 +104,8 @@ The recommended Lovelace setup is to install the BJP Keep Home Assistant integra
 7. Install `BJP Keep`.
 8. Restart Home Assistant.
 
+HACS uses GitHub releases/tags for the installed/latest version labels. If this repository has no release/tag yet, HACS may show short commit hashes instead of numeric versions. Create a GitHub release such as `v0.1.0` after publishing integration changes if you want HACS to show a normal version number.
+
 After restart:
 
 1. Go to `Settings` > `Devices & services`.

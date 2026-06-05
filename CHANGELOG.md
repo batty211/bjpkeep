@@ -1,20 +1,9 @@
 # Changelog
 
-## 0.7.0d
-
-- Reverted the Home Assistant integration bridge to config-flow-only setup to restore Add Integration discovery behavior while keeping the fixed `ConfigFlow` handler name.
-
 ## 0.7.0c
 
-- Added a `configuration.yaml` fallback for the BJP Keep Home Assistant bridge so users can configure it even if the custom integration does not appear in the Add Integration search.
-
-## 0.7.0b
-
-- Added Home Assistant integration manifest metadata and translation files to improve custom integration discovery in the Add Integration UI.
-
-## 0.7.0a
-
-- Fixed the BJP Keep Home Assistant integration config flow handler class name so Home Assistant can load the setup flow.
+- Kept the Home Assistant add-on release version aligned with the currently installed `0.7.0c` add-on while leaving the HACS integration version independent.
+- Removed a config flow import dependency on `homeassistant.const.CONF_NAME` for better Home Assistant compatibility.
 
 ## 0.7.0
 
@@ -22,6 +11,7 @@
 - Added Home Assistant WebSocket/API proxy support so Lovelace cards can work without public `api_url` configuration.
 - Updated Lovelace cards to keep direct `api_url` mode as a fallback while supporting integration mode when `api_url` is omitted.
 - Documented the recommended HACS integration flow and same-origin Lovelace resource URL.
+- Kept the HACS integration version independent from the Home Assistant add-on version.
 
 ## 0.6.0c
 

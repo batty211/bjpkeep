@@ -15,8 +15,10 @@ Also maintain release notes and versions in the same work session:
 
 - Update `CHANGELOG.md` for every code/config/product change.
 - Update `bjpkeep_ha/CHANGELOG.md` for Home Assistant add-on release notes; HA reads the add-on changelog from the add-on folder, not the repository root changelog.
-- Update the add-on/app version whenever behavior changes.
-- Keep `bjpkeep_ha/config.yaml` and `bjpkeep_ha/package.json` versions in sync.
+- Update the add-on/app version only when `bjpkeep_ha/` add-on/app behavior changes.
+- Keep `bjpkeep_ha/config.yaml`, `bjpkeep_ha/package.json`, and `bjpkeep_ha/package-lock.json` versions in sync only for add-on/app releases.
+- Keep the HACS custom integration version independent in `custom_components/bjpkeep/manifest.json`. Do not bump `bjpkeep_ha/config.yaml` for integration-only changes.
+- HACS displays GitHub release/tag versions. If there is no release/tag, HACS may show commit hashes as installed/latest versions even when `manifest.json` has a numeric version.
 - Version rule: bug-fix-only changes append letters to the current version, e.g. `0.5.0a`, `0.5.0b`, etc.
 - Version rule: feature additions bump the minor version, e.g. `0.5.0` -> `0.6.0`, unless the user explicitly asks for a different version.
 
@@ -341,11 +343,10 @@ Recent Docker/build fix:
 
 Recent version note:
 
-- Version `0.7.0d` reverts the custom integration bridge to config-flow-only setup after YAML fallback made Add Integration discovery harder to reason about; it keeps the fixed `ConfigFlow` handler class name.
-- Version `0.7.0c` adds YAML fallback setup for the custom integration bridge so users can configure the HA proxy even if the custom integration does not appear in the Add Integration search UI.
-- Version `0.7.0b` adds `integration_type` metadata and `translations/en.json` for the custom integration so Home Assistant/HACS can discover and display the setup flow more reliably.
-- Version `0.7.0a` fixes the custom integration config flow class name (`ConfigFlow`) so Home Assistant can load the integration setup handler.
-- Version `0.7.0` adds the HACS-ready Home Assistant custom integration bridge, same-origin Lovelace asset/image proxying, and integration-mode Lovelace cards while preserving direct `api_url` mode as fallback.
+- Add-on/app version `0.7.0c` is the currently installed add-on release used with the optional HACS integration bridge; keep `bjpkeep_ha/config.yaml`, `bjpkeep_ha/package.json`, and `bjpkeep_ha/package-lock.json` aligned to this unless the add-on itself changes again.
+- Integration compatibility fix: `custom_components/bjpkeep/config_flow.py` defines `CONF_NAME = "name"` locally instead of importing it from `homeassistant.const`, avoiding HA-version-specific import failures.
+- HACS integration version is independent and currently starts at `custom_components/bjpkeep/manifest.json` version `0.1.0`.
+- For HACS to show numeric versions instead of commit hashes, publish a GitHub release/tag for the integration. Without releases/tags, HACS can show short commit SHAs as installed/latest versions.
 - Version `0.6.0b` adds the required `homeassistant_api: true` add-on permission for direct Niimbot service calls and adds `bjpkeep_ha/CHANGELOG.md` so Home Assistant can show update notes. `0.6.0a` contained the Niimbot service payload/target fixes.
 
 ## Features Already Implemented
