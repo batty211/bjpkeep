@@ -122,7 +122,7 @@ On iOS Home Assistant app, live `getUserMedia` did not work. The scanner now use
 
 ### Niimbot Printing
 
-The add-on can print cabinet labels directly through Home Assistant's `eigger/hass-niimbot` integration.
+BJP Keep can print cabinet labels directly through Home Assistant's `eigger/hass-niimbot` HACS custom integration.
 
 Config options:
 
@@ -138,7 +138,7 @@ API:
 - `POST /api/niimbot` with `{ "cabinetId": "...", "kind": "label" }` prints a small D110-style 40x12 label using `width: 240`, `height: 96`, and `rotate: 90`.
 - `POST /api/niimbot` with `{ "cabinetId": "...", "kind": "qr" }` prints a B1-style 50x50 QR label using `width: 400`, `height: 400`.
 
-The API calls Home Assistant via `http://supervisor/core/api/services/niimbot/print` with `SUPERVISOR_TOKEN`, so direct printing works only inside the Home Assistant add-on runtime.
+The API calls Home Assistant via `http://supervisor/core/api/services/niimbot/print` with `SUPERVISOR_TOKEN`, so direct printing works only from BJP Keep while it is running as a Home Assistant add-on. `hass-niimbot` itself is a HACS custom integration, not an add-on. The request body must include `target: { device_id: ... }`; do not put `device_id` directly in the service data. `hass-niimbot` QR elements use `data`, not `value`.
 
 ### Images And Thumbnails
 

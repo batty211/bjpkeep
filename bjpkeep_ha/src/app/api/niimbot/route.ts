@@ -53,7 +53,7 @@ function buildQrPayload(cabinet: { id: string; name: string; code: string; room:
         type: "qrcode",
         x: 64,
         y: 18,
-        value: createCabinetQrPayload(cabinet.id),
+        data: createCabinetQrPayload(cabinet.id),
         boxsize: 8,
         border: 2,
         eclevel: "H",
@@ -103,7 +103,9 @@ async function callNiimbotPrint(deviceId: string, data: Record<string, unknown>)
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      device_id: deviceId,
+      target: {
+        device_id: deviceId,
+      },
       ...data,
     }),
   });

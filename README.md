@@ -79,7 +79,7 @@ Inside the app:
 3. Print or save cabinet QR codes from each cabinet QR page.
 4. Add items to cabinets.
 
-If the Home Assistant `eigger/hass-niimbot` integration is installed and the device ids above are configured, each cabinet QR page can send a small 40x12 label or a 50x50 QR label directly to `niimbot.print`.
+If the Home Assistant `eigger/hass-niimbot` HACS custom integration is installed and the device ids above are configured, each cabinet QR page can send a small 40x12 label or a 50x50 QR label directly to `niimbot.print`.
 
 Cabinet QR codes use permanent payloads like:
 

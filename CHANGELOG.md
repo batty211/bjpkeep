@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.6.0a
+
+- Fixed Niimbot print service calls to send Home Assistant target data in the expected format.
+- Fixed QR payload element data field for `hass-niimbot`.
+
 ## 0.6.0
 
 - Added Niimbot direct printing support from cabinet QR pages.
