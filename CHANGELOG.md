@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.6.0b
+
+- Added Home Assistant API permission for direct Niimbot service calls from the add-on.
+
 ## 0.6.0a
 
 - Fixed Niimbot print service calls to send Home Assistant target data in the expected format.

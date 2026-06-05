@@ -1,6 +1,6 @@
 name: BJP Keep
 slug: bjpkeep
-version: "0.6.0a"
+version: "0.6.0b"
 description: "BJP Home where are my stuff!!"
 startup: application
 boot: auto
@@ -8,6 +8,7 @@ init: false
 panel_icon: mdi:package-variant-closed
 ingress: true
 ingress_port: 3000
+homeassistant_api: true
 ports:
   3000/tcp: 3000
 arch:

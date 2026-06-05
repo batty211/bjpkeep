@@ -19,6 +19,8 @@ Also maintain release notes and versions in the same work session:
 - Version rule: bug-fix-only changes append letters to the current version, e.g. `0.5.0a`, `0.5.0b`, etc.
 - Version rule: feature additions bump the minor version, e.g. `0.5.0` -> `0.6.0`, unless the user explicitly asks for a different version.
 
+At the end of each code/config/product change, include a short git-ready summary that the user can reuse for commit/push notes.
+
 ## What This Project Is
 
 BJP Keep is a private home inventory app for tracking where household items are stored.
@@ -51,6 +53,8 @@ Important files:
 - `bjpkeep_ha/Dockerfile`: HA local build image.
 - `bjpkeep_ha/run.sh`: runtime setup and app start.
 - `bjpkeep_ha/server.mjs`: custom Next server for HA Ingress path rewriting.
+
+The add-on manifest includes `homeassistant_api: true` so BJP Keep can call Home Assistant Core services through the Supervisor API. This is required for direct Niimbot printing; without it, `/api/niimbot` returns `401: Unauthorized` even when the same `niimbot.print` action works from Home Assistant Developer Tools.
 
 Runtime storage is currently hardcoded for the user's setup:
 
@@ -139,6 +143,8 @@ API:
 - `POST /api/niimbot` with `{ "cabinetId": "...", "kind": "qr" }` prints a B1-style 50x50 QR label using `width: 400`, `height: 400`.
 
 The API calls Home Assistant via `http://supervisor/core/api/services/niimbot/print` with `SUPERVISOR_TOKEN`, so direct printing works only from BJP Keep while it is running as a Home Assistant add-on. `hass-niimbot` itself is a HACS custom integration, not an add-on. The request body must include `target: { device_id: ... }`; do not put `device_id` directly in the service data. `hass-niimbot` QR elements use `data`, not `value`.
+
+`bjpkeep_ha/config.yaml` must keep `homeassistant_api: true`; this grants the add-on permission to use the `SUPERVISOR_TOKEN` against Home Assistant Core API service endpoints. If print requests return `{"error":"401: Unauthorized"}` from `/api/niimbot`, check that this manifest permission exists and the add-on has been rebuilt/restarted.
 
 ### Images And Thumbnails
 
@@ -299,6 +305,10 @@ Recent Docker/build fix:
 - `bjpkeep_ha/Dockerfile` uses `npm ci` instead of `npm install` for deterministic image builds from `package-lock.json`.
 - Docker build npm retry/timeout environment settings were added to reduce Home Assistant Supervisor build failures from slow or flaky network reads.
 - Keep `package.json`, `package-lock.json`, and `config.yaml` versions in sync when bumping releases.
+
+Recent version note:
+
+- Version `0.6.0b` adds the required `homeassistant_api: true` add-on permission for direct Niimbot service calls. `0.6.0a` contained the Niimbot service payload/target fixes.
 
 ## Features Already Implemented
 
