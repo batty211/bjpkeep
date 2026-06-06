@@ -105,4 +105,3 @@ export async function createQrLabelImage(cabinet: CabinetForLabel) {
 
   return toDataUrl(canvas);
 }
-

@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.8.0a
+
+- Added a clearer Niimbot connection error explaining that the mobile NIIMBOT app or another Bluetooth client must be disconnected before Home Assistant can print.
+
 ## Documentation
 
 - Reworked the root README into a more user-facing setup guide, with internal maintainer/release notes separated from normal installation and dashboard setup steps.

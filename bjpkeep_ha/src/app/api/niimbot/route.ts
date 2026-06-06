@@ -77,11 +77,12 @@ async function callNiimbotPrint(deviceId: string, data: Record<string, unknown>)
 
   if (!response.ok) {
     const message = await response.text().catch(() => "");
+    const error =
+      response.status >= 500 && message.includes("Server got itself in trouble")
+        ? "Home Assistant เชื่อมต่อเครื่องพิมพ์ไม่ได้ กรุณาปิดแอป NIIMBOT บนมือถือหรืออุปกรณ์อื่นที่กำลังเชื่อมต่อเครื่องพิมพ์อยู่ แล้วตรวจว่าเครื่องเปิดและ Bluetooth proxy มองเห็นเครื่อง"
+        : message || `Niimbot print failed with HTTP ${response.status}`;
 
-    return NextResponse.json(
-      { error: message || `Niimbot print failed with HTTP ${response.status}` },
-      { status: 502 }
-    );
+    return NextResponse.json({ error }, { status: 502 });
   }
 
   return NextResponse.json({ success: true });

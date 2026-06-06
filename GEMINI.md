@@ -154,6 +154,8 @@ The API calls Home Assistant via `http://supervisor/core/api/services/niimbot/pr
 
 `bjpkeep_ha/config.yaml` must keep `homeassistant_api: true`; this grants the add-on permission to use the `SUPERVISOR_TOKEN` against Home Assistant Core API service endpoints. If print requests return `{"error":"401: Unauthorized"}` from `/api/niimbot`, check that this manifest permission exists and the add-on has been rebuilt/restarted.
 
+Niimbot Bluetooth connections are exclusive. Before printing from BJP Keep, close or disconnect the mobile NIIMBOT app and any other client connected to the printer. A competing Bluetooth connection can make Home Assistant return a generic `500 Internal Server Error` even though the BJP Keep print payload is valid.
+
 ### Images And Thumbnails
 
 Inventory used to load full-size original photos, which was slow.

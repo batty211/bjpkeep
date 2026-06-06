@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.8.0a
+
+- Added a clearer Niimbot connection error explaining that the mobile NIIMBOT app or another Bluetooth client must be disconnected before Home Assistant can print.
+
 ## 0.8.0
 
 - Added integration-mode Lovelace photo upload support through the authenticated Home Assistant multipart action proxy.
